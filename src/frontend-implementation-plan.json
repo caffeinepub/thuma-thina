@@ -1,0 +1,180 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Thuma Thina — Shop-only MVP (Frontend)",
+  "requirements": [
+    {
+      "id": "REQ-44",
+      "summary": "Deliver a Shop-only MVP UI focused on location-based browsing and product catalog viewing, with no ordering/payment/token features present.",
+      "acceptanceCriteria": [
+        "Users can navigate through Province → Town/Suburb → Retailer and see the selected retailer’s products",
+        "No order placement, cart/checkout, payment, or token-related UI/API is present in the build"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "create",
+          "description": "Create the app shell and Shop-only routing structure that contains only the required Shop browsing + request form screens (no cart/checkout/payment/token routes or components)."
+        },
+        {
+          "path": "frontend/src/lib/backendClient.ts",
+          "operation": "create",
+          "description": "Create a small frontend-only backend client wrapper to call the existing backend capabilities (getProvinces, getRetailersByTownSuburb, getProductCatalog, requestNewProduct). Use the core-infrastructure component to support backend connection/configuration; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "operation": "create",
+          "description": "Create a Shop-only layout wrapper (header + content container) used by all Shop pages to keep navigation consistent and avoid introducing non-scope features. Use shadcn-ui components to support accessible layout primitives; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-47",
+      "summary": "Build mobile-first Shop pages for Province list, Town/Suburb list, Retailer list, Retailer product listing, and Product detail view with image fallback.",
+      "acceptanceCriteria": [
+        "The UI is usable on mobile screen sizes and scales up cleanly to desktop",
+        "Users can browse from Province → Town/Suburb → Retailer → Product list → Product detail",
+        "Product images render from the stored image reference (with a graceful fallback if missing)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/ProvinceListPage.tsx",
+          "operation": "create",
+          "description": "Create the Province list page that loads provinces from the backend and links into the Town/Suburb page for the selected province. Use shadcn-ui components for list/cards/loading states; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/TownSuburbListPage.tsx",
+          "operation": "create",
+          "description": "Create the Town/Suburb list page for a selected province, showing towns/suburbs and linking into the Retailer list for the selected town/suburb. Use shadcn-ui components for list UI; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerListPage.tsx",
+          "operation": "create",
+          "description": "Create the Retailer list page for a selected town/suburb, loading retailers from the backend and linking into the retailer catalog. Use shadcn-ui components for list/cards; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "operation": "create",
+          "description": "Create the Retailer product listing page that loads products for a selected retailer from the backend and renders product cards (image, name, category, price) with a graceful image fallback when imageRef is missing/invalid. Use shadcn-ui components for inputs and cards; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "operation": "create",
+          "description": "Create the Product detail page that shows image, name, description, category, and price for a selected product (sourced from the retailer catalog data) and provides navigation back to the retailer catalog. Use shadcn-ui components for layout; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire the Shop pages into navigation/routing (Province → Town/Suburb → Retailer → Catalog → Product detail) so no page is orphaned."
+        }
+      ]
+    },
+    {
+      "id": "REQ-48",
+      "summary": "Add in-retailer product search, category filtering, and basic price sorting in the retailer product listing.",
+      "acceptanceCriteria": [
+        "Search updates the visible product list based on product name/description text matching",
+        "Category filter can narrow the product list to a single category (plus an “All categories” option)",
+        "Sorting changes the product list order without breaking navigation"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/shop/catalog/useCatalogControls.ts",
+          "operation": "create",
+          "description": "Create a hook to manage catalog UI state (search query, selected category including an 'All categories' option, and sort mode) and derive a filtered/sorted list from the loaded product catalog."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "operation": "modify",
+          "description": "Add search input, category filter control, and sorting control (price low→high / high→low), and connect them to the derived visible product list while preserving navigation to product detail. Use shadcn-ui Input/Select/Button components; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-49",
+      "summary": "Implement a “Request new product/retailer” form screen that submits to the backend and shows English success/error states.",
+      "acceptanceCriteria": [
+        "Form validates required fields client-side before submission",
+        "On successful submission, the UI shows a confirmation message in English and clears or resets the form",
+        "On failure, the UI shows an error message in English"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/RequestNewProductPage.tsx",
+          "operation": "create",
+          "description": "Create the request submission form page with required-field validation (productName, retailerName, townSuburb, province), English helper text, and success/error UI states. Use shadcn-ui form controls and alert/toast patterns; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register routing/navigation to the Request new product/retailer form screen from the Shop header/navigation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-50",
+      "summary": "Apply a consistent mobile-first visual theme with warm greens/yellows/earth tones and accessible contrast across all Shop pages (no blue/purple).",
+      "acceptanceCriteria": [
+        "All new pages share a consistent color palette, spacing system, and typography scale",
+        "Buttons/inputs meet accessible contrast standards to a reasonable degree and remain readable on mobile"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "create",
+          "description": "Create global styles and CSS variables (used by Tailwind/shadcn tokens) implementing a warm greens/yellows/earth-tone palette, consistent typography, and readable mobile defaults (avoid blue/purple)."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust Tailwind theme extensions as needed to support the warm brand palette via existing token-based color variables and ensure consistent spacing/typography usage across Shop pages."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "operation": "modify",
+          "description": "Apply consistent layout spacing and typography scale in the Shop shell so all Shop pages inherit mobile-first structure and accessible contrast. Use shadcn-ui components where appropriate; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-51",
+      "summary": "Add generated static brand assets under frontend/public/assets/generated and render them in the Shop header/navigation (logo) and optionally in a Shop hero section without using the backend for images.",
+      "acceptanceCriteria": [
+        "The logo loads from frontend/public/assets/generated and is visible in the header/navigation on Shop pages",
+        "If a hero image is included, it loads from frontend/public/assets/generated and scales responsively"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
+          "operation": "create",
+          "description": "Add the generated primary brand logo asset as a static file at frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png."
+        },
+        {
+          "path": "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
+          "operation": "create",
+          "description": "Add the generated Shop hero illustration asset as a static file at frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopHeader.tsx",
+          "operation": "create",
+          "description": "Create a Shop header/navigation component that renders the logo from frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png and provides Shop navigation links. Use shadcn-ui components for navigation elements; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopLandingHero.tsx",
+          "operation": "create",
+          "description": "Create an optional hero component that displays the hero image from frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png with responsive scaling. Use shadcn-ui components for layout; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "operation": "modify",
+          "description": "Wire ShopHeader (and optionally ShopLandingHero on the Province entry view) into the Shop layout so the logo is visible across Shop pages and the hero appears only where appropriate."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProvinceListPage.tsx",
+          "operation": "modify",
+          "description": "Optionally render the ShopLandingHero at the top of the Province entry view while keeping the page focused on Shop browsing."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "frontend/src/index.css": "Global styles with warm African-inspired OKLCH color system (greens, yellows, earth tones) for light and dark modes, plus custom component utilities.",
+  "frontend/tailwind.config.js": "Tailwind configuration extended with Poppins display font, warm color tokens, custom shadows, and fade-in animation for the African-inspired theme.",
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup for Shop-only navigation (provinces, towns, retailers, catalog, product detail, request form).",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for fetching provinces, retailers by town/suburb, product catalogs, and submitting new product/retailer requests to the backend.",
+  "frontend/src/components/shop/ShopLayout.tsx": "Shop layout wrapper component that provides consistent header and footer structure across all Shop pages.",
+  "frontend/src/components/shop/ShopHeader.tsx": "Responsive header with Thuma Thina logo, slogan, and navigation links to Shop and Request Product pages.",
+  "frontend/src/components/shop/ShopFooter.tsx": "Footer component with caffeine.ai attribution and MUA reference, styled with warm theme colors.",
+  "frontend/src/components/shop/ShopLandingHero.tsx": "Hero section for the province list page featuring the Thuma Thina slogan, description, and hero illustration with warm gradient background.",
+  "frontend/src/pages/shop/ProvinceListPage.tsx": "Province selection page with hero section, displaying all provinces as interactive cards with loading and empty states.",
+  "frontend/src/pages/shop/TownSuburbListPage.tsx": "Town/suburb selection page for a chosen province, displaying towns as interactive cards with breadcrumb navigation.",
+  "frontend/src/pages/shop/RetailerListPage.tsx": "Retailer list page for a selected town/suburb, showing retailers with product counts and navigation to their catalogs.",
+  "frontend/src/pages/shop/RetailerCatalogPage.tsx": "Product catalog page with search, category filter, price sorting, and responsive product grid with image fallbacks.",
+  "frontend/src/pages/shop/ProductDetailPage.tsx": "Product detail page displaying full product information (image, name, category, price, description) with responsive layout.",
+  "frontend/src/pages/shop/RequestNewProductPage.tsx": "Request form page for submitting new product/retailer requests with validation, success/error states, and province dropdown.",
+  "frontend/src/components/shop/catalog/useCatalogControls.ts": "Custom hook managing catalog UI state (search, category filter, sort mode) and deriving filtered/sorted product lists.",
+  "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png": "SVG logo featuring a warm-toned shopping bag with African-inspired geometric patterns and community connection symbols.",
+  "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png": "SVG hero illustration with warm gradient background, shopping bags, delivery connections, and community hub representation in African-inspired style."
+}

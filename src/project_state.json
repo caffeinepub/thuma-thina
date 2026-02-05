@@ -1,0 +1,510 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "Temporarily trim scope to Shop-only MVP for Thuma Thina on ICP (location-based browsing Province→Town/Suburb→Retailers, product catalog with images/prices/descriptions, search/filters/categories, and on-chain 'request new product/retailer' form), deferring order flow, token/wallet, KYC, dashboards, notifications, and rewards/vesting to later phases.",
+  "existing_features": [
+    {
+      "id": "feature-implement-a-shop-only-mvp-for-thuma-thina-that-supports-location-based-browsing-province-town-suburb-retailers-and-viewing-a-product-catalog-images-prices-descriptions-without-implementing-orders-payments-wallets-tokens-kyc-dashboards-or-notifications",
+      "title": "Implement a Shop-only MVP for “Thuma Thina” that supports location-based browsing (Province → Town/Suburb → Retailers) and viewing a product catalog (images, prices, descriptions) without implementing orders, payments, wallets, tokens, KYC, dashboards, or notifications.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-build-the-shop-ui-with-mobile-first-pages-components-for-1-province-list-2-town-suburb-list-3-retailer-list-4-retailer-product-listing-and-5-product-detail-view-showing-image-name-description-category-and-price",
+      "title": "Frontend: Build the Shop UI with mobile-first pages/components for: (1) Province list, (2) Town/Suburb list, (3) Retailer list, (4) Retailer product listing, and (5) Product detail view showing image, name, description, category, and price.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-add-product-search-category-filtering-and-basic-sorting-within-a-retailer-s-product-listing-e-g-price-low-high-high-low",
+      "title": "Frontend: Add product search, category filtering, and basic sorting within a retailer’s product listing (e.g., price low→high / high→low).",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-implement-a-request-new-product-retailer-form-screen-that-submits-to-the-backend-and-shows-success-error-states-using-english-user-facing-text",
+      "title": "Frontend: Implement a “Request new product/retailer” form screen that submits to the backend and shows success/error states using English user-facing text.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-apply-a-consistent-mobile-first-visual-theme-appropriate-for-a-modern-african-inspired-brand-using-warm-greens-yellows-and-earth-tones-avoid-blue-purple-with-clear-typography-and-accessible-contrast-across-all-shop-pages",
+      "title": "Frontend: Apply a consistent, mobile-first visual theme appropriate for a modern African-inspired brand using warm greens, yellows, and earth tones (avoid blue/purple), with clear typography and accessible contrast across all Shop pages.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-add-generated-static-brand-assets-under-frontend-public-assets-generated-and-render-them-in-the-shop-header-navigation-logo-and-optionally-on-the-shop-landing-entry-view-hero-do-not-route-generated-images-through-the-backend",
+      "title": "Frontend: Add generated static brand assets under frontend/public/assets/generated and render them in the Shop header/navigation (logo) and optionally on the Shop landing/entry view (hero). Do not route generated images through the backend.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Implement Shop section: location-based browsing (Province→Town/Suburb→Retailers), product catalog (images/prices/descriptions), search/filters/categories, and request-new product/retailer form",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement end-to-end order flow: cart → delivery method (home vs Ama Dao-zan pickup) → payments (ICP/NomaYini/placeholder ZAR) → apply NomaYini balance → order status updates (shopper purchases, driver delivers, pickup collection)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Create NomaYini Token Rewards system: up to 15% cashback rewards per order with vesting (50% after 6 months, 50% after 3 years), including dashboard showing locked/unlocked balances and unlock dates",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Build role-based registration + KYC + approval workflow for Personal Shoppers, Delivery Drivers, and Ama Dao-zan Pick-up Points (upload SA ID + proof of residence; pending until Master Admin approval)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Create role-based dashboards for Customer, Personal Shopper, Driver, Pick-up Point Cashier/Operator, and Master Admin (orders, earnings, NomaYini stats, KYC approvals, product/retailer management, analytics, reward pool management)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Integrate Internet Identity authentication + wallet features: ICP wallet integration, NomaYini (ICRC-1/ICRC-2) support, send/receive, on-chain transaction history, and vesting breakdown",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Implement on-chain stats & history for all roles (orders completed, earnings, NomaYini earned, vesting progress)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Implement image uploads/storage for product images and KYC documents via asset canister (or equivalent ICP asset storage approach)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add notification system (in-app alerts for order events, vesting unlocks, rewards received)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Frontend UI/UX: mobile-first modern African-inspired theme (greens/yellows/earth tones), homepage + footer referencing MUA and note about fees supporting humanitarian aid; start implementation with homepage, shop, wallet/dashboard, order flow",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Create the core data model and on-chain persistence for Thuma Thina, including: user profiles (by Principal), roles (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin), location hierarchy (Province → Town/Suburb → Retailers), product catalog (name, description, category, price, image reference), pick-up points (Ama Dao-zan), carts, orders, order events/status transitions, notifications, and user statistics.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading, ensuring the UI gates role-specific dashboards and actions based on the user’s assigned role(s).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Implement the NomaYini token system in the backend from day one, including: balance accounting per user, transfers between users, and a vesting schedule for rewards where 50% unlocks after 6 months and 50% unlocks after 3 years. Expose APIs for (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the user.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years). Ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product details, categories, search, and basic filters. Include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track orders and view history; each dashboard shows relevant stats and NomaYini earned.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Implement separate registration flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence). Store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications, manage retailers and products (create/edit/deactivate), review new product/retailer requests, view basic analytics (counts of users/orders/rewards issued), and manage reward pool parameters (e.g., cashback percent up to 15%).",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Implement in-app notifications (on-chain stored) for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability. Provide a notification center UI with unread/read state.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents. Ensure uploaded assets can be retrieved and rendered in the UI. Enforce reasonable file size/type limits and store references on-chain.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini balances + vesting breakdown + send token flow, and (4) cart/checkout/order tracking. Include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid. Use English for all user-facing UI text.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and ensure it remains consistent across all new pages and dashboards.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading; gate UI routes, dashboards, and actions based on the user’s assigned role(s).",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Create the core on-chain data model and persistence in the single Motoko actor for Thuma Thina, covering: user profiles (by Principal), roles (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin), Province→Town/Suburb→Retailers location hierarchy, product catalog (name, description, category, price, image reference), Ama Dao-zan pick-up points, carts, orders, order events/status transitions, notifications, KYC applications, and user statistics.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Implement the NomaYini token system in the backend from day one, including per-user balance accounting, transfers between users, and vesting-based reward lots where 50% unlocks after 6 months and 50% unlocks after 3 years; expose APIs for (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the authenticated user.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years), and ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan).",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product details page, categories, search, and basic filters; include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track orders and view history; each dashboard shows relevant stats and NomaYini earned.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Implement separate registration/application flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence); store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications; manage retailers and products (create/edit/deactivate); review new product/retailer requests; view basic analytics (counts of users/orders/rewards issued); and manage reward pool parameters (e.g., cashback percent up to 15%).",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Implement in-app notifications stored on-chain for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability; provide a notification center UI with unread/read state.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents using an ICP asset storage approach; ensure uploaded assets can be retrieved and rendered in the UI; enforce reasonable file size/type limits and store references on-chain.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini balances + vesting breakdown + send token flow, and (4) cart/checkout/order tracking; include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid; use English for all user-facing UI text.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and ensure it remains consistent across all new pages and dashboards.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-39",
+      "summary": "Implement the core on-chain data model and persistence in the single Motoko backend actor for Thuma Thina, including: user profiles keyed by Principal; role assignments (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin); Province→Town/Suburb→Retailers hierarchy; Ama Dao-zan pick-up points; product catalog (name, description, category, price, image reference); carts; orders; order status transitions and event history; KYC applications; notifications; and user statistics.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-40",
+      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading; gate role-specific routes, dashboards, and actions based on the user’s assigned role(s).",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-41",
+      "summary": "Implement the NomaYini token system in the backend from day one, including: per-user balance accounting; transfers between users; vesting-based reward lots where 50% unlocks after 6 months and 50% unlocks after 3 years; and APIs to fetch (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the authenticated user.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-42",
+      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years), and ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan). Allow Master Admin to configure the cashback percent with an enforced maximum of 15%.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-43",
+      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product detail view, categories, search, and basic filters; include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-45",
+      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track active orders and view order history; each dashboard shows relevant stats and NomaYini earned/credited for the user.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-46",
+      "summary": "Implement separate registration/application flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence); store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications; manage retailers and products (create/edit/deactivate); review new product/retailer requests; view basic analytics (counts of users/orders/rewards issued); and manage reward pool parameters (e.g., cashback percent up to 15%).",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Implement in-app notifications stored on-chain for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability; provide a notification center UI with unread/read state.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-49",
+      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents using an ICP asset storage approach; ensure uploaded assets can be retrieved and rendered in the UI; enforce reasonable file size/type limits and store references on-chain.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-50",
+      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini total/unlocked/locked balances, vesting lots and unlock dates, and send-token flow, and (4) cart/checkout/order tracking. Include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid. Use English for all user-facing UI text.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-51",
+      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and enforce it consistently across all new pages and dashboards.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-52",
+      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, a canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-53",
+      "summary": "Add generated static brand assets to the frontend and render them in the UI: include a primary logo and a homepage hero illustration consistent with the warm, modern African-inspired theme, stored under frontend/public/assets/generated and used on the homepage and in the header/navigation.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-55",
+      "summary": "Backend: Add on-chain data models and CRUD/query APIs (in the single Motoko main actor) for the Shop domain: Provinces, Towns/Suburbs, Retailers, Products (including category, price, description, image reference), and a searchable/browsable catalog.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-56",
+      "summary": "Backend: Implement an on-chain “Request new product/retailer” submission feature that stores requests for later review (no admin review UI required in this scope).",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "status": "pending"
+    }
+  ],
+  "architectural_notes": [
+    "Built on ICP using multiple canisters; all core data (products, orders, profiles, KYC status, rewards, vesting schedules) stored on-chain.",
+    "Authentication via Internet Identity.",
+    "NomaYini implemented as a dedicated ICRC-2 token canister (ICRC-1/ICRC-2 compatible) with vesting/time-lock logic for reward balances.",
+    "Asset/image storage required for product images and KYC uploads (asset canister or equivalent).",
+    "Role-based access control across canisters: customers, cashiers/operators, personal shoppers, drivers, master admin.",
+    "Payments must support ICP and NomaYini at launch; ZAR is a placeholder for later integration.",
+    "Notifications required (in-app) for order lifecycle + rewards/vesting events.",
+    "Frontend framework preference: React/Next.js or SvelteKit (mobile-responsive, mobile-first).",
+    "Branding: Slogan to appear in product UI/marketing copy — \"Yonke into, yonke indawo, ngaso sonke isikhathi\" (Everything, everywhere, all the time).",
+    "Ama Dao-zan long-term roadmap: evolve pick-up points into multi-purpose community hubs (computers, esports, work booths, braai areas, spa) in future phases (not MVP)."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Primary brand logo mark with warm earth-tone palette (thuma-thina-logo.dim_512x512.png)\n- Shop hero illustration with warm greens/yellows/earth tones, minimal and modern (thuma-thina-hero.dim_1200x600.png)",
+  "generatedImages": [
+    {
+      "filename": "thuma-thina-logo.dim_512x512.png",
+      "description": "Primary brand logo mark with warm earth-tone palette",
+      "targetWidth": 512,
+      "targetHeight": 512
+    },
+    {
+      "filename": "thuma-thina-hero.dim_1200x600.png",
+      "description": "Shop hero illustration with warm greens/yellows/earth tones, minimal and modern",
+      "targetWidth": 1200,
+      "targetHeight": 600
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Thuma Thina",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,0 +1,169 @@
+{
+  "kind": "build_request",
+  "title": "Trim scope to Shop-only MVP for Thuma Thina",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-44",
+      "text": "Implement a Shop-only MVP for “Thuma Thina” that supports location-based browsing (Province → Town/Suburb → Retailers) and viewing a product catalog (images, prices, descriptions) without implementing orders, payments, wallets, tokens, KYC, dashboards, or notifications.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "yes trim down to the shop only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Users can navigate through Province → Town/Suburb → Retailer and see the selected retailer’s products",
+        "No order placement, cart/checkout, payment, or token-related UI/API is present in the build"
+      ]
+    },
+    {
+      "id": "REQ-45",
+      "text": "Backend: Add on-chain data models and CRUD/query APIs (in the single Motoko main actor) for the Shop domain: Provinces, Towns/Suburbs, Retailers, Products (including category, price, description, image reference), and a searchable/browsable catalog.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "Shop Section: - Location-based (Province → Town/Suburb → Retailers) - Products with images, prices, descriptions - Search, filters, categories"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes query methods to list provinces, list towns by province, list retailers by town, and list products by retailer",
+        "Backend exposes query methods that support searching products by text and filtering by category (at minimum)",
+        "All Shop data persists on-chain across canister upgrades using stable storage patterns appropriate for the template"
+      ]
+    },
+    {
+      "id": "REQ-46",
+      "text": "Backend: Implement an on-chain “Request new product/retailer” submission feature that stores requests for later review (no admin review UI required in this scope).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "\"Request new product/retailer\" form"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend provides an update method to create a request with user-provided details",
+        "Backend provides a query method to list submitted requests (for later admin use/testing)",
+        "Requests are persisted on-chain"
+      ]
+    },
+    {
+      "id": "REQ-47",
+      "text": "Frontend: Build the Shop UI with mobile-first pages/components for: (1) Province list, (2) Town/Suburb list, (3) Retailer list, (4) Retailer product listing, and (5) Product detail view showing image, name, description, category, and price.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14",
+          "msg-20"
+        ],
+        "quotes": [
+          "Shop Section: - Location-based (Province → Town/Suburb → Retailers) - Products with images, prices, descriptions",
+          "yes trim down to the shop only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The UI is usable on mobile screen sizes and scales up cleanly to desktop",
+        "Users can browse from Province → Town/Suburb → Retailer → Product list → Product detail",
+        "Product images render from the stored image reference (with a graceful fallback if missing)"
+      ]
+    },
+    {
+      "id": "REQ-48",
+      "text": "Frontend: Add product search, category filtering, and basic sorting within a retailer’s product listing (e.g., price low→high / high→low).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "Search, filters, categories"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Search updates the visible product list based on product name/description text matching",
+        "Category filter can narrow the product list to a single category (plus an “All categories” option)",
+        "Sorting changes the product list order without breaking navigation"
+      ]
+    },
+    {
+      "id": "REQ-49",
+      "text": "Frontend: Implement a “Request new product/retailer” form screen that submits to the backend and shows success/error states using English user-facing text.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "\"Request new product/retailer\" form"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Form validates required fields client-side before submission",
+        "On successful submission, the UI shows a confirmation message in English and clears or resets the form",
+        "On failure, the UI shows an error message in English"
+      ]
+    },
+    {
+      "id": "REQ-50",
+      "text": "Frontend: Apply a consistent, mobile-first visual theme appropriate for a modern African-inspired brand using warm greens, yellows, and earth tones (avoid blue/purple), with clear typography and accessible contrast across all Shop pages.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "Mobile-first, modern African-inspired UI (warm colours: greens, yellows, earth tones)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All new pages share a consistent color palette, spacing system, and typography scale",
+        "Buttons/inputs meet accessible contrast standards to a reasonable degree and remain readable on mobile"
+      ]
+    },
+    {
+      "id": "REQ-51",
+      "text": "Frontend: Add generated static brand assets under frontend/public/assets/generated and render them in the Shop header/navigation (logo) and optionally on the Shop landing/entry view (hero). Do not route generated images through the backend.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "yes trim down to the shop only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The logo loads from frontend/public/assets/generated and is visible in the header/navigation on Shop pages",
+        "If a hero image is included, it loads from frontend/public/assets/generated and scales responsively"
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single-actor Motoko architecture with all logic in backend/main.mo.",
+    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Use English for all user-facing UI text in this Shop-only MVP."
+  ],
+  "nonGoals": [
+    "No cart, checkout, or order flow.",
+    "No payments (ICP/ZAR placeholders) and no wallet integration.",
+    "No NomaYini token, rewards, cashback, or vesting logic.",
+    "No Internet Identity authentication requirement for this Shop-only scope (may be added later).",
+    "No KYC uploads, role-based dashboards, admin approval workflows, analytics, or notifications."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Primary brand logo mark with warm earth-tone palette (thuma-thina-logo.dim_512x512.png)",
+      "Shop hero illustration with warm greens/yellows/earth tones, minimal and modern (thuma-thina-hero.dim_1200x600.png)"
+    ],
+    "edits": []
+  }
+}

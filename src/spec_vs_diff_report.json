@@ -1,0 +1,86 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-05T09:03:58.184Z",
+  "summary": "Diff adds a Shop-oriented frontend (province→town→retailer→catalog→product detail + request form), warm theme styling, and a Motoko backend with basic province/retailer/product/request types and some query/update methods. However, several backend API/persistence requirements are missing, and some non-goal/auth + non-English UI text appears in the frontend.",
+  "missing_requirements": [
+    {
+      "id": "REQ-45",
+      "requirement": "Backend must expose a query method to list towns/suburbs by province.",
+      "reason": "Backend only exposes getProvinces() returning embedded towns, but no dedicated 'list towns by province' query method is present in backend/main.mo.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-45",
+      "requirement": "Backend must support searching products by text and filtering by category (at minimum) via query methods.",
+      "reason": "No backend query methods for searching/filtering products exist; only getProductCatalog(retailerId) is implemented and client-side search/filter is done in the frontend hook.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/components/shop/catalog/useCatalogControls.ts"
+      ]
+    },
+    {
+      "id": "REQ-45",
+      "requirement": "All Shop data must persist on-chain across canister upgrades using stable storage patterns appropriate for the template.",
+      "reason": "backend/main.mo uses in-memory List/Map bindings (e.g., let provinces = List.empty<Province>(); let retailers = Map.empty<...>();) with no stable variables and no preupgrade/postupgrade logic shown.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-44",
+      "requirement": "Use English for all user-facing UI text in this Shop-only MVP.",
+      "reason": "ShopLandingHero includes non-English user-facing slogan text: \"Yonke into, yonke indawo, ngaso sonke isikhathi\".",
+      "evidence": [
+        "frontend/src/components/shop/ShopLandingHero.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Internet Identity authentication context/provider and identity-aware actor creation are included.",
+      "reason": "BuildRequest explicitly states there is no Internet Identity authentication requirement for this Shop-only scope; diff adds useInternetIdentity, InternetIdentityProvider wrapping the app, and identity-based actor creation.",
+      "evidence": [
+        "frontend/src/main.tsx",
+        "frontend/src/hooks/useInternetIdentity.ts",
+        "frontend/src/hooks/useActor.ts"
+      ]
+    },
+    {
+      "description": "Footer includes third-party attribution/link to caffeine.ai and organization text (MUA).",
+      "reason": "Not requested by any requirement; adds additional branding/attribution content beyond Shop MVP requirements.",
+      "evidence": [
+        "frontend/src/components/shop/ShopFooter.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.78,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/shop/ShopFooter.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
+    "frontend/src/components/shop/ShopLandingHero.tsx",
+    "frontend/src/components/shop/ShopLayout.tsx",
+    "frontend/src/components/shop/catalog/useCatalogControls.ts",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/shop/ProductDetailPage.tsx",
+    "frontend/src/pages/shop/ProvinceListPage.tsx",
+    "frontend/src/pages/shop/RequestNewProductPage.tsx",
+    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+    "frontend/src/pages/shop/RetailerListPage.tsx",
+    "frontend/src/pages/shop/TownSuburbListPage.tsx",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}
