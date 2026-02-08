@@ -1,33 +1,41 @@
 import { useState, useMemo } from 'react';
-import type { Product } from '../../../backend';
 
-export function useCatalogControls(products: Product[]) {
+interface CatalogItem {
+  id: bigint;
+  name: string;
+  category: string;
+  price: bigint;
+  imageRef?: string;
+  description?: string;
+}
+
+export function useCatalogControls(items: CatalogItem[]) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortMode, setSortMode] = useState<'default' | 'price-asc' | 'price-desc'>('default');
 
   const categories = useMemo(() => {
-    const uniqueCategories = new Set(products.map(p => p.category));
+    const uniqueCategories = new Set(items.map(item => item.category));
     return Array.from(uniqueCategories).sort();
-  }, [products]);
+  }, [items]);
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = [...items];
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
-        p =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
+        item =>
+          item.name.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query) ||
+          (item.description && item.description.toLowerCase().includes(query))
       );
     }
 
     // Apply category filter
     if (selectedCategory) {
-      result = result.filter(p => p.category === selectedCategory);
+      result = result.filter(item => item.category === selectedCategory);
     }
 
     // Apply sorting
@@ -38,7 +46,7 @@ export function useCatalogControls(products: Product[]) {
     }
 
     return result;
-  }, [products, searchQuery, selectedCategory, sortMode]);
+  }, [items, searchQuery, selectedCategory, sortMode]);
 
   return {
     searchQuery,

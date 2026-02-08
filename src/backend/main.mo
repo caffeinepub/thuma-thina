@@ -1,38 +1,76 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
 import Iter "mo:core/Iter";
+import Array "mo:core/Array";
+import Nat "mo:core/Nat";
 import Order "mo:core/Order";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
+import Migration "migration";
 
+import MixinAuthorization "authorization/MixinAuthorization";
+import AccessControl "authorization/access-control";
+import UserApproval "user-approval/approval";
+
+// Apply migration on upgrade
+(with migration = Migration.run)
 actor {
-  type Product = {
-    id : Nat;
+  public type RetailerId = Nat;
+  public type ProductId = Nat;
+  public type ListingId = Nat;
+
+  public type Product = {
+    id : ProductId;
     name : Text;
     category : Text;
-    price : Nat;
     description : Text;
     imageRef : Text;
   };
 
-  type Retailer = {
-    id : Nat;
-    name : Text;
-    townSuburb : Text;
-    products : [Product];
+  public type ListingStatus = {
+    #active;
+    #outOfStock;
+    #discontinued;
   };
 
-  type Province = {
+  public type Listing = {
+    id : ListingId;
+    retailerId : RetailerId;
+    productId : ProductId;
+    price : Nat;
+    stock : Nat;
+    status : ListingStatus;
+  };
+
+  public type Retailer = {
+    id : RetailerId;
+    name : Text;
+    townSuburb : Text;
+    province : Text;
+  };
+
+  public type Province = {
     name : Text;
     towns : [Text];
   };
 
-  type ProductRequest = {
+  public type ProductRequest = {
     id : Nat;
     productName : Text;
     retailerName : Text;
     townSuburb : Text;
     province : Text;
+  };
+
+  public type RetailerWithListings = {
+    retailer : Retailer;
+    listings : [Listing];
+  };
+
+  public type ProductWithRetailers = {
+    product : Product;
+    listings : [(Retailer, Listing)];
   };
 
   module Retailer {
@@ -42,74 +80,199 @@ actor {
   };
 
   let provinces = List.empty<Province>();
-  let retailers = Map.empty<Nat, Retailer>();
+  let retailers = Map.empty<RetailerId, Retailer>();
+  let products = Map.empty<ProductId, Product>();
+  let listings = Map.empty<ListingId, Listing>();
   let productRequests = Map.empty<Nat, ProductRequest>();
 
   var nextRetailerId = 0;
   var nextProductId = 0;
+  var nextListingId = 0;
   var nextRequestId = 0;
 
+  let accessControlState = AccessControl.initState();
+  let approvalState = UserApproval.initState(accessControlState);
+
+  include MixinAuthorization(accessControlState);
+
+  public shared ({ caller }) func bootstrapAdmin(adminToken : Text, userProvidedToken : Text) : async () {
+    AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken);
+  };
+
+  public query ({ caller }) func isCallerApproved() : async Bool {
+    AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
+  };
+
+  public shared ({ caller }) func upgradeToAdmin(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    AccessControl.assignRole(accessControlState, caller, user, #admin);
+  };
+
+  public shared ({ caller }) func requestApproval() : async () {
+    UserApproval.requestApproval(approvalState, caller);
+  };
+
+  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.setApproval(approvalState, user, status);
+  };
+
+  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.listApprovals(approvalState);
+  };
+
   public shared ({ caller }) func addProvince(name : Text, towns : [Text]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     let province : Province = { name; towns };
     provinces.add(province);
   };
 
-  public shared ({ caller }) func addRetailer(name : Text, townSuburb : Text) : async Nat {
+  public shared ({ caller }) func addRetailer(name : Text, townSuburb : Text, province : Text) : async RetailerId {
+    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    };
     let retailer : Retailer = {
       id = nextRetailerId;
       name;
       townSuburb;
-      products = [];
+      province;
     };
     retailers.add(nextRetailerId, retailer);
     nextRetailerId += 1;
     nextRetailerId - 1;
   };
 
-  public shared ({ caller }) func addProduct(
-    retailerId : Nat,
-    name : Text,
-    category : Text,
-    price : Nat,
-    description : Text,
-    imageRef : Text,
-  ) : async Nat {
+  public shared ({ caller }) func addProduct(name : Text, category : Text, description : Text, imageRef : Text) : async ProductId {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
     let product : Product = {
       id = nextProductId;
       name;
       category;
-      price;
       description;
       imageRef;
     };
-
-    switch (retailers.get(retailerId)) {
-      case (null) { Runtime.trap("Retailer not found") };
-      case (?retailer) {
-        let updatedProducts = List.fromArray<Product>(retailer.products);
-        updatedProducts.add(product);
-        let updatedRetailer = {
-          id = retailer.id;
-          name = retailer.name;
-          townSuburb = retailer.townSuburb;
-          products = updatedProducts.toArray();
-        };
-        retailers.add(retailerId, updatedRetailer);
-      };
-    };
+    products.add(nextProductId, product);
     nextProductId += 1;
     nextProductId - 1;
   };
 
-  public query ({ caller }) func getRetailersByTownSuburb(townSuburb : Text) : async [Retailer] {
-    let allRetailers = retailers.values().toArray();
-    allRetailers.filter(func(retailer) { retailer.townSuburb == townSuburb }).sort(Retailer.compareByTownSuburb);
-  };
+  public shared ({ caller }) func addListing(
+    retailerId : RetailerId,
+    productId : ProductId,
+    price : Nat,
+    stock : Nat,
+    status : ListingStatus,
+  ) : async ListingId {
+    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    };
 
-  public query ({ caller }) func getProductCatalog(retailerId : Nat) : async [Product] {
     switch (retailers.get(retailerId)) {
       case (null) { Runtime.trap("Retailer not found") };
-      case (?retailer) { retailer.products };
+      case (?_) {
+        switch (products.get(productId)) {
+          case (null) { Runtime.trap("Product not found") };
+          case (?_) {
+            let listing : Listing = {
+              id = nextListingId;
+              retailerId;
+              productId;
+              price;
+              stock;
+              status;
+            };
+            listings.add(nextListingId, listing);
+            nextListingId += 1;
+            nextListingId - 1;
+          };
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func getRetailersByTownSuburb(townSuburb : Text) : async [RetailerWithListings] {
+    let filteredRetailers = retailers.values().toArray().filter(func(retailer) { retailer.townSuburb == townSuburb });
+    filteredRetailers.map(
+      func(retailer) {
+        let retailerListings = listings.values().toArray().filter(func(listing) { listing.retailerId == retailer.id });
+        {
+          retailer;
+          listings = retailerListings;
+        };
+      }
+    );
+  };
+
+  public query ({ caller }) func getProductCatalog(retailerId : RetailerId) : async [Listing] {
+    switch (retailers.get(retailerId)) {
+      case (null) { Runtime.trap("Retailer not found") };
+      case (?_) {
+        let retailerListings = listings.values().toArray().filter(func(listing) { listing.retailerId == retailerId });
+        retailerListings;
+      };
+    };
+  };
+
+  public query ({ caller }) func getProductWithRetailers(productId : ProductId) : async ProductWithRetailers {
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product not found") };
+      case (?product) {
+        let productListings = listings.values().toArray().filter(func(listing) { listing.productId == productId });
+        let listingsWithRetailers = productListings.filter(func(listing) {
+          switch (retailers.get(listing.retailerId)) {
+            case (null) { false };
+            case (?_) { true };
+          };
+        });
+        let retailerListingPairs = listingsWithRetailers.map(
+          func(listing) {
+            switch (retailers.get(listing.retailerId)) {
+              case (null) {
+                let dummyRetailer : Retailer = {
+                  id = 0;
+                  name = "";
+                  townSuburb = "";
+                  province = "";
+                };
+                (dummyRetailer, listing);
+              };
+              case (?retailer) { (retailer, listing) };
+            };
+          }
+        );
+        {
+          product;
+          listings = retailerListingPairs;
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func getDashboardData() : async {
+    retailers : Nat;
+    products : Nat;
+    listings : Nat;
+    requests : Nat;
+  } {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can access dashboard data");
+    };
+    {
+      retailers = retailers.size();
+      products = products.size();
+      listings = listings.size();
+      requests = productRequests.size();
     };
   };
 
@@ -119,6 +282,8 @@ actor {
     townSuburb : Text,
     province : Text,
   ) : async Nat {
+    // Allow any authenticated user (including guests) to request new products
+    // No authorization check needed - this is a public feature
     let request : ProductRequest = {
       id = nextRequestId;
       productName;
@@ -137,5 +302,23 @@ actor {
 
   public query ({ caller }) func getProductRequests() : async [ProductRequest] {
     productRequests.values().toArray();
+  };
+
+  public query ({ caller }) func getAllActiveListings() : async [Listing] {
+    listings.values().toArray().filter(func(listing) { listing.status == #active });
+  };
+
+  public shared ({ caller }) func updateListingStatus(listingId : ListingId, newStatus : ListingStatus) : async () {
+    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    };
+
+    switch (listings.get(listingId)) {
+      case (null) { Runtime.trap("Listing not found") };
+      case (?listing) {
+        let updatedListing = { listing with status = newStatus };
+        listings.add(listingId, updatedListing);
+      };
+    };
   };
 };

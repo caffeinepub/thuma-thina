@@ -1,64 +1,280 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
-  "summary": "Temporarily trim scope to Shop-only MVP for Thuma Thina on ICP (location-based browsing Province→Town/Suburb→Retailers, product catalog with images/prices/descriptions, search/filters/categories, and on-chain 'request new product/retailer' form), deferring order flow, token/wallet, KYC, dashboards, notifications, and rewards/vesting to later phases.",
+  "projectStateVersion": 35,
+  "summary": "Build Thuma Thina (part of Mthandeni Umuntu Association) as a full-stack, mobile-responsive Internet Computer (ICP) platform combining (1) a personal shopper + delivery driver network and (2) Ama Dao-zan community pick-up points, with Internet Identity auth, on-chain data, and an integrated NomaYini ICRC-2 token + vesting rewards system from day one.",
+  "architectural_notes": [
+    "Built on ICP using multiple canisters; all core data (products, orders, profiles, KYC status, rewards, vesting schedules) stored on-chain.",
+    "Authentication via Internet Identity.",
+    "NomaYini implemented as a dedicated ICRC-2 token canister (ICRC-1/ICRC-2 compatible) with vesting/time-lock logic for reward balances.",
+    "Asset/image storage required for product images and KYC uploads (asset canister or equivalent).",
+    "Role-based access control across canisters: customers, cashiers/operators, personal shoppers, drivers, master admin.",
+    "Payments must support ICP and NomaYini at launch; ZAR is a placeholder for later integration.",
+    "Notifications required (in-app) for order lifecycle + rewards/vesting events.",
+    "Frontend framework preference: React/Next.js or SvelteKit (mobile-responsive, mobile-first).",
+    "Branding: Slogan to appear in product UI/marketing copy — \"Yonke into, yonke indawo, ngaso sonke isikhathi\" (Everything, everywhere, all the time).",
+    "Frontend UI foundation uses Tailwind + shadcn-ui component set (config + shared components) to accelerate consistent mobile-first UI development."
+  ],
+  "known_issues": [
+    "Generated homepage hero image file is 1200x600, but project image requirements specify 1600x900 (consider regenerating/resizing to the required dimensions).",
+    "First authenticated user is not being auto-assigned/recognized as Master Admin, so the user is not routed/loaded into the admin portal and cannot populate products or view analytics.",
+    "Login workflow results in a blank screen after clicking 'Log in' (auth flow/UI not loading)."
+  ],
+  "isFixRequest": true,
+  "generatedImages": [
+    {
+      "filename": "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
+      "description": "Primary wordmark logo reading 'Thuma Thina' with subtle 'Ama Dao-zan' secondary text.",
+      "targetWidth": 512,
+      "targetHeight": 512
+    },
+    {
+      "filename": "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
+      "description": "Homepage hero illustration featuring a shopper, a delivery driver, and a community pick-up point in warm green/yellow/earth tones.",
+      "targetWidth": 1200,
+      "targetHeight": 600
+    }
+  ],
   "existing_features": [
     {
-      "id": "feature-implement-a-shop-only-mvp-for-thuma-thina-that-supports-location-based-browsing-province-town-suburb-retailers-and-viewing-a-product-catalog-images-prices-descriptions-without-implementing-orders-payments-wallets-tokens-kyc-dashboards-or-notifications",
-      "title": "Implement a Shop-only MVP for “Thuma Thina” that supports location-based browsing (Province → Town/Suburb → Retailers) and viewing a product catalog (images, prices, descriptions) without implementing orders, payments, wallets, tokens, KYC, dashboards, or notifications.",
+      "id": "IF-1",
+      "title": "Static brand assets generated and integrated in frontend",
+      "synonyms": [
+        "Brand assets",
+        "Logo + hero illustration"
+      ],
+      "description": "Added generated Thuma Thina wordmark logo and homepage hero illustration under frontend/public/assets/generated and wired for use in the frontend UI/header/home experience.",
       "reqIds": [
-        "REQ-44"
+        "REQ-43"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-build-the-shop-ui-with-mobile-first-pages-components-for-1-province-list-2-town-suburb-list-3-retailer-list-4-retailer-product-listing-and-5-product-detail-view-showing-image-name-description-category-and-price",
-      "title": "Frontend: Build the Shop UI with mobile-first pages/components for: (1) Province list, (2) Town/Suburb list, (3) Retailer list, (4) Retailer product listing, and (5) Product detail view showing image, name, description, category, and price.",
+      "id": "IF-2",
+      "title": "Initial Shop section UI (location browsing + catalog pages)",
+      "synonyms": [
+        "Shop pages",
+        "Location-based browsing"
+      ],
+      "description": "Implemented shop browsing flow pages for Province → Town/Suburb → Retailers, retailer catalog listing, and product detail page scaffolding in the React frontend.",
       "reqIds": [
-        "REQ-47"
+        "REQ-5",
+        "REQ-19",
+        "REQ-33"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-add-product-search-category-filtering-and-basic-sorting-within-a-retailer-s-product-listing-e-g-price-low-high-high-low",
-      "title": "Frontend: Add product search, category filtering, and basic sorting within a retailer’s product listing (e.g., price low→high / high→low).",
+      "id": "IF-3",
+      "title": "Request-new product/retailer page (frontend)",
+      "synonyms": [
+        "Product request form",
+        "Retailer request form"
+      ],
+      "description": "Added a 'Request new product/retailer' page in the Shop section UI for submitting requests (storage/on-chain review integration to be validated).",
       "reqIds": [
-        "REQ-48"
+        "REQ-5",
+        "REQ-19",
+        "REQ-33"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-implement-a-request-new-product-retailer-form-screen-that-submits-to-the-backend-and-shows-success-error-states-using-english-user-facing-text",
-      "title": "Frontend: Implement a “Request new product/retailer” form screen that submits to the backend and shows success/error states using English user-facing text.",
+      "id": "IF-4",
+      "title": "Internet Identity integration scaffold in frontend",
+      "synonyms": [
+        "II auth hooks",
+        "Authenticated actor hook"
+      ],
+      "description": "Added frontend hooks/utilities for Internet Identity sign-in and authenticated backend actor access (useInternetIdentity/useActor) to support gated flows.",
       "reqIds": [
-        "REQ-49"
+        "REQ-2",
+        "REQ-15",
+        "REQ-30"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-apply-a-consistent-mobile-first-visual-theme-appropriate-for-a-modern-african-inspired-brand-using-warm-greens-yellows-and-earth-tones-avoid-blue-purple-with-clear-typography-and-accessible-contrast-across-all-shop-pages",
-      "title": "Frontend: Apply a consistent, mobile-first visual theme appropriate for a modern African-inspired brand using warm greens, yellows, and earth tones (avoid blue/purple), with clear typography and accessible contrast across all Shop pages.",
+      "id": "IF-5",
+      "title": "ICP build/deploy template scaffolding added",
+      "synonyms": [
+        "Build template",
+        "Docker + deploy scripts",
+        "ICP CLI export template"
+      ],
+      "description": "Added a reusable build-template including Dockerfile, deploy scripts, ICP config (icp.yaml/canister.yaml), workspace package manifests, and supporting tooling/scripts to standardize building and deploying the full-stack app on ICP.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Shadcn UI + Tailwind-based frontend UI foundation integrated",
+      "synonyms": [
+        "shadcn-ui component library",
+        "Tailwind UI system"
+      ],
+      "description": "Integrated a Tailwind + shadcn-ui component foundation (shared UI components, utilities, lint rules, and config) to support consistent, mobile-first UI implementation across the frontend.",
       "reqIds": [
-        "REQ-50"
+        "REQ-13",
+        "REQ-27",
+        "REQ-41"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-add-generated-static-brand-assets-under-frontend-public-assets-generated-and-render-them-in-the-shop-header-navigation-logo-and-optionally-on-the-shop-landing-entry-view-hero-do-not-route-generated-images-through-the-backend",
-      "title": "Frontend: Add generated static brand assets under frontend/public/assets/generated and render them in the Shop header/navigation (logo) and optionally on the Shop landing/entry view (hero). Do not route generated images through the backend.",
+      "id": "IF-7",
+      "title": "Backend role-based authorization + access control utilities",
+      "synonyms": [
+        "Authorization mixin",
+        "Access control module",
+        "RBAC enforcement helpers"
+      ],
+      "description": "Added/updated Motoko authorization infrastructure (authorization mixin + access-control helpers) to support role-based gating of backend methods and admin-only operations.",
       "reqIds": [
-        "REQ-51"
+        "REQ-2",
+        "REQ-15",
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Backend user approval workflow scaffold (role applications/approvals)",
+      "synonyms": [
+        "User approval canister module",
+        "Admin approval pipeline",
+        "Role application approvals"
+      ],
+      "description": "Implemented/updated backend user-approval components to support an approval workflow for role applications (e.g., pending/approved/rejected) that can be used by Master Admin flows.",
+      "reqIds": [
+        "REQ-8",
+        "REQ-9",
+        "REQ-22",
+        "REQ-36",
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Frontend role application and approval pages (Join Us, application status, admin review)",
+      "synonyms": [
+        "Role application UI",
+        "Applicant status UI",
+        "Master Admin role applications page"
+      ],
+      "description": "Added frontend pages and navigation for role applications and tracking: Join Us page, applicant application status page, and a Master Admin role applications review page, wired into the existing Shop layout/header/footer.",
+      "reqIds": [
+        "REQ-8",
+        "REQ-9",
+        "REQ-12",
+        "REQ-22",
+        "REQ-26",
+        "REQ-36",
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Asset/storage client utility scaffold in frontend",
+      "synonyms": [
+        "Storage client",
+        "Upload client helper"
+      ],
+      "description": "Added a frontend StorageClient utility scaffold to support future ICP asset-canister (or equivalent) upload/download integration for product images and KYC documents.",
+      "reqIds": [
+        "REQ-11",
+        "REQ-25",
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Build-template enhancements for ICP deployment + frontend component baseline",
+      "synonyms": [
+        "Template refresh",
+        "Image tooling scripts",
+        "React build template"
+      ],
+      "description": "Expanded/updated the reusable build-template (Docker/deploy/icp configs, React frontend baseline, lint rules) including utility scripts to prune unused images and resize images as part of the build tooling.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Shop UI layout components (header/footer/landing hero) integrated",
+      "synonyms": [
+        "Shop layout shell",
+        "Shop header/footer",
+        "Shop landing hero"
+      ],
+      "description": "Implemented reusable Shop section layout components (ShopLayout, ShopHeader, ShopFooter, ShopLandingHero) and supporting utilities (public asset URL helper, URL params helpers, shared query hooks) to provide consistent navigation and structure across Shop-related pages.",
+      "reqIds": [
+        "REQ-12",
+        "REQ-26",
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-master-admin-role-from-the-join-us-page-so-nobody-can-apply-for-it-while-keeping-the-admin-only-review-applications-entry-point-visible-only-for-admins",
+      "title": "Remove the Master Admin role from the Join Us page so nobody can apply for it, while keeping the admin-only “Review Applications” entry point visible only for admins.",
+      "reqIds": [
+        "REQ-63"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-support-browsing-both-1-by-retailer-retailer-catalogue-derived-from-listings-and-2-by-product-product-detail-view-that-can-show-which-retailers-list-the-product-and-at-what-price",
+      "title": "Support browsing both (1) by retailer (retailer catalogue derived from listings) and (2) by product (product detail view that can show which retailers list the product and at what price).",
+      "reqIds": [
+        "REQ-66"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-home-page-route-to-display-a-catalogue-preview-section-below-the-existing-landing-hero-rendering-preview-items-from-live-backend-data-and-linking-into-existing-browsing-routes-retailer-catalog-and-or-product-detail-use-english-for-all-new-user-facing-text",
+      "title": "Update the home page route ('/') to display a “Catalogue” preview section below the existing landing hero, rendering preview items from live backend data and linking into existing browsing routes (retailer catalog and/or product detail). Use English for all new user-facing text.",
+      "reqIds": [
+        "REQ-68"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-trigger-the-backend-master-admin-bootstrap-from-the-frontend-after-a-user-logs-in-with-internet-identity-without-modifying-any-frontend-immutable-paths-and-ensure-the-call-is-safe-to-run-multiple-times",
+      "title": "Trigger the backend Master Admin bootstrap from the frontend after a user logs in with Internet Identity, without modifying any frontend immutable paths, and ensure the call is safe to run multiple times.",
+      "reqIds": [
+        "REQ-72"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-only-admin-entry-point-in-the-shop-ui-that-is-visible-only-when-iscalleradmin-is-true-and-route-to-an-admin-dashboard-page-where-the-admin-can-start-populating-catalog-data-and-view-basic-analytics-counts",
+      "title": "Add an admin-only 'Admin' entry point in the shop UI that is visible only when `isCallerAdmin` is true, and route to an Admin Dashboard page where the admin can start populating catalog data and view basic analytics counts.",
+      "reqIds": [
+        "REQ-73"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-user-visible-non-blank-fallback-ui-for-unexpected-runtime-errors-during-after-login-e-g-actor-creation-query-failures-so-the-app-never-renders-a-completely-blank-screen-the-fallback-must-show-an-english-error-message-and-a-recovery-action-e-g-reload-page-return-home",
+      "title": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
+      "reqIds": [
+        "REQ-75"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-login-workflow-provides-a-clear-loading-state-during-the-internet-identity-round-trip-and-the-immediate-post-login-initialization-phase-without-modifying-any-immutable-hook-files",
+      "title": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
+      "reqIds": [
+        "REQ-76"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Implement Shop section: location-based browsing (Province→Town/Suburb→Retailers), product catalog (images/prices/descriptions), search/filters/categories, and request-new product/retailer form",
-      "reqIds": [],
-      "status": "pending"
-    },
     {
       "id": "AR-2",
       "summary": "Implement end-to-end order flow: cart → delivery method (home vs Ama Dao-zan pickup) → payments (ICP/NomaYini/placeholder ZAR) → apply NomaYini balance → order status updates (shopper purchases, driver delivers, pickup collection)",
@@ -142,14 +358,6 @@
       "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years). Ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan).",
       "reqIds": [
         "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-15",
-      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product details, categories, search, and basic filters. Include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
-      "reqIds": [
-        "REQ-5"
       ],
       "status": "pending"
     },
@@ -258,14 +466,6 @@
       "status": "pending"
     },
     {
-      "id": "AR-29",
-      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product details page, categories, search, and basic filters; include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
-      "reqIds": [
-        "REQ-19"
-      ],
-      "status": "pending"
-    },
-    {
       "id": "AR-30",
       "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
       "reqIds": [
@@ -370,14 +570,6 @@
       "status": "pending"
     },
     {
-      "id": "AR-43",
-      "summary": "Build the Shop section UI and supporting backend queries for: location-based browsing (Province → Town/Suburb → Retailers), retailer product listings with product images, product detail view, categories, search, and basic filters; include a 'Request new product/retailer' form that stores requests on-chain for Master Admin review.",
-      "reqIds": [
-        "REQ-33"
-      ],
-      "status": "pending"
-    },
-    {
       "id": "AR-44",
       "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
       "reqIds": [
@@ -451,56 +643,229 @@
     },
     {
       "id": "AR-53",
-      "summary": "Add generated static brand assets to the frontend and render them in the UI: include a primary logo and a homepage hero illustration consistent with the warm, modern African-inspired theme, stored under frontend/public/assets/generated and used on the homepage and in the header/navigation.",
-      "reqIds": [
-        "REQ-43"
-      ],
+      "summary": "Bootstrap governance: the first user to authenticate (via Internet Identity) is automatically assigned the Master Admin/Master Owner role; thereafter only Master Admin can approve other role applications and manage privileged actions.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-54",
+      "summary": "Homepage/landing enhancements: display the shop catalogue on the landing page and add inventory + product/retailer listing/management workflows (e.g., create/edit/deactivate listings) surfaced from the landing experience.",
+      "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-55",
-      "summary": "Backend: Add on-chain data models and CRUD/query APIs (in the single Motoko main actor) for the Shop domain: Provinces, Towns/Suburbs, Retailers, Products (including category, price, description, image reference), and a searchable/browsable catalog.",
+      "summary": "Implement governance bootstrapping so the first Internet Identity Principal who successfully authenticates and interacts with the backend is automatically assigned the Master Owner/Master Admin permission, without requiring an admin token. After the Master Owner exists, only a Master Owner can approve other users and perform privileged actions.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-56",
+      "summary": "Update backend authorization on catalogue/inventory mutation endpoints so that retailer/product listing management operations are restricted to Master Owner (or admin permission), while read-only catalogue browsing endpoints remain publicly accessible.",
       "reqIds": [
         "REQ-45"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-56",
-      "summary": "Backend: Implement an on-chain “Request new product/retailer” submission feature that stores requests for later review (no admin review UI required in this scope).",
+      "id": "AR-57",
+      "summary": "Add backend read APIs needed to render a landing-page catalogue preview (e.g., fetch a list of retailers and/or a mixed list of products across retailers) so the frontend can display a catalogue section on the landing page without forcing the user to drill into a specific retailer first.",
       "reqIds": [
         "REQ-46"
       ],
       "status": "pending"
-    }
-  ],
-  "architectural_notes": [
-    "Built on ICP using multiple canisters; all core data (products, orders, profiles, KYC status, rewards, vesting schedules) stored on-chain.",
-    "Authentication via Internet Identity.",
-    "NomaYini implemented as a dedicated ICRC-2 token canister (ICRC-1/ICRC-2 compatible) with vesting/time-lock logic for reward balances.",
-    "Asset/image storage required for product images and KYC uploads (asset canister or equivalent).",
-    "Role-based access control across canisters: customers, cashiers/operators, personal shoppers, drivers, master admin.",
-    "Payments must support ICP and NomaYini at launch; ZAR is a placeholder for later integration.",
-    "Notifications required (in-app) for order lifecycle + rewards/vesting events.",
-    "Frontend framework preference: React/Next.js or SvelteKit (mobile-responsive, mobile-first).",
-    "Branding: Slogan to appear in product UI/marketing copy — \"Yonke into, yonke indawo, ngaso sonke isikhathi\" (Everything, everywhere, all the time).",
-    "Ama Dao-zan long-term roadmap: evolve pick-up points into multi-purpose community hubs (computers, esports, work booths, braai areas, spa) in future phases (not MVP)."
-  ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Primary brand logo mark with warm earth-tone palette (thuma-thina-logo.dim_512x512.png)\n- Shop hero illustration with warm greens/yellows/earth tones, minimal and modern (thuma-thina-hero.dim_1200x600.png)",
-  "generatedImages": [
-    {
-      "filename": "thuma-thina-logo.dim_512x512.png",
-      "description": "Primary brand logo mark with warm earth-tone palette",
-      "targetWidth": 512,
-      "targetHeight": 512
     },
     {
-      "filename": "thuma-thina-hero.dim_1200x600.png",
-      "description": "Shop hero illustration with warm greens/yellows/earth tones, minimal and modern",
-      "targetWidth": 1200,
-      "targetHeight": 600
+      "id": "AR-58",
+      "summary": "Enhance the shop landing page (current route: '/') to display a 'Catalogue' section below the hero that renders a browsable preview of available retailers/products and links into the existing browsing routes (retailer catalog, product detail, province/town flows). Use English for any new user-facing text.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-59",
+      "summary": "Surface product and retailer listing workflows from the landing experience by adding an admin-only 'Manage Listings' area (visible only to Master Owner/admin) that supports creating new retailers and adding products to a retailer (and any newly supported deactivate/edit actions), reusing the existing app styling and interaction patterns (dialogs/forms). Use English for all UI text.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-60",
+      "summary": "Implement governance bootstrapping so the first Internet Identity Principal who successfully calls the backend is automatically assigned the Master Admin permission (\"first user to log in master admin\"). After a Master Admin exists, do not auto-promote any other Principals.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-61",
+      "summary": "Remove the need for a user-provided admin token for initial setup by introducing a backend method (or equivalent flow) that safely performs the one-time Master Admin bootstrap without requiring secrets in the frontend.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-62",
+      "summary": "Ensure all privileged backend operations (e.g., approving users/role applications and any catalogue/inventory mutations) are restricted to Master Admin, while catalogue read/browse endpoints remain publicly accessible (anonymous/unauthenticated).",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-63",
+      "summary": "Add backend read API(s) needed to render a homepage catalogue preview without forcing the user to drill into a specific town/retailer first (e.g., a mixed preview list of retailers and/or products across retailers).",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-64",
+      "summary": "Update the home page (current route '/') to display a 'Catalogue' section below the existing landing hero so visitors can immediately see what is available. The section must render a preview using live backend data and link into existing browsing routes (e.g., retailer catalog and product detail). Use English for all new user-facing text.",
+      "reqIds": [
+        "REQ-53"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-65",
+      "summary": "Trigger the Master Admin bootstrap from the frontend after a user logs in with Internet Identity, without modifying any frontend immutable paths. The bootstrap call should be safe to run multiple times (idempotent) and should not block normal browsing for non-admin users.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-66",
+      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call the backend is automatically assigned the Master Admin role/permission, and no subsequent Principals are auto-promoted.",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-67",
+      "summary": "Remove the requirement for a user-provided admin token for initial setup by deprecating or disabling the current token-based initializeMasterAdmin flow, ensuring initial admin setup can be completed without frontend secrets.",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-68",
+      "summary": "Expose a backend query API for the frontend to determine whether the current caller is an admin (e.g., `isCallerAdmin : async Bool`) and ensure admin checks consistently gate privileged operations.",
+      "reqIds": [
+        "REQ-57"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-69",
+      "summary": "Trigger the Master Admin bootstrap from the frontend after a user logs in with Internet Identity using an idempotent backend call (safe to run multiple times), without modifying any frontend immutable paths.",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-70",
+      "summary": "Refactor catalogue data model to avoid duplicate products: maintain a single global product catalog (shared name/description/image/category) and add per-retailer \"listings\" that reference a global product and store retailer-specific fields (price, stock, availability/status). Support browsing both by product (see retailers/prices) and by retailer (retailer’s catalogue from listings).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-71",
+      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call the backend is automatically assigned the Master Admin permission, and no subsequent Principals are auto-promoted.",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-72",
+      "summary": "Remove the requirement for a user-provided admin token for initial setup by deprecating/neutralizing the current token-based initializeMasterAdmin flow and replacing it with a safe bootstrap method that does not require frontend secrets.",
+      "reqIds": [
+        "REQ-60"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-73",
+      "summary": "Expose a backend query API for the frontend to determine whether the current caller is a Master Admin (e.g., isCallerAdmin : async Bool) and ensure all privileged operations are consistently gated by this admin check.",
+      "reqIds": [
+        "REQ-61"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-74",
+      "summary": "Update the frontend to trigger the Master Admin bootstrap after a user logs in with Internet Identity using an idempotent backend call, without modifying any frontend immutable paths.",
+      "reqIds": [
+        "REQ-62"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-76",
+      "summary": "Allow an existing Master Admin to upgrade any already-registered user into Master Admin via backend admin-only methods.",
+      "reqIds": [
+        "REQ-64"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-77",
+      "summary": "Refactor the backend catalogue data model to avoid duplicate products by maintaining a single global Product catalog (shared name/description/image/category) and adding per-retailer Listings that reference a global product and store retailer-specific fields (price, stock, availability/status).",
+      "reqIds": [
+        "REQ-65"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-79",
+      "summary": "Add backend read API(s) needed to render a homepage catalogue preview without forcing users to drill into a specific province/town/retailer first (e.g., a mixed preview list of listings/products and/or featured retailers).",
+      "reqIds": [
+        "REQ-67"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-81",
+      "summary": "Add a conditional data migration for existing on-chain state to convert any existing retailer-embedded products into the new global product + listing model (or safely reset/initialize catalogue state if migration cannot be losslessly performed).",
+      "reqIds": [
+        "REQ-69"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-82",
+      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call a dedicated bootstrap method is automatically assigned the admin permission, and no subsequent Principals are auto-promoted.",
+      "reqIds": [
+        "REQ-70"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-83",
+      "summary": "Expose backend APIs needed by the frontend to reliably gate admin-only UI: add a query method to check whether the current caller is an admin.",
+      "reqIds": [
+        "REQ-71"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-84",
+      "summary": "Fix the post-login blank-screen failure by ensuring the frontend actor initialization cannot be broken by access-control secret initialization when no admin token is provided (e.g., empty `caffeineAdminToken`). Specifically, make the backend access-control initialization path safe to call with empty tokens so the authenticated actor can still be created and used for normal browsing.",
+      "reqIds": [
+        "REQ-74"
+      ],
+      "status": "pending"
     }
   ],
   "gameProjectType": "none",

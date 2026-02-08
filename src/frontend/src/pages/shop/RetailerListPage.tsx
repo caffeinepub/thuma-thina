@@ -1,21 +1,18 @@
 import { useRetailersByTownSuburb } from '../../hooks/useQueries';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { Store, ChevronRight, ChevronLeft, Loader2, Package } from 'lucide-react';
+import { ChevronLeft, Store, ChevronRight, Loader2, Package } from 'lucide-react';
 
 export function RetailerListPage() {
-  const { provinceName, townSuburb } = useParams({ strict: false });
-  const { data: retailers, isLoading, error } = useRetailersByTownSuburb(townSuburb || '');
+  const { townSuburb } = useParams({ strict: false });
+  const { data: retailersWithListings, isLoading, error } = useRetailersByTownSuburb(townSuburb || '');
   const navigate = useNavigate();
 
   return (
     <div className="container-custom py-8 sm:py-12">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate({ 
-            to: '/province/$provinceName', 
-            params: { provinceName: provinceName || '' } 
-          })}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          onClick={() => navigate({ to: '/' })}
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors font-medium"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Towns
@@ -25,63 +22,57 @@ export function RetailerListPage() {
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Retailers in {townSuburb}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             Browse products from local retailers
           </p>
         </div>
 
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-            <p className="font-medium">Error loading retailers</p>
-            <p className="text-sm mt-1">Please try again later</p>
+          <div className="rounded-xl border-2 border-destructive/50 bg-destructive/5 p-6 text-destructive shadow-sm">
+            <p className="font-semibold text-lg">Error loading retailers</p>
+            <p className="text-sm mt-1 opacity-90">Please try again later</p>
           </div>
         )}
 
-        {!isLoading && retailers && retailers.length === 0 && (
-          <div className="rounded-lg border border-border bg-muted/50 p-8 text-center">
-            <Store className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground mb-4">No retailers available in this area yet</p>
-            <button
-              onClick={() => navigate({ to: '/request' })}
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Request a Retailer
-            </button>
+        {!isLoading && retailersWithListings && retailersWithListings.length === 0 && (
+          <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-12 text-center">
+            <Store className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground text-lg">No retailers available yet</p>
           </div>
         )}
 
-        {retailers && retailers.length > 0 && (
-          <div className="grid gap-4 sm:gap-6">
-            {retailers.map((retailer) => (
+        {retailersWithListings && retailersWithListings.length > 0 && (
+          <div className="grid gap-4">
+            {retailersWithListings.map(({ retailer, listings }) => (
               <button
                 key={retailer.id.toString()}
                 onClick={() => navigate({ 
                   to: '/retailer/$retailerId', 
                   params: { retailerId: retailer.id.toString() } 
                 })}
-                className="group flex items-center justify-between p-5 sm:p-6 rounded-xl border border-border bg-card hover:bg-accent/50 hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-warm"
+                className="group flex items-center justify-between p-5 sm:p-6 rounded-2xl border-2 border-border bg-card hover:bg-gradient-to-r hover:from-accent/5 hover:to-primary/5 hover:border-accent/40 transition-all duration-300 shadow-sm hover:shadow-warm"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent/20 text-accent-foreground group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent/10 to-primary/10 text-accent group-hover:from-accent group-hover:to-accent/90 group-hover:text-accent-foreground transition-all duration-300 shadow-sm">
                     <Store className="h-7 w-7" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-display text-lg sm:text-xl font-semibold text-foreground mb-1">
+                    <h3 className="font-display text-lg sm:text-xl font-bold text-foreground group-hover:text-accent transition-colors">
                       {retailer.name}
                     </h3>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Package className="h-4 w-4 mr-1.5" />
-                      {retailer.products.length} {retailer.products.length === 1 ? 'product' : 'products'}
-                    </div>
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      <Package className="h-3.5 w-3.5 mr-1.5" />
+                      {listings.length} {listings.length === 1 ? 'listing' : 'listings'}
+                    </p>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ChevronRight className="h-6 w-6 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
               </button>
             ))}
           </div>

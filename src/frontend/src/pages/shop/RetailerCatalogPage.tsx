@@ -2,12 +2,56 @@ import { useProductCatalog } from '../../hooks/useQueries';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronLeft, Loader2, Package, Search } from 'lucide-react';
 import { useCatalogControls } from '../../components/shop/catalog/useCatalogControls';
+import { publicAssetUrl } from '../../utils/publicAssetUrl';
+import { useQuery } from '@tanstack/react-query';
+import { useActor } from '../../hooks/useActor';
 import type { Product } from '../../backend';
 
 export function RetailerCatalogPage() {
   const { retailerId } = useParams({ strict: false });
-  const { data: products, isLoading, error } = useProductCatalog(retailerId || '');
+  const { data: listings, isLoading, error } = useProductCatalog(retailerId || '');
+  const { actor } = useActor();
   const navigate = useNavigate();
+
+  // Fetch all products to enrich listings
+  const { data: allProducts } = useQuery<Product[]>({
+    queryKey: ['allProducts'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const allListings = await actor.getAllActiveListings();
+        const productIds = new Set(allListings.map(l => l.productId.toString()));
+        const products: Product[] = [];
+        
+        for (const productId of productIds) {
+          try {
+            const productWithRetailers = await actor.getProductWithRetailers(BigInt(productId));
+            products.push(productWithRetailers.product);
+          } catch (e) {
+            console.debug('Could not fetch product', productId);
+          }
+        }
+        return products;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        return [];
+      }
+    },
+    enabled: !!actor
+  });
+
+  // Enrich listings with product data for catalog controls
+  const enrichedProducts = (listings || []).map(listing => {
+    const product = allProducts?.find(p => p.id === listing.productId);
+    return {
+      id: listing.productId,
+      name: product?.name || 'Unknown Product',
+      category: product?.category || 'Uncategorized',
+      description: product?.description || '',
+      imageRef: product?.imageRef || '',
+      price: listing.price
+    };
+  });
 
   const {
     searchQuery,
@@ -18,14 +62,14 @@ export function RetailerCatalogPage() {
     setSortMode,
     filteredProducts,
     categories
-  } = useCatalogControls(products || []);
+  } = useCatalogControls(enrichedProducts);
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = (productId: bigint) => {
     navigate({ 
       to: '/product/$retailerId/$productId', 
       params: { 
         retailerId: retailerId || '', 
-        productId: product.id.toString() 
+        productId: productId.toString() 
       } 
     });
   };
@@ -34,12 +78,26 @@ export function RetailerCatalogPage() {
     return `R ${Number(price).toFixed(2)}`;
   };
 
+  // Helper to normalize image URLs
+  const getImageUrl = (imageRef: string) => {
+    if (!imageRef) return '';
+    // If it's already a full URL, return as-is
+    if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
+      return imageRef;
+    }
+    // If it looks like a public asset path, normalize it
+    if (imageRef.startsWith('/assets/') || imageRef.startsWith('assets/')) {
+      return publicAssetUrl(imageRef);
+    }
+    return imageRef;
+  };
+
   return (
     <div className="container-custom py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
         <button
           onClick={() => navigate({ to: '/' })}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors font-medium"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Retailers
@@ -59,14 +117,14 @@ export function RetailerCatalogPage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-sm"
               />
             </div>
 
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2.5 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              className="px-4 py-3 rounded-xl border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-sm font-medium"
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
@@ -79,7 +137,7 @@ export function RetailerCatalogPage() {
             <select
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as 'default' | 'price-asc' | 'price-desc')}
-              className="px-4 py-2.5 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              className="px-4 py-3 rounded-xl border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-sm font-medium"
             >
               <option value="default">Sort by</option>
               <option value="price-asc">Price: Low to High</option>
@@ -89,22 +147,22 @@ export function RetailerCatalogPage() {
         </div>
 
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-            <p className="font-medium">Error loading products</p>
-            <p className="text-sm mt-1">Please try again later</p>
+          <div className="rounded-xl border-2 border-destructive/50 bg-destructive/5 p-6 text-destructive shadow-sm">
+            <p className="font-semibold text-lg">Error loading products</p>
+            <p className="text-sm mt-1 opacity-90">Please try again later</p>
           </div>
         )}
 
         {!isLoading && filteredProducts.length === 0 && (
-          <div className="rounded-lg border border-border bg-muted/50 p-8 text-center">
-            <Package className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-12 text-center">
+            <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground text-lg mb-4">
               {searchQuery || selectedCategory !== '' 
                 ? 'No products match your search' 
                 : 'No products available yet'}
@@ -115,7 +173,7 @@ export function RetailerCatalogPage() {
                   setSearchQuery('');
                   setSelectedCategory('');
                 }}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:text-primary/80 font-medium underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
               >
                 Clear filters
               </button>
@@ -124,19 +182,19 @@ export function RetailerCatalogPage() {
         )}
 
         {filteredProducts.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <button
                 key={product.id.toString()}
-                onClick={() => handleProductClick(product)}
-                className="group flex flex-col rounded-xl border border-border bg-card hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-warm overflow-hidden text-left"
+                onClick={() => handleProductClick(product.id)}
+                className="group flex flex-col rounded-2xl border-2 border-border bg-card hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-warm overflow-hidden text-left"
               >
-                <div className="aspect-square bg-muted/50 relative overflow-hidden">
+                <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative overflow-hidden">
                   {product.imageRef ? (
                     <img
-                      src={product.imageRef}
+                      src={getImageUrl(product.imageRef)}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
@@ -146,22 +204,22 @@ export function RetailerCatalogPage() {
                     />
                   ) : null}
                   <div 
-                    className="absolute inset-0 flex items-center justify-center"
+                    className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/70"
                     style={{ display: product.imageRef ? 'none' : 'flex' }}
                   >
-                    <Package className="h-12 w-12 text-muted-foreground/50" />
+                    <Package className="h-16 w-16 text-muted-foreground/40" />
                   </div>
                 </div>
-                <div className="p-4 flex-1 flex flex-col">
+                <div className="p-5 flex-1 flex flex-col">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                    <h3 className="font-semibold text-base text-foreground mb-1.5 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-muted-foreground mb-2">
+                    <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide">
                       {product.category}
                     </p>
                   </div>
-                  <p className="font-display text-lg font-bold text-primary">
+                  <p className="font-display text-xl font-bold text-primary">
                     {formatPrice(product.price)}
                   </p>
                 </div>

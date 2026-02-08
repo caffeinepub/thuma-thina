@@ -8,13 +8,26 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const Product = IDL.Record({
-  'id' : IDL.Nat,
-  'name' : IDL.Text,
-  'description' : IDL.Text,
-  'imageRef' : IDL.Text,
-  'category' : IDL.Text,
+export const RetailerId = IDL.Nat;
+export const ProductId = IDL.Nat;
+export const ListingStatus = IDL.Variant({
+  'active' : IDL.Null,
+  'discontinued' : IDL.Null,
+  'outOfStock' : IDL.Null,
+});
+export const ListingId = IDL.Nat;
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const Listing = IDL.Record({
+  'id' : ListingId,
+  'status' : ListingStatus,
+  'productId' : ProductId,
+  'stock' : IDL.Nat,
   'price' : IDL.Nat,
+  'retailerId' : RetailerId,
 });
 export const ProductRequest = IDL.Record({
   'id' : IDL.Nat,
@@ -23,50 +36,121 @@ export const ProductRequest = IDL.Record({
   'retailerName' : IDL.Text,
   'townSuburb' : IDL.Text,
 });
+export const Retailer = IDL.Record({
+  'id' : RetailerId,
+  'province' : IDL.Text,
+  'name' : IDL.Text,
+  'townSuburb' : IDL.Text,
+});
+export const Product = IDL.Record({
+  'id' : ProductId,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'imageRef' : IDL.Text,
+  'category' : IDL.Text,
+});
+export const ProductWithRetailers = IDL.Record({
+  'listings' : IDL.Vec(IDL.Tuple(Retailer, Listing)),
+  'product' : Product,
+});
 export const Province = IDL.Record({
   'towns' : IDL.Vec(IDL.Text),
   'name' : IDL.Text,
 });
-export const Retailer = IDL.Record({
-  'id' : IDL.Nat,
-  'name' : IDL.Text,
-  'products' : IDL.Vec(Product),
-  'townSuburb' : IDL.Text,
+export const RetailerWithListings = IDL.Record({
+  'listings' : IDL.Vec(Listing),
+  'retailer' : Retailer,
+});
+export const ApprovalStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const UserApprovalInfo = IDL.Record({
+  'status' : ApprovalStatus,
+  'principal' : IDL.Principal,
 });
 
 export const idlService = IDL.Service({
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addListing' : IDL.Func(
+      [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
+      [ListingId],
+      [],
+    ),
   'addProduct' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
-      [IDL.Nat],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [ProductId],
       [],
     ),
   'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-  'addRetailer' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], []),
-  'getProductCatalog' : IDL.Func([IDL.Nat], [IDL.Vec(Product)], ['query']),
+  'addRetailer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [RetailerId], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getDashboardData' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'listings' : IDL.Nat,
+          'requests' : IDL.Nat,
+          'products' : IDL.Nat,
+          'retailers' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
+  'getProductCatalog' : IDL.Func([RetailerId], [IDL.Vec(Listing)], ['query']),
   'getProductRequests' : IDL.Func([], [IDL.Vec(ProductRequest)], ['query']),
+  'getProductWithRetailers' : IDL.Func(
+      [ProductId],
+      [ProductWithRetailers],
+      ['query'],
+    ),
   'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
   'getRetailersByTownSuburb' : IDL.Func(
       [IDL.Text],
-      [IDL.Vec(Retailer)],
+      [IDL.Vec(RetailerWithListings)],
       ['query'],
     ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+  'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'requestApproval' : IDL.Func([], [], []),
   'requestNewProduct' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
       [],
     ),
+  'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+  'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
+  'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const Product = IDL.Record({
-    'id' : IDL.Nat,
-    'name' : IDL.Text,
-    'description' : IDL.Text,
-    'imageRef' : IDL.Text,
-    'category' : IDL.Text,
+  const RetailerId = IDL.Nat;
+  const ProductId = IDL.Nat;
+  const ListingStatus = IDL.Variant({
+    'active' : IDL.Null,
+    'discontinued' : IDL.Null,
+    'outOfStock' : IDL.Null,
+  });
+  const ListingId = IDL.Nat;
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const Listing = IDL.Record({
+    'id' : ListingId,
+    'status' : ListingStatus,
+    'productId' : ProductId,
+    'stock' : IDL.Nat,
     'price' : IDL.Nat,
+    'retailerId' : RetailerId,
   });
   const ProductRequest = IDL.Record({
     'id' : IDL.Nat,
@@ -75,38 +159,96 @@ export const idlFactory = ({ IDL }) => {
     'retailerName' : IDL.Text,
     'townSuburb' : IDL.Text,
   });
+  const Retailer = IDL.Record({
+    'id' : RetailerId,
+    'province' : IDL.Text,
+    'name' : IDL.Text,
+    'townSuburb' : IDL.Text,
+  });
+  const Product = IDL.Record({
+    'id' : ProductId,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'imageRef' : IDL.Text,
+    'category' : IDL.Text,
+  });
+  const ProductWithRetailers = IDL.Record({
+    'listings' : IDL.Vec(IDL.Tuple(Retailer, Listing)),
+    'product' : Product,
+  });
   const Province = IDL.Record({
     'towns' : IDL.Vec(IDL.Text),
     'name' : IDL.Text,
   });
-  const Retailer = IDL.Record({
-    'id' : IDL.Nat,
-    'name' : IDL.Text,
-    'products' : IDL.Vec(Product),
-    'townSuburb' : IDL.Text,
+  const RetailerWithListings = IDL.Record({
+    'listings' : IDL.Vec(Listing),
+    'retailer' : Retailer,
+  });
+  const ApprovalStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const UserApprovalInfo = IDL.Record({
+    'status' : ApprovalStatus,
+    'principal' : IDL.Principal,
   });
   
   return IDL.Service({
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addListing' : IDL.Func(
+        [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
+        [ListingId],
+        [],
+      ),
     'addProduct' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat, IDL.Text, IDL.Text],
-        [IDL.Nat],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [ProductId],
         [],
       ),
     'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-    'addRetailer' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], []),
-    'getProductCatalog' : IDL.Func([IDL.Nat], [IDL.Vec(Product)], ['query']),
+    'addRetailer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [RetailerId], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getDashboardData' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'listings' : IDL.Nat,
+            'requests' : IDL.Nat,
+            'products' : IDL.Nat,
+            'retailers' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
+    'getProductCatalog' : IDL.Func([RetailerId], [IDL.Vec(Listing)], ['query']),
     'getProductRequests' : IDL.Func([], [IDL.Vec(ProductRequest)], ['query']),
+    'getProductWithRetailers' : IDL.Func(
+        [ProductId],
+        [ProductWithRetailers],
+        ['query'],
+      ),
     'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
     'getRetailersByTownSuburb' : IDL.Func(
         [IDL.Text],
-        [IDL.Vec(Retailer)],
+        [IDL.Vec(RetailerWithListings)],
         ['query'],
       ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+    'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'requestApproval' : IDL.Func([], [], []),
     'requestNewProduct' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
         [],
       ),
+    'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+    'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
+    'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
   });
 };
 

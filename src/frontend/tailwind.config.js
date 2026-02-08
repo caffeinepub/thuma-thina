@@ -68,7 +68,8 @@ export default {
             },
             boxShadow: {
                 xs: '0 1px 2px 0 rgba(0,0,0,0.05)',
-                warm: '0 4px 20px -2px rgba(139, 92, 46, 0.15)'
+                warm: '0 8px 24px -4px rgba(139, 92, 46, 0.12), 0 4px 8px -2px rgba(139, 92, 46, 0.08)',
+                'warm-lg': '0 12px 32px -6px rgba(139, 92, 46, 0.15), 0 6px 12px -3px rgba(139, 92, 46, 0.1)'
             },
             keyframes: {
                 'accordion-down': {
@@ -87,7 +88,7 @@ export default {
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
-                'fade-in': 'fade-in 0.3s ease-out'
+                'fade-in': 'fade-in 0.4s ease-out'
             }
         }
     },

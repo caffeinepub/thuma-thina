@@ -2,10 +2,33 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-a-shop-only-mvp-for-thuma-thina-that-supports-location-based-browsing-province-town-suburb-retailers-and-viewing-a-product-catalog-images-prices-descriptions-without-implementing-orders-payments-wallets-tokens-kyc-dashboards-or-notifications",
-      "featureTitle": "Implement a Shop-only MVP for “Thuma Thina” that supports location-based browsing (Province → Town/Suburb → Retailers) and viewing a product catalog (images, prices, descriptions) without implementing orders, payments, wallets, tokens, KYC, dashboards, or notifications.",
+      "featureId": "feature-add-a-user-visible-non-blank-fallback-ui-for-unexpected-runtime-errors-during-after-login-e-g-actor-creation-query-failures-so-the-app-never-renders-a-completely-blank-screen-the-fallback-must-show-an-english-error-message-and-a-recovery-action-e-g-reload-page-return-home",
+      "featureTitle": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
       "files": [
         "frontend/src/App.tsx",
+        "frontend/src/components/errors/GlobalErrorBoundary.tsx",
+        "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0"
+      ],
+      "testIds": [
+        "REQ-75"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-login-workflow-provides-a-clear-loading-state-during-the-internet-identity-round-trip-and-the-immediate-post-login-initialization-phase-without-modifying-any-immutable-hook-files",
+      "featureTitle": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
+      "files": [
+        "frontend/src/components/auth/AuthInitializationOverlay.tsx",
+        "frontend/src/components/shop/ShopHeader.tsx",
         "frontend/src/components/shop/ShopLayout.tsx"
       ],
       "components": [
@@ -13,112 +36,12 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0"
       ],
       "testIds": [
-        "REQ-44"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-build-the-shop-ui-with-mobile-first-pages-components-for-1-province-list-2-town-suburb-list-3-retailer-list-4-retailer-product-listing-and-5-product-detail-view-showing-image-name-description-category-and-price",
-      "featureTitle": "Frontend: Build the Shop UI with mobile-first pages/components for: (1) Province list, (2) Town/Suburb list, (3) Retailer list, (4) Retailer product listing, and (5) Product detail view showing image, name, description, category, and price.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/shop/ProductDetailPage.tsx",
-        "frontend/src/pages/shop/ProvinceListPage.tsx",
-        "frontend/src/pages/shop/RetailerCatalogPage.tsx",
-        "frontend/src/pages/shop/RetailerListPage.tsx",
-        "frontend/src/pages/shop/TownSuburbListPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-47"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-add-product-search-category-filtering-and-basic-sorting-within-a-retailer-s-product-listing-e-g-price-low-high-high-low",
-      "featureTitle": "Frontend: Add product search, category filtering, and basic sorting within a retailer’s product listing (e.g., price low→high / high→low).",
-      "files": [
-        "frontend/src/components/shop/catalog/useCatalogControls.ts",
-        "frontend/src/pages/shop/RetailerCatalogPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-48"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-implement-a-request-new-product-retailer-form-screen-that-submits-to-the-backend-and-shows-success-error-states-using-english-user-facing-text",
-      "featureTitle": "Frontend: Implement a “Request new product/retailer” form screen that submits to the backend and shows success/error states using English user-facing text.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/shop/RequestNewProductPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-49"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-apply-a-consistent-mobile-first-visual-theme-appropriate-for-a-modern-african-inspired-brand-using-warm-greens-yellows-and-earth-tones-avoid-blue-purple-with-clear-typography-and-accessible-contrast-across-all-shop-pages",
-      "featureTitle": "Frontend: Apply a consistent, mobile-first visual theme appropriate for a modern African-inspired brand using warm greens, yellows, and earth tones (avoid blue/purple), with clear typography and accessible contrast across all Shop pages.",
-      "files": [
-        "frontend/src/components/shop/ShopLayout.tsx",
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-50"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-add-generated-static-brand-assets-under-frontend-public-assets-generated-and-render-them-in-the-shop-header-navigation-logo-and-optionally-on-the-shop-landing-entry-view-hero-do-not-route-generated-images-through-the-backend",
-      "featureTitle": "Frontend: Add generated static brand assets under frontend/public/assets/generated and render them in the Shop header/navigation (logo) and optionally on the Shop landing/entry view (hero). Do not route generated images through the backend.",
-      "files": [
-        "frontend/src/components/shop/ShopHeader.tsx",
-        "frontend/src/components/shop/ShopLandingHero.tsx",
-        "frontend/src/components/shop/ShopLayout.tsx",
-        "frontend/src/pages/shop/ProvinceListPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-51"
+        "REQ-76"
       ],
       "confidence": "high"
     }

@@ -10,14 +10,29 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type ApprovalStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
+export interface Listing {
+  'id' : ListingId,
+  'status' : ListingStatus,
+  'productId' : ProductId,
+  'stock' : bigint,
+  'price' : bigint,
+  'retailerId' : RetailerId,
+}
+export type ListingId = bigint;
+export type ListingStatus = { 'active' : null } |
+  { 'discontinued' : null } |
+  { 'outOfStock' : null };
 export interface Product {
-  'id' : bigint,
+  'id' : ProductId,
   'name' : string,
   'description' : string,
   'imageRef' : string,
   'category' : string,
-  'price' : bigint,
 }
+export type ProductId = bigint;
 export interface ProductRequest {
   'id' : bigint,
   'province' : string,
@@ -25,25 +40,67 @@ export interface ProductRequest {
   'retailerName' : string,
   'townSuburb' : string,
 }
+export interface ProductWithRetailers {
+  'listings' : Array<[Retailer, Listing]>,
+  'product' : Product,
+}
 export interface Province { 'towns' : Array<string>, 'name' : string }
 export interface Retailer {
-  'id' : bigint,
+  'id' : RetailerId,
+  'province' : string,
   'name' : string,
-  'products' : Array<Product>,
   'townSuburb' : string,
 }
+export type RetailerId = bigint;
+export interface RetailerWithListings {
+  'listings' : Array<Listing>,
+  'retailer' : Retailer,
+}
+export interface UserApprovalInfo {
+  'status' : ApprovalStatus,
+  'principal' : Principal,
+}
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _SERVICE {
-  'addProduct' : ActorMethod<
-    [bigint, string, string, bigint, string, string],
-    bigint
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addListing' : ActorMethod<
+    [RetailerId, ProductId, bigint, bigint, ListingStatus],
+    ListingId
   >,
+  'addProduct' : ActorMethod<[string, string, string, string], ProductId>,
   'addProvince' : ActorMethod<[string, Array<string>], undefined>,
-  'addRetailer' : ActorMethod<[string, string], bigint>,
-  'getProductCatalog' : ActorMethod<[bigint], Array<Product>>,
+  'addRetailer' : ActorMethod<[string, string, string], RetailerId>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bootstrapAdmin' : ActorMethod<[string, string], undefined>,
+  'getAllActiveListings' : ActorMethod<[], Array<Listing>>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getDashboardData' : ActorMethod<
+    [],
+    {
+      'listings' : bigint,
+      'requests' : bigint,
+      'products' : bigint,
+      'retailers' : bigint,
+    }
+  >,
+  'getProductCatalog' : ActorMethod<[RetailerId], Array<Listing>>,
   'getProductRequests' : ActorMethod<[], Array<ProductRequest>>,
+  'getProductWithRetailers' : ActorMethod<[ProductId], ProductWithRetailers>,
   'getProvinces' : ActorMethod<[], Array<Province>>,
-  'getRetailersByTownSuburb' : ActorMethod<[string], Array<Retailer>>,
+  'getRetailersByTownSuburb' : ActorMethod<
+    [string],
+    Array<RetailerWithListings>
+  >,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerApproved' : ActorMethod<[], boolean>,
+  'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
+  'requestApproval' : ActorMethod<[], undefined>,
   'requestNewProduct' : ActorMethod<[string, string, string, string], bigint>,
+  'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
+  'updateListingStatus' : ActorMethod<[ListingId, ListingStatus], undefined>,
+  'upgradeToAdmin' : ActorMethod<[Principal], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
