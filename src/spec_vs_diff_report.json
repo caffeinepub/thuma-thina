@@ -1,54 +1,59 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T10:21:50.931Z",
-  "summary": "REQ-75 and REQ-76 appear implemented via a global error boundary with a user-facing recovery screen and a visible auth/loading overlay (plus header login loading/error UI). REQ-74 is not evidenced in the diff: backend access-control initialization still appears to call the initializer directly without guarding against empty tokens. The diff also includes multiple unrelated UI/theme/shop-page changes not requested by the BuildRequest.",
+  "generatedAt": "2026-02-08T12:10:42.871Z",
+  "summary": "Frontend adds a new admin-only /admin/retailers route and UI for registering retailers, listing them, editing details, and confirming removal. It also adds SA province constants and a reusable searchable select used in the Admin Dashboard listing creation flow. Backend diff shown does not evidence the required retailer-management APIs, expanded retailer model (hours/holidays), open/closed checks, or migration logic.",
   "missing_requirements": [
     {
-      "id": "REQ-74",
-      "requirement": "Make backend access-control/secret initialization safe to call with empty token(s) (e.g., empty caffeineAdminToken) so authenticated actor creation/browsing is not broken and does not trap.",
-      "reason": "backend/main.mo still calls AccessControl.initialize(...) directly in bootstrapAdmin with no shown empty-token guard/no-op behavior. No changes to AccessControl.initialize are shown in the diff summary, so there is no evidence that empty tokens will not trap.",
+      "id": "REQ-89",
+      "requirement": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
+      "reason": "The backend diff excerpt only shows the existing Retailer type (id/name/townSuburb/province) and does not show any new query/mutation methods for listing all retailers, updating, or removing retailers with admin-only traps.",
       "evidence": [
-        "backend/main.mo (bootstrapAdmin calls AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken); no guard shown)",
-        "backend/main.mo (truncated; no other relevant changes visible)"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "Large-scale UI/theme redesign (\"warm African-inspired OKLCH color system\", new shadow utilities, animation timing changes).",
-      "reason": "Not requested; BuildRequest is specifically about fixing blank screen after II login and adding loading/error fallback states.",
-      "evidence": [
-        "frontend-file-summaries.txt (entries for frontend/src/index.css and frontend/tailwind.config.js)"
+        "backend/main.mo"
       ]
     },
     {
-      "description": "Multiple unrelated shop page/feature enhancements (hero section, catalogue preview, extensive styling/hierarchy changes across Province/Town/Retailer/Catalog/Product pages, Join Us page behavior changes, etc.).",
-      "reason": "Not requested; these are product/UI changes unrelated to the login blank-screen fix.",
+      "id": "REQ-90",
+      "requirement": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
+      "reason": "Frontend adds an hours editor UI, but the edit dialog explicitly contains a TODO to load existing hours from the retailer when backend supports it, and the backend Retailer type shown is not expanded to include weekly hours or holiday overrides.",
       "evidence": [
-        "frontend-file-summaries.txt (entries for ShopLandingHero, ProvinceListPage, TownSuburbListPage, RetailerListPage, RetailerCatalogPage, ProductDetailPage, JoinUsPage, etc.)"
+        "frontend/src/components/admin/RetailerEditDialog.tsx",
+        "frontend/src/components/admin/RetailerHoursEditor.tsx",
+        "backend/main.mo"
       ]
     },
     {
-      "description": "Added backend state migration module and applied it on upgrade, including removing isAdminBootstrapOpen from migrated state.",
-      "reason": "BuildRequest allows backend/migration.mo only if state migration is strictly required; the diff does not provide evidence that this migration is necessary to fix the login blank-screen issue.",
+      "id": "REQ-91",
+      "requirement": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
+      "reason": "No diff evidence shows a backend query to determine if a retailer is currently open or a reusable backend guard/check, and no changes are shown on shop browsing pages to display open/closed status or gate ordering paths.",
       "evidence": [
-        "backend/migration.mo (added; OldActor includes isAdminBootstrapOpen but NewActor omits it)",
-        "backend/main.mo (imports Migration and applies (with migration = Migration.run))"
+        "backend/main.mo",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "id": "REQ-94",
+      "requirement": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
+      "reason": "No migration file changes are present, and the backend Retailer type shown is not expanded; there is no diff evidence of upgrade logic to backfill default hours/empty overrides for existing retailer records.",
+      "evidence": [
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.62,
+  "hallucinated_features": [],
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
-    "frontend/src/components/auth/AuthInitializationOverlay.tsx",
-    "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-    "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/components/shop/ShopLayout.tsx",
+    "frontend/src/components/admin/RetailerEditDialog.tsx",
+    "frontend/src/components/admin/RetailerHoursEditor.tsx",
+    "frontend/src/components/admin/SearchableSelect.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/admin/AdminRetailersPage.tsx",
+    "frontend/src/pages/shop/AdminDashboardPage.tsx",
+    "frontend/src/utils/saProvinces.ts",
     "project_state.json"
   ]
 }

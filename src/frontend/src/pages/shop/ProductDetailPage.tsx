@@ -1,28 +1,18 @@
 import { useProductWithRetailers } from '../../hooks/useQueries';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronLeft, Loader2, Package, Tag, Store } from 'lucide-react';
-import { publicAssetUrl } from '../../utils/publicAssetUrl';
 import { Button } from '@/components/ui/button';
+import { getPrimaryImage, getAllImages, getImageUrl } from '../../utils/productImages';
+import { useState } from 'react';
 
 export function ProductDetailPage() {
   const { retailerId, productId } = useParams({ strict: false });
   const { data: productWithRetailers, isLoading } = useProductWithRetailers(productId || '');
   const navigate = useNavigate();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const formatPrice = (price: bigint) => {
     return `R ${Number(price).toFixed(2)}`;
-  };
-
-  // Helper to normalize image URLs
-  const getImageUrl = (imageRef: string) => {
-    if (!imageRef) return '';
-    if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
-      return imageRef;
-    }
-    if (imageRef.startsWith('/assets/') || imageRef.startsWith('assets/')) {
-      return publicAssetUrl(imageRef);
-    }
-    return imageRef;
   };
 
   if (isLoading) {
@@ -59,6 +49,8 @@ export function ProductDetailPage() {
   }
 
   const { product, listings } = productWithRetailers;
+  const allImages = getAllImages(product);
+  const currentImage = allImages[selectedImageIndex];
 
   return (
     <div className="container-custom py-8 sm:py-12">
@@ -76,28 +68,59 @@ export function ProductDetailPage() {
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Image */}
-          <div className="rounded-3xl border-2 border-border bg-card overflow-hidden shadow-warm ring-1 ring-border/30">
-            <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative">
-              {product.imageRef ? (
-                <img
-                  src={getImageUrl(product.imageRef)}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div 
-                className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/70"
-                style={{ display: product.imageRef ? 'none' : 'flex' }}
-              >
-                <Package className="h-32 w-32 text-muted-foreground/30" />
+          <div className="space-y-4">
+            <div className="rounded-3xl border-2 border-border bg-card overflow-hidden shadow-warm ring-1 ring-border/30">
+              <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative">
+                {currentImage ? (
+                  <img
+                    src={getImageUrl(currentImage)}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/70"
+                  style={{ display: currentImage ? 'none' : 'flex' }}
+                >
+                  <Package className="h-32 w-32 text-muted-foreground/30" />
+                </div>
               </div>
             </div>
+
+            {/* Image Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="flex gap-3">
+                {allImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-1 rounded-xl border-2 overflow-hidden transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-border hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative">
+                      <img
+                        src={getImageUrl(image)}
+                        alt={`${product.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}

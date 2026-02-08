@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 35,
+  "projectStateVersion": 41,
   "summary": "Build Thuma Thina (part of Mthandeni Umuntu Association) as a full-stack, mobile-responsive Internet Computer (ICP) platform combining (1) a personal shopper + delivery driver network and (2) Ama Dao-zan community pick-up points, with Internet Identity auth, on-chain data, and an integrated NomaYini ICRC-2 token + vesting rewards system from day one.",
   "architectural_notes": [
     "Built on ICP using multiple canisters; all core data (products, orders, profiles, KYC status, rewards, vesting schedules) stored on-chain.",
@@ -17,9 +17,10 @@
   "known_issues": [
     "Generated homepage hero image file is 1200x600, but project image requirements specify 1600x900 (consider regenerating/resizing to the required dimensions).",
     "First authenticated user is not being auto-assigned/recognized as Master Admin, so the user is not routed/loaded into the admin portal and cannot populate products or view analytics.",
-    "Login workflow results in a blank screen after clicking 'Log in' (auth flow/UI not loading)."
+    "Login workflow results in a blank screen after clicking 'Log in' (auth flow/UI not loading).",
+    "Login now reaches the app but shows an error: \"receiving end does not exist\" (likely actor/canister communication issue) after authentication."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "generatedImages": [
     {
       "filename": "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
@@ -270,6 +271,94 @@
       "title": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
       "reqIds": [
         "REQ-76"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-frontend-support-to-trigger-the-full-system-wipe-from-an-admin-only-ui-entry-point-e-g-a-danger-zone-section-in-the-existing-admin-dashboard-page-with-an-explicit-confirmation-step-and-ensure-the-ui-recovers-cleanly-after-the-wipe-e-g-refresh-queries-and-prompt-the-user-to-re-login-use-english-for-all-user-facing-text",
+      "title": "Add frontend support to trigger the full system wipe from an admin-only UI entry point (e.g., a \"Danger Zone\" section in the existing Admin Dashboard page) with an explicit confirmation step, and ensure the UI recovers cleanly after the wipe (e.g., refresh queries and prompt the user to re-login). Use English for all user-facing text.",
+      "reqIds": [
+        "REQ-80"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-external-product-image-links-with-on-platform-product-image-uploads-stored-on-the-internet-computer-supporting-1-recommended-image-and-up-to-3-images-maximum-per-product-and-persist-only-platform-hosted-asset-references-on-chain",
+      "title": "Replace external product image links with on-platform product image uploads stored on the Internet Computer, supporting 1 recommended image and up to 3 images maximum per product, and persist only platform-hosted asset references on-chain.",
+      "reqIds": [
+        "REQ-81"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-admin-ui-to-upload-and-manage-product-images-within-the-existing-admin-dashboard-experience-including-showing-current-images-adding-images-up-to-the-max-of-3-selecting-a-primary-image-and-removing-images",
+      "title": "Add admin UI to upload and manage product images within the existing Admin Dashboard experience, including showing current images, adding images up to the max of 3, selecting a primary image, and removing images.",
+      "reqIds": [
+        "REQ-83"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-customer-facing-browsing-pages-to-render-the-new-multi-image-product-model-using-the-primary-image-by-default-and-gracefully-handling-missing-or-broken-image-assets-with-the-existing-fallback-behavior",
+      "title": "Update customer-facing browsing pages to render the new multi-image product model, using the primary image by default and gracefully handling missing or broken image assets with the existing fallback behavior.",
+      "reqIds": [
+        "REQ-84"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-dashboard-ui-to-display-the-expanded-analytics-daily-sales-completed-orders-only-number-of-shoppers-number-of-drivers-number-of-orders-and-deliveries-and-top-favourite-products-and-retailers-based-on-actual-user-behavior",
+      "title": "Update the Admin Dashboard UI to display the expanded analytics: daily sales (completed orders only), number of shoppers, number of drivers, number of orders and deliveries, and top/favourite products and retailers based on actual user behavior.",
+      "reqIds": [
+        "REQ-86"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-admin-only-retailers-management-section-separate-from-the-existing-admin-dashboard-dedicated-to-retailer-registration-and-ongoing-retailer-management",
+      "title": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
+      "reqIds": [
+        "REQ-87"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-retailers-list-in-the-new-admin-retailers-section-that-shows-all-retailers-and-provides-actions-to-edit-retailer-details-and-remove-retailers-with-a-confirmation-step",
+      "title": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
+      "reqIds": [
+        "REQ-88"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-full-per-day-retailer-operating-hours-mon-sun-with-additional-holiday-specific-overrides-store-them-on-the-retailer-model-and-make-them-editable-from-the-admin-retailers-section",
+      "title": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
+      "reqIds": [
+        "REQ-90"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-prevent-customers-from-placing-orders-while-a-retailer-is-closed-by-adding-backend-level-retailer-open-checks-and-frontend-visibility-of-open-closed-status-on-retailer-browsing-pages",
+      "title": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
+      "reqIds": [
+        "REQ-91"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-free-text-province-entry-during-retailer-registration-with-a-dropdown-containing-all-south-african-provinces-eastern-cape-free-state-gauteng-kwazulu-natal-limpopo-mpumalanga-northern-cape-north-west-western-cape",
+      "title": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
+      "reqIds": [
+        "REQ-92"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-admin-listing-creation-ux-by-making-the-retailer-and-product-selectors-populated-from-live-backend-data-and-type-searchable-to-avoid-inefficient-scrolling-for-long-lists",
+      "title": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
+      "reqIds": [
+        "REQ-93"
       ],
       "version": 1
     }
@@ -864,6 +953,104 @@
       "summary": "Fix the post-login blank-screen failure by ensuring the frontend actor initialization cannot be broken by access-control secret initialization when no admin token is provided (e.g., empty `caffeineAdminToken`). Specifically, make the backend access-control initialization path safe to call with empty tokens so the authenticated actor can still be created and used for normal browsing.",
       "reqIds": [
         "REQ-74"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-85",
+      "summary": "Add a full system reset/wipe capability for dev/test: wipe all users/roles (including current Master Admin), products, retailers, and listings so the next login behaves like a fresh install where the first user becomes Master Admin again.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-86",
+      "summary": "Add a backend query method `isCallerAdmin : async Bool` that returns whether the current caller has admin permission, so the frontend admin-gating queries do not fail with a missing method error.",
+      "reqIds": [
+        "REQ-77"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-87",
+      "summary": "Update backend authorization rules so that only the Master Admin (admin permission) can create or modify catalog data: add retailers, add listings, and update listing status. Remove the ability for merely \"approved\" users to perform these mutations for now.",
+      "reqIds": [
+        "REQ-78"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-88",
+      "summary": "Implement a backend \"full system wipe\" capability that removes all stored users/roles/approvals (including the current Master Admin), products, retailers, listings, provinces, and product requests; resets all ID counters; and returns the canister to a fresh-install state where the next login can bootstrap a new first Master Admin.",
+      "reqIds": [
+        "REQ-79"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-89",
+      "summary": "Replace external product image links with on-platform image uploads: allow admin to upload product images directly in-app, storing assets on ICP (asset canister or equivalent) and persisting on-chain references; support 1 recommended image per product with up to 3 images max.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-90",
+      "summary": "Expand Admin analytics: compute daily sales based on completed orders only; show counts of active shoppers and drivers, number of orders and deliveries, and identify favourite/most-used products and retailers based on actual user behaviour (e.g., most ordered/most purchased), not manual curation.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-92",
+      "summary": "Update backend product APIs to support multiple images per product (up to 3) and add admin-only methods to add/replace/remove product images without requiring direct manual editing of image reference strings.",
+      "reqIds": [
+        "REQ-82"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-95",
+      "summary": "Expand backend analytics to support: daily sales totals calculated from completed orders only, counts of orders and deliveries, counts of active shoppers and active drivers, and “favourite” products and retailers based on actual user behavior.",
+      "reqIds": [
+        "REQ-85"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-96",
+      "summary": "Implement a dedicated Admin \"Retailers\" section: register retailer with South African province selection, show a retailers list, and support edit + remove retailers.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-97",
+      "summary": "Add retailer operating hours with full per-day schedules (Mon–Sun) including weekends and holidays, and prevent customers from placing orders while a retailer is closed.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-98",
+      "summary": "Improve Admin listing creation UX: populate retailer and product dropdowns from live data and make them type-searchable to handle long lists (avoid inefficient scrolling).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-99",
+      "summary": "Add Admin management sections for Personal Shoppers and Delivery Drivers (list + edit details + remove/disable bad actors), similar in spirit to the Retailers admin section.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-102",
+      "summary": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
+      "reqIds": [
+        "REQ-89"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-107",
+      "summary": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
+      "reqIds": [
+        "REQ-94"
       ],
       "status": "pending"
     }

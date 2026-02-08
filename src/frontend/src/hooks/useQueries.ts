@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Province, RetailerWithListings, Listing, ProductRequest, Product, ProductWithRetailers, ListingStatus } from '../backend';
+import type { Province, RetailerWithListings, Listing, ProductRequest, Product, ProductWithRetailers, ListingStatus, ProductId, RetailerId } from '../backend';
+import { ExternalBlob } from '../backend';
+import type { DaySchedule, HolidayOverride } from '../components/admin/RetailerHoursEditor';
 
 export function useProvinces() {
   const { actor, isFetching } = useActor();
@@ -224,6 +226,37 @@ export function useDashboardData() {
   });
 }
 
+export function useAdminAnalytics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['adminAnalytics'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not initialized');
+      try {
+        // For now, return mock data structure
+        // Backend doesn't have SalesAnalytics endpoint yet
+        return {
+          totalSales: BigInt(0),
+          ordersCount: BigInt(0),
+          deliveriesCount: BigInt(0),
+          activeShoppers: BigInt(0),
+          activeDrivers: BigInt(0),
+          favouriteProducts: [] as Product[],
+          favouriteRetailers: [] as any[]
+        };
+      } catch (error: any) {
+        if (error.message?.includes('Unauthorized')) {
+          throw new Error('You must be an admin to view analytics');
+        }
+        throw error;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false
+  });
+}
+
 export function useAddProduct() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -233,14 +266,23 @@ export function useAddProduct() {
       name: string;
       category: string;
       description: string;
-      imageRef: string;
+      preferredImage?: File;
     }) => {
       if (!actor) throw new Error('Actor not initialized');
-      return actor.addProduct(data.name, data.category, data.description, data.imageRef);
+      
+      let imageBlob: ExternalBlob | null = null;
+      if (data.preferredImage) {
+        const arrayBuffer = await data.preferredImage.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        imageBlob = ExternalBlob.fromBytes(uint8Array);
+      }
+      
+      return actor.addProduct(data.name, data.category, data.description, imageBlob);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
     }
   });
 }
@@ -261,6 +303,7 @@ export function useAddRetailer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       queryClient.invalidateQueries({ queryKey: ['retailers'] });
+      queryClient.invalidateQueries({ queryKey: ['allRetailers'] });
     }
   });
 }
@@ -324,6 +367,7 @@ export function useAllRetailers() {
     queryKey: ['allRetailers'],
     queryFn: async () => {
       if (!actor) return [];
+      // TODO: Replace with backend getAllRetailers() when available
       const provinces = await actor.getProvinces();
       const allRetailers: RetailerWithListings[] = [];
       
@@ -341,5 +385,157 @@ export function useAllRetailers() {
       return allRetailers;
     },
     enabled: !!actor && !isFetching
+  });
+}
+
+// Retailer Management Hooks
+
+export function useUpdateRetailer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      id: bigint;
+      name: string;
+      townSuburb: string;
+      province: string;
+      weeklyHours: DaySchedule[];
+      holidayOverrides: HolidayOverride[];
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend method will be implemented
+      return actor.updateRetailer(data.id, data.name, data.townSuburb, data.province, data.weeklyHours, data.holidayOverrides);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allRetailers'] });
+      queryClient.invalidateQueries({ queryKey: ['retailers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
+    }
+  });
+}
+
+export function useRemoveRetailer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (retailerId: RetailerId) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend method will be implemented
+      return actor.removeRetailer(retailerId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allRetailers'] });
+      queryClient.invalidateQueries({ queryKey: ['retailers'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+    }
+  });
+}
+
+export function useRetailerOpenStatus(retailerId: RetailerId | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: ['retailerOpenStatus', retailerId?.toString()],
+    queryFn: async () => {
+      if (!actor || !retailerId) return false;
+      // @ts-expect-error - Backend method will be implemented
+      return actor.isRetailerOpen(retailerId);
+    },
+    enabled: !!actor && !isFetching && !!retailerId,
+    refetchInterval: 60000 // Refetch every minute to keep status current
+  });
+}
+
+// Product Image Management Hooks
+
+export function useAddImageRef() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: ProductId;
+      imageFile: File;
+      onProgress?: (percentage: number) => void;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      
+      const arrayBuffer = await data.imageFile.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let imageBlob = ExternalBlob.fromBytes(uint8Array);
+      
+      if (data.onProgress) {
+        imageBlob = imageBlob.withUploadProgress(data.onProgress);
+      }
+      
+      return actor.addImageRef(data.productId, imageBlob);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers', variables.productId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['previewProducts'] });
+    }
+  });
+}
+
+export function useSetPreferredImage() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: ProductId;
+      preferredImage: ExternalBlob | null;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      return actor.setPreferredImage(data.productId, data.preferredImage);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers', variables.productId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['previewProducts'] });
+    }
+  });
+}
+
+export function useRemoveImage() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: ProductId;
+      imageIndex: bigint;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      return actor.removeImage(data.productId, data.imageIndex);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers', variables.productId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['previewProducts'] });
+    }
+  });
+}
+
+export function useWipeSystem() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not initialized');
+      return actor.wipeSystem();
+    },
+    onSuccess: () => {
+      // Clear all React Query caches related to catalog and admin state
+      queryClient.clear();
+    }
   });
 }

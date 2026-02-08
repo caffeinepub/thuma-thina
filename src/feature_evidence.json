@@ -2,12 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-user-visible-non-blank-fallback-ui-for-unexpected-runtime-errors-during-after-login-e-g-actor-creation-query-failures-so-the-app-never-renders-a-completely-blank-screen-the-fallback-must-show-an-english-error-message-and-a-recovery-action-e-g-reload-page-return-home",
-      "featureTitle": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
+      "featureId": "feature-create-a-new-admin-only-retailers-management-section-separate-from-the-existing-admin-dashboard-dedicated-to-retailer-registration-and-ongoing-retailer-management",
+      "featureTitle": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
       "files": [
         "frontend/src/App.tsx",
-        "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-        "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx"
+        "frontend/src/pages/admin/AdminRetailersPage.tsx",
+        "frontend/src/pages/shop/AdminDashboardPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -16,20 +16,21 @@
         "initial-app@1.0.0",
         "github-export-icp-cli@1.0.0",
         "authorization@4.0.0",
-        "user-approval@3.0.0"
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-75"
+        "REQ-87"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-login-workflow-provides-a-clear-loading-state-during-the-internet-identity-round-trip-and-the-immediate-post-login-initialization-phase-without-modifying-any-immutable-hook-files",
-      "featureTitle": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
+      "featureId": "feature-implement-a-retailers-list-in-the-new-admin-retailers-section-that-shows-all-retailers-and-provides-actions-to-edit-retailer-details-and-remove-retailers-with-a-confirmation-step",
+      "featureTitle": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
       "files": [
-        "frontend/src/components/auth/AuthInitializationOverlay.tsx",
-        "frontend/src/components/shop/ShopHeader.tsx",
-        "frontend/src/components/shop/ShopLayout.tsx"
+        "frontend/src/components/admin/RetailerEditDialog.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/admin/AdminRetailersPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -38,10 +39,102 @@
         "initial-app@1.0.0",
         "github-export-icp-cli@1.0.0",
         "authorization@4.0.0",
-        "user-approval@3.0.0"
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-76"
+        "REQ-88"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-full-per-day-retailer-operating-hours-mon-sun-with-additional-holiday-specific-overrides-store-them-on-the-retailer-model-and-make-them-editable-from-the-admin-retailers-section",
+      "featureTitle": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
+      "files": [
+        "frontend/src/components/admin/RetailerEditDialog.tsx",
+        "frontend/src/components/admin/RetailerHoursEditor.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-90"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-prevent-customers-from-placing-orders-while-a-retailer-is-closed-by-adding-backend-level-retailer-open-checks-and-frontend-visibility-of-open-closed-status-on-retailer-browsing-pages",
+      "featureTitle": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-91"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-free-text-province-entry-during-retailer-registration-with-a-dropdown-containing-all-south-african-provinces-eastern-cape-free-state-gauteng-kwazulu-natal-limpopo-mpumalanga-northern-cape-north-west-western-cape",
+      "featureTitle": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
+      "files": [
+        "frontend/src/components/admin/RetailerEditDialog.tsx",
+        "frontend/src/pages/admin/AdminRetailersPage.tsx",
+        "frontend/src/pages/shop/AdminDashboardPage.tsx",
+        "frontend/src/utils/saProvinces.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-92"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-improve-the-admin-listing-creation-ux-by-making-the-retailer-and-product-selectors-populated-from-live-backend-data-and-type-searchable-to-avoid-inefficient-scrolling-for-long-lists",
+      "featureTitle": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
+      "files": [
+        "frontend/src/components/admin/SearchableSelect.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/shop/AdminDashboardPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-93"
       ],
       "confidence": "high"
     }

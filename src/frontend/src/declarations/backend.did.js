@@ -8,8 +8,20 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const RetailerId = IDL.Nat;
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const ProductId = IDL.Nat;
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const RetailerId = IDL.Nat;
 export const ListingStatus = IDL.Variant({
   'active' : IDL.Null,
   'discontinued' : IDL.Null,
@@ -44,9 +56,10 @@ export const Retailer = IDL.Record({
 });
 export const Product = IDL.Record({
   'id' : ProductId,
+  'imageRefs' : IDL.Vec(ExternalBlob),
   'name' : IDL.Text,
   'description' : IDL.Text,
-  'imageRef' : IDL.Text,
+  'preferredImage' : IDL.Opt(ExternalBlob),
   'category' : IDL.Text,
 });
 export const ProductWithRetailers = IDL.Record({
@@ -72,14 +85,41 @@ export const UserApprovalInfo = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addImageRef' : IDL.Func([ProductId, ExternalBlob], [], []),
   'addListing' : IDL.Func(
       [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
       [ListingId],
       [],
     ),
   'addProduct' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
       [ProductId],
       [],
     ),
@@ -117,6 +157,7 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
   'requestApproval' : IDL.Func([], [], []),
   'requestNewProduct' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -124,15 +165,29 @@ export const idlService = IDL.Service({
       [],
     ),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+  'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
   'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
   'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
+  'wipeSystem' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const RetailerId = IDL.Nat;
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const ProductId = IDL.Nat;
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const RetailerId = IDL.Nat;
   const ListingStatus = IDL.Variant({
     'active' : IDL.Null,
     'discontinued' : IDL.Null,
@@ -167,9 +222,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const Product = IDL.Record({
     'id' : ProductId,
+    'imageRefs' : IDL.Vec(ExternalBlob),
     'name' : IDL.Text,
     'description' : IDL.Text,
-    'imageRef' : IDL.Text,
+    'preferredImage' : IDL.Opt(ExternalBlob),
     'category' : IDL.Text,
   });
   const ProductWithRetailers = IDL.Record({
@@ -195,14 +251,41 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addImageRef' : IDL.Func([ProductId, ExternalBlob], [], []),
     'addListing' : IDL.Func(
         [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
         [ListingId],
         [],
       ),
     'addProduct' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
         [ProductId],
         [],
       ),
@@ -240,6 +323,7 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
     'requestApproval' : IDL.Func([], [], []),
     'requestNewProduct' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -247,8 +331,10 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+    'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
     'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
     'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
+    'wipeSystem' : IDL.Func([], [], []),
   });
 };
 

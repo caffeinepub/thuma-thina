@@ -1,31 +1,32 @@
+import AccessControl "authorization/access-control";
+import MixinAuthorization "authorization/MixinAuthorization";
+import MixinStorage "blob-storage/Mixin";
+import Storage "blob-storage/Storage";
+import UserApproval "user-approval/approval";
 import List "mo:core/List";
 import Map "mo:core/Map";
-import Iter "mo:core/Iter";
 import Array "mo:core/Array";
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
-import Migration "migration";
+import Time "mo:core/Time";
 
-import MixinAuthorization "authorization/MixinAuthorization";
-import AccessControl "authorization/access-control";
-import UserApproval "user-approval/approval";
 
-// Apply migration on upgrade
-(with migration = Migration.run)
+
 actor {
-  public type RetailerId = Nat;
-  public type ProductId = Nat;
-  public type ListingId = Nat;
+  type RetailerId = Nat;
+  type ProductId = Nat;
+  type ListingId = Nat;
 
   public type Product = {
     id : ProductId;
     name : Text;
     category : Text;
     description : Text;
-    imageRef : Text;
+    preferredImage : ?Storage.ExternalBlob;
+    imageRefs : [Storage.ExternalBlob];
   };
 
   public type ListingStatus = {
@@ -73,10 +74,14 @@ actor {
     listings : [(Retailer, Listing)];
   };
 
-  module Retailer {
-    public func compareByTownSuburb(r1 : Retailer, r2 : Retailer) : Order.Order {
-      Text.compare(r1.townSuburb, r2.townSuburb);
-    };
+  public type SalesAnalytics = {
+    totalSales : Nat;
+    ordersCount : Nat;
+    deliveriesCount : Nat;
+    activeShoppers : Nat;
+    activeDrivers : Nat;
+    favouriteProducts : [Product];
+    favouriteRetailers : [Retailer];
   };
 
   let provinces = List.empty<Province>();
@@ -90,10 +95,17 @@ actor {
   var nextListingId = 0;
   var nextRequestId = 0;
 
-  let accessControlState = AccessControl.initState();
-  let approvalState = UserApproval.initState(accessControlState);
+  var accessControlState = AccessControl.initState();
+  var approvalState = UserApproval.initState(accessControlState);
 
   include MixinAuthorization(accessControlState);
+  include MixinStorage();
+
+  module Retailer {
+    public func compareByTownSuburb(r1 : Retailer, r2 : Retailer) : Order.Order {
+      Text.compare(r1.townSuburb, r2.townSuburb);
+    };
+  };
 
   public shared ({ caller }) func bootstrapAdmin(adminToken : Text, userProvidedToken : Text) : async () {
     AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken);
@@ -137,8 +149,8 @@ actor {
   };
 
   public shared ({ caller }) func addRetailer(name : Text, townSuburb : Text, province : Text) : async RetailerId {
-    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     let retailer : Retailer = {
       id = nextRetailerId;
@@ -151,7 +163,7 @@ actor {
     nextRetailerId - 1;
   };
 
-  public shared ({ caller }) func addProduct(name : Text, category : Text, description : Text, imageRef : Text) : async ProductId {
+  public shared ({ caller }) func addProduct(name : Text, category : Text, description : Text, preferredImage : ?Storage.ExternalBlob) : async ProductId {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
@@ -160,7 +172,8 @@ actor {
       name;
       category;
       description;
-      imageRef;
+      preferredImage;
+      imageRefs = [];
     };
     products.add(nextProductId, product);
     nextProductId += 1;
@@ -174,8 +187,8 @@ actor {
     stock : Nat,
     status : ListingStatus,
   ) : async ListingId {
-    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
     switch (retailers.get(retailerId)) {
@@ -282,8 +295,6 @@ actor {
     townSuburb : Text,
     province : Text,
   ) : async Nat {
-    // Allow any authenticated user (including guests) to request new products
-    // No authorization check needed - this is a public feature
     let request : ProductRequest = {
       id = nextRequestId;
       productName;
@@ -309,8 +320,8 @@ actor {
   };
 
   public shared ({ caller }) func updateListingStatus(listingId : ListingId, newStatus : ListingStatus) : async () {
-    if (not (UserApproval.isApproved(approvalState, caller) or AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only approved users can perform this action");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
     switch (listings.get(listingId)) {
@@ -321,4 +332,81 @@ actor {
       };
     };
   };
+
+  public shared ({ caller }) func addImageRef(productId : ProductId, imageRef : Storage.ExternalBlob) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product not found") };
+      case (?product) {
+        if (product.imageRefs.size() >= 3) {
+          Runtime.trap("Maximum of 3 images allowed per product");
+        };
+        let updatedProduct : Product = {
+          product with imageRefs = product.imageRefs.concat([imageRef]);
+        };
+        products.add(productId, updatedProduct);
+      };
+    };
+  };
+
+  public shared ({ caller }) func setPreferredImage(productId : ProductId, preferredImage : ?Storage.ExternalBlob) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product not found") };
+      case (?product) {
+        let updatedProduct : Product = {
+          product with preferredImage
+        };
+        products.add(productId, updatedProduct);
+      };
+    };
+  };
+
+  public shared ({ caller }) func removeImage(productId : ProductId, imageIndex : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product not found") };
+      case (?product) {
+        if (imageIndex >= product.imageRefs.size()) {
+          Runtime.trap("Invalid image index");
+        };
+        let filteredImageRefs = product.imageRefs.filter(
+          func(index) { index != imageIndex }
+        );
+        let updatedProduct : Product = {
+          product with imageRefs = filteredImageRefs
+        };
+        products.add(productId, updatedProduct);
+      };
+    };
+  };
+
+  public shared ({ caller }) func wipeSystem() : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can wipe the system");
+    };
+    retailers.clear();
+    products.clear();
+    listings.clear();
+    productRequests.clear();
+    provinces.clear();
+
+    nextRetailerId := 0;
+    nextProductId := 0;
+    nextListingId := 0;
+    nextRequestId := 0;
+
+    accessControlState := AccessControl.initState();
+    approvalState := UserApproval.initState(accessControlState);
+  };
 };
+

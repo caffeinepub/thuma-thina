@@ -13,6 +13,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
+export type ExternalBlob = Uint8Array;
 export interface Listing {
   'id' : ListingId,
   'status' : ListingStatus,
@@ -27,9 +28,10 @@ export type ListingStatus = { 'active' : null } |
   { 'outOfStock' : null };
 export interface Product {
   'id' : ProductId,
+  'imageRefs' : Array<ExternalBlob>,
   'name' : string,
   'description' : string,
-  'imageRef' : string,
+  'preferredImage' : [] | [ExternalBlob],
   'category' : string,
 }
 export type ProductId = bigint;
@@ -63,13 +65,43 @@ export interface UserApprovalInfo {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addImageRef' : ActorMethod<[ProductId, ExternalBlob], undefined>,
   'addListing' : ActorMethod<
     [RetailerId, ProductId, bigint, bigint, ListingStatus],
     ListingId
   >,
-  'addProduct' : ActorMethod<[string, string, string, string], ProductId>,
+  'addProduct' : ActorMethod<
+    [string, string, string, [] | [ExternalBlob]],
+    ProductId
+  >,
   'addProvince' : ActorMethod<[string, Array<string>], undefined>,
   'addRetailer' : ActorMethod<[string, string, string], RetailerId>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -96,11 +128,17 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
+  'removeImage' : ActorMethod<[ProductId, bigint], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
   'requestNewProduct' : ActorMethod<[string, string, string, string], bigint>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
+  'setPreferredImage' : ActorMethod<
+    [ProductId, [] | [ExternalBlob]],
+    undefined
+  >,
   'updateListingStatus' : ActorMethod<[ListingId, ListingStatus], undefined>,
   'upgradeToAdmin' : ActorMethod<[Principal], undefined>,
+  'wipeSystem' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

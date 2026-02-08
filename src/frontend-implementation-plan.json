@@ -1,57 +1,173 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Prevent blank screen during/after Internet Identity login with loading + error fallback",
+  "title": "Admin Retailers management, schedules, and searchable selectors",
   "requirements": [
     {
-      "id": "REQ-75",
-      "summary": "Add a global, user-visible fallback UI for unexpected runtime errors during/after login so the app never renders blank.",
+      "id": "REQ-87",
+      "summary": "Add a new admin-only Retailers management section with its own route and combined registration + management UI.",
       "acceptanceCriteria": [
-        "If any unhandled error occurs during/after login, the UI shows a readable error panel instead of a blank page.",
-        "The error panel includes English text describing that something went wrong during sign-in/loading and provides at least one recovery action (reload and/or navigate home).",
-        "When no error occurs, the normal UI is unchanged."
+        "A new admin-only route exists for retailer management (accessible only inside the existing <AdminOnly> gate).",
+        "The new section supports registering a retailer and viewing/managing existing retailers in the same section.",
+        "All user-facing text added for this section is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx",
-          "operation": "create",
-          "description": "Create a reusable error screen component that renders a clear English error message and provides recovery actions (at minimum: reload page and navigate home). Use shadcn-ui components (e.g., Button/Alert/Card if available) for consistent styling; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-          "operation": "create",
-          "description": "Add a global error boundary that catches render-time exceptions and also captures window-level runtime errors (e.g., unhandled promise rejections) during/after login, and renders UnexpectedRuntimeErrorScreen instead of leaving the UI blank."
-        },
-        {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Wrap the RouterProvider (or the root route layout tree) with GlobalErrorBoundary so any unexpected runtime errors during/after login show the fallback UI rather than a blank screen. Ensure normal rendering is unchanged when no errors occur."
+          "description": "Register a new admin-only route (e.g., /admin/retailers) wrapped in the existing AdminOnly gate, and ensure it is reachable via routing. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "operation": "create",
+          "description": "Create the new Retailers management page that includes retailer registration and a management list within the same admin-only view, using shadcn-ui composed components (e.g., Card, Tabs, Table). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add a navigation affordance (button/link) from the existing Admin Dashboard to the new Retailers management route, keeping the sections separate. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-76",
-      "summary": "Provide a clear, non-blank loading state during the Internet Identity round-trip and immediate post-login initialization, without modifying immutable hook files.",
+      "id": "REQ-88",
+      "summary": "Implement an admin Retailers list with live data and edit/remove actions with confirmation and React Query cache refresh.",
       "acceptanceCriteria": [
-        "After clicking “Login”, the user sees a visible loading state (not a blank screen) until the app is ready.",
-        "If login fails, the app stays interactive and displays an English error message rather than going blank.",
-        "This change does not modify any files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useActor.ts`, or other immutable paths."
+        "The UI displays a list/table of retailers loaded from live backend data.",
+        "Each retailer row has an Edit action that updates retailer fields and persists changes.",
+        "Each retailer row has a Remove action that asks for confirmation before deleting and then removes the retailer from backend state.",
+        "After edit/remove, relevant React Query caches are invalidated/refreshed so the list updates without a full page reload."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/auth/AuthInitializationOverlay.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks/mutations for retailer management used by the new admin Retailers section: fetch-all-retailers (from the new backend capability), update-retailer, and remove-retailer, including cache invalidation for retailer queries. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "operation": "modify",
+          "description": "Implement a retailers table/list fed by live backend data, with per-row Edit (modal/drawer) and Remove (confirmation dialog) actions; on success, invalidate relevant React Query caches to refresh without full reload. Use shadcn-ui composed components such as Table, Dialog/AlertDialog, Button, Input. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/RetailerEditDialog.tsx",
           "operation": "create",
-          "description": "Create an overlay/loading component that becomes visible during Internet Identity login and the immediate post-login actor initialization phase by reading state from existing hooks (without modifying immutable hooks). Use shadcn-ui primitives (e.g., Button/Spinner styling patterns) where appropriate; verify the component's usage instructions before implementing."
+          "description": "Create a composed shadcn-ui dialog component used by AdminRetailersPage to edit retailer fields and save via React Query mutation; ensure it can be opened per retailer row. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-90",
+      "summary": "Add editable weekly operating hours (Mon–Sun) and holiday override schedules to the admin Retailers section.",
+      "acceptanceCriteria": [
+        "Retailer data includes a weekly schedule covering all seven days and a set of holiday overrides (date-specific).",
+        "Admin UI can set each day as open or closed and, if open, configure opening and closing time fields.",
+        "Admin UI can add/edit/remove holiday overrides per retailer.",
+        "Saving operating hours persists to the backend and reloads correctly on page refresh."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/RetailerHoursEditor.tsx",
+          "operation": "create",
+          "description": "Create a reusable editor UI for weekly hours (Mon–Sun open/closed + open/close times) and holiday overrides (date-specific), composed from shadcn-ui inputs/buttons and used inside the retailer edit flow. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "path": "frontend/src/components/admin/RetailerEditDialog.tsx",
           "operation": "modify",
-          "description": "Wire AuthInitializationOverlay into the main layout so it is always present and can display a visible loading state during login and post-login initialization without adding new routes/pages."
+          "description": "Integrate the RetailerHoursEditor into the retailer edit dialog so admins can add/edit/remove weekly hours and holiday overrides, and include these fields in the save payload. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/shop/ShopHeader.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Ensure the header login area remains clearly interactive during login failures by surfacing an English error message when Internet Identity reports a login error state (while keeping existing behavior unchanged when no error occurs). Use shadcn-ui components (e.g., Alert) for consistent UI; verify the component's usage instructions before implementing."
+          "description": "Extend the retailer update mutation hook usage to include operating-hours and holiday-override fields in the data passed to the backend capability, and ensure post-save refetch/invalidation updates the admin list and any retailer-detail queries. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-91",
+      "summary": "Show retailer open/closed status on browsing pages and remove any implied path to ordering while closed.",
+      "acceptanceCriteria": [
+        "Backend provides a query that indicates whether a retailer is currently open based on stored weekly hours and holiday overrides.",
+        "Backend exposes (or reuses) a reusable guard/check that can be applied to order-placement endpoints later (must be enforced server-side, not only in the UI).",
+        "Retailer browsing UI clearly shows when a retailer is closed (English message) and does not present a path that implies an order can be placed while closed (e.g., disables or hides order initiation controls if present now or added later)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hook(s) to retrieve open/closed status for a retailer (and/or for a list of retailers) from the new backend capability, with stable query keys for cache reuse across list/catalog/detail pages. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerListPage.tsx",
+          "operation": "modify",
+          "description": "Display each retailer's current open/closed status alongside the retailer entry using English text, leveraging the new open-status query hook(s). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "operation": "modify",
+          "description": "Show a clear open/closed banner/status for the current retailer; when closed, ensure the UI does not suggest ordering is possible (e.g., show a closed message and ensure any present/future order initiation controls are disabled/hidden). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "operation": "modify",
+          "description": "Show the current retailer's open/closed status near product availability context; when closed, show an English message indicating ordering is unavailable while closed and avoid any implied ordering path. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-92",
+      "summary": "Use a fixed dropdown of the 9 South African provinces for retailer registration (no free-text province input).",
+      "acceptanceCriteria": [
+        "Retailer registration UI uses a dropdown (not a free-text input) for province selection.",
+        "The dropdown contains exactly the 9 South African provinces and saves the selected province string into the retailer record.",
+        "All user-facing text for the dropdown and validation messages is English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/saProvinces.ts",
+          "operation": "create",
+          "description": "Add a single source of truth constant list for the 9 South African provinces (exact strings required) to be reused by admin retailer registration/edit forms. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "operation": "modify",
+          "description": "Implement retailer registration province selection as a dropdown populated from the SA provinces constant (exact 9), and ensure the selected province string is sent in the registration mutation. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update the existing Add Retailer form province selector to use the fixed SA provinces dropdown (exact 9) rather than relying on province iteration data, so retailer registration consistently meets requirements. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "operation": "modify",
+          "description": "Ensure the retailer edit UI uses the same SA provinces dropdown for province changes (exact 9) and persists the selected string on save. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-93",
+      "summary": "Make Admin Dashboard listing creation Retailer and Product selectors live-data populated and type-searchable with keyboard navigation.",
+      "acceptanceCriteria": [
+        "In the existing listing creation form (Admin Dashboard), both Retailer and Product selectors load their options from live backend data.",
+        "Both selectors support type-to-search filtering and keyboard navigation.",
+        "Selecting a retailer/product reliably sets the IDs used in the listing creation mutation."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/SearchableSelect.tsx",
+          "operation": "create",
+          "description": "Create a reusable searchable selector component composed from shadcn-ui primitives (e.g., Popover + Command pattern) that supports type-to-search filtering and keyboard navigation, returning the selected value reliably. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Replace the listing creation Retailer and Product selectors with the new SearchableSelect component, populated from live backend data (allRetailers/allProducts queries) and ensure selected IDs feed the addListing mutation correctly. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure the queries used by listing creation provide up-to-date product and retailer option lists (from live backend data) with appropriate caching and refetch behavior for admin workflows. Verify the component's usage instructions before implementing."
         }
       ]
     }

@@ -1,73 +1,178 @@
 {
   "kind": "build_request",
-  "title": "Fix Internet Identity login blank screen after clicking Login",
-  "priority": "high",
+  "title": "Add admin Retailers section with SA provinces, operating hours, edit/remove, and searchable dropdowns",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-74",
-      "text": "Fix the post-login blank-screen failure by ensuring the frontend actor initialization cannot be broken by access-control secret initialization when no admin token is provided (e.g., empty `caffeineAdminToken`). Specifically, make the backend access-control initialization path safe to call with empty tokens so the authenticated actor can still be created and used for normal browsing.",
+      "id": "REQ-87",
+      "text": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "lets do the retailers section first"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new admin-only route exists for retailer management (accessible only inside the existing <AdminOnly> gate).",
+        "The new section supports registering a retailer and viewing/managing existing retailers in the same section.",
+        "All user-facing text added for this section is in English."
+      ]
+    },
+    {
+      "id": "REQ-88",
+      "text": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "after adding retailer there should be a retailers list with option to edit of remove retailers."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The UI displays a list/table of retailers loaded from live backend data.",
+        "Each retailer row has an Edit action that updates retailer fields and persists changes.",
+        "Each retailer row has a Remove action that asks for confirmation before deleting and then removes the retailer from backend state.",
+        "After edit/remove, relevant React Query caches are invalidated/refreshed so the list updates without a full page reload."
+      ]
+    },
+    {
+      "id": "REQ-89",
+      "text": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Ok the log in worklow does not load after click log in, stuck with blank screen"
+          "a new dedicated retailer section for registration and edit of retailers only."
         ]
       },
       "acceptanceCriteria": [
-        "Logging in with Internet Identity no longer results in a blank screen.",
-        "After a successful login, the app continues rendering and users can navigate/browse as normal.",
-        "If the frontend calls the access-control/secret initialization with empty token(s), the backend does not trap; the call succeeds or becomes a no-op that does not break the session."
+        "Backend exposes a query method to return all retailers (not dependent on province/town iteration).",
+        "Backend exposes admin-only methods to update a retailer and to remove a retailer.",
+        "Unauthorized callers attempting update/remove retailer operations receive an authorization error (trap) consistent with existing admin checks."
       ]
     },
     {
-      "id": "REQ-75",
-      "text": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
-      "target": "frontend",
+      "id": "REQ-90",
+      "text": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Ok the log in worklow does not load after click log in, stuck with blank screen"
+          "full per day shedules including holidays and weekends individually"
         ]
       },
       "acceptanceCriteria": [
-        "If any unhandled error occurs during/after login, the UI shows a readable error panel instead of a blank page.",
-        "The error panel includes English text describing that something went wrong during sign-in/loading and provides at least one recovery action (reload and/or navigate home).",
-        "When no error occurs, the normal UI is unchanged."
+        "Retailer data includes a weekly schedule covering all seven days and a set of holiday overrides (date-specific).",
+        "Admin UI can set each day as open or closed and, if open, configure opening and closing time fields.",
+        "Admin UI can add/edit/remove holiday overrides per retailer.",
+        "Saving operating hours persists to the backend and reloads correctly on page refresh."
       ]
     },
     {
-      "id": "REQ-76",
-      "text": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
-      "target": "frontend",
+      "id": "REQ-91",
+      "text": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Ok the log in worklow does not load after click log in, stuck with blank screen"
+          "include operating hours for retailers so that users cant make orders while retailers are closed."
         ]
       },
       "acceptanceCriteria": [
-        "After clicking “Login”, the user sees a visible loading state (not a blank screen) until the app is ready.",
-        "If login fails, the app stays interactive and displays an English error message rather than going blank.",
-        "This change does not modify any files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useActor.ts`, or other immutable paths."
+        "Backend provides a query that indicates whether a retailer is currently open based on stored weekly hours and holiday overrides.",
+        "Backend exposes (or reuses) a reusable guard/check that can be applied to order-placement endpoints later (must be enforced server-side, not only in the UI).",
+        "Retailer browsing UI clearly shows when a retailer is closed (English message) and does not present a path that implies an order can be placed while closed (e.g., disables or hides order initiation controls if present now or added later)."
+      ]
+    },
+    {
+      "id": "REQ-92",
+      "text": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "provinces drop down appears when registering a retailer and choosing which location it is situated"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Retailer registration UI uses a dropdown (not a free-text input) for province selection.",
+        "The dropdown contains exactly the 9 South African provinces and saves the selected province string into the retailer record.",
+        "All user-facing text for the dropdown and validation messages is English."
+      ]
+    },
+    {
+      "id": "REQ-93",
+      "text": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "lastly when listing an item make sure retailer and product drop down list is populated can be type searched for easier access we anticipate a long list and simply scrolling will not be efficient"
+        ]
+      },
+      "acceptanceCriteria": [
+        "In the existing listing creation form (Admin Dashboard), both Retailer and Product selectors load their options from live backend data.",
+        "Both selectors support type-to-search filtering and keyboard navigation.",
+        "Selecting a retailer/product reliably sets the IDs used in the listing creation mutation."
+      ]
+    },
+    {
+      "id": "REQ-94",
+      "text": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "lets also include operating hours for retailers"
+        ]
+      },
+      "acceptanceCriteria": [
+        "An upgrade/migration path exists so existing retailer records are upgraded with default operating hours and no data loss of existing retailer fields (name, townSuburb, province).",
+        "The app continues to load existing retailers after deployment/upgrade without trapping due to missing fields.",
+        "Migration is implemented following the repo’s conditional migration policy (only create/update backend/migration.mo when needed)."
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend immutable paths: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, and anything under `frontend/src/components/ui`.",
-    "Backend must remain a single Motoko actor in `backend/main.mo`; only add `backend/migration.mo` changes if state migration is strictly required."
+    "Use English for all new user-facing text.",
+    "Do not modify any files under frontend/src/components/ui (Shadcn components must be composed, not edited).",
+    "Do not modify frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo changes only if required for state upgrade."
   ],
   "nonGoals": [
-    "Implementing new auth providers or third-party authentication (only Internet Identity).",
-    "Adding new product features unrelated to fixing the login blank-screen issue."
+    "Implementing Personal Shopper and Delivery Driver admin management sections (explicitly deferred until after the Retailers section).",
+    "Implementing the full end-to-end customer order flow and payments (only add the retailer-closed gating primitives needed for later enforcement).",
+    "Adding maps/geolocation or any third-party location services."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

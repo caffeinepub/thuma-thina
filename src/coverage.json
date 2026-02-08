@@ -1,67 +1,136 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T10:21:50.934Z",
+  "generatedAt": "2026-02-08T12:10:42.876Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 8,
+    "implemented": 6,
     "items": [
       {
-        "id": "REQ-74",
-        "summary": "Fix the post-login blank-screen failure by ensuring the frontend actor initialization cannot be broken by access-control secret initialization when no admin token is provided (e.g., empty `caffeineAdminToken`). Specifically, make the backend access-control initialization path safe to call with empty tokens so the authenticated actor can still be created and used for normal browsing.",
+        "id": "REQ-87",
+        "summary": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-88",
+        "summary": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx"
+        ]
+      },
+      {
+        "id": "REQ-89",
+        "summary": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-75",
-        "summary": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
+        "id": "REQ-90",
+        "summary": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx",
-          "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/components/admin/RetailerHoursEditor.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx",
-          "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/components/admin/RetailerHoursEditor.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ]
       },
       {
-        "id": "REQ-76",
-        "summary": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
+        "id": "REQ-91",
+        "summary": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/auth/AuthInitializationOverlay.tsx",
-          "frontend/src/components/shop/ShopLayout.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/shop/RetailerListPage.tsx",
+          "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/auth/AuthInitializationOverlay.tsx",
-          "frontend/src/components/shop/ShopLayout.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
+          "frontend/src/hooks/useQueries.ts"
         ]
+      },
+      {
+        "id": "REQ-92",
+        "summary": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/saProvinces.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/saProvinces.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx"
+        ]
+      },
+      {
+        "id": "REQ-93",
+        "summary": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/SearchableSelect.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/SearchableSelect.tsx",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-94",
+        "summary": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/App.tsx",
-    "frontend/src/components/auth/AuthInitializationOverlay.tsx",
-    "frontend/src/components/errors/GlobalErrorBoundary.tsx",
-    "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/components/shop/ShopLayout.tsx",
+    "frontend/src/components/admin/RetailerEditDialog.tsx",
+    "frontend/src/components/admin/RetailerHoursEditor.tsx",
+    "frontend/src/components/admin/SearchableSelect.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/admin/AdminRetailersPage.tsx",
+    "frontend/src/pages/shop/AdminDashboardPage.tsx",
+    "frontend/src/utils/saProvinces.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -15,6 +15,7 @@ import { JoinUsPage } from './pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from './pages/shop/RoleApplicationsStatusPage';
 import { MasterAdminRoleApplicationsPage } from './pages/shop/MasterAdminRoleApplicationsPage';
 import { AdminDashboardPage } from './pages/shop/AdminDashboardPage';
+import { AdminRetailersPage } from './pages/admin/AdminRetailersPage';
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,16 @@ const adminRoute = createRoute({
   )
 });
 
+const adminRetailersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/retailers',
+  component: () => (
+    <AdminOnly>
+      <AdminRetailersPage />
+    </AdminOnly>
+  )
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   townSuburbRoute,
@@ -101,7 +112,8 @@ const routeTree = rootRoute.addChildren([
   joinRoute,
   joinStatusRoute,
   joinAdminRoute,
-  adminRoute
+  adminRoute,
+  adminRetailersRoute
 ]);
 
 const router = createRouter({ routeTree });

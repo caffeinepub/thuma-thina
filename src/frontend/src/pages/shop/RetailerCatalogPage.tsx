@@ -2,10 +2,10 @@ import { useProductCatalog } from '../../hooks/useQueries';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronLeft, Loader2, Package, Search } from 'lucide-react';
 import { useCatalogControls } from '../../components/shop/catalog/useCatalogControls';
-import { publicAssetUrl } from '../../utils/publicAssetUrl';
 import { useQuery } from '@tanstack/react-query';
 import { useActor } from '../../hooks/useActor';
 import type { Product } from '../../backend';
+import { getPrimaryImage, getImageUrl } from '../../utils/productImages';
 
 export function RetailerCatalogPage() {
   const { retailerId } = useParams({ strict: false });
@@ -43,12 +43,14 @@ export function RetailerCatalogPage() {
   // Enrich listings with product data for catalog controls
   const enrichedProducts = (listings || []).map(listing => {
     const product = allProducts?.find(p => p.id === listing.productId);
+    const primaryImage = product ? getPrimaryImage(product) : null;
+    
     return {
       id: listing.productId,
       name: product?.name || 'Unknown Product',
       category: product?.category || 'Uncategorized',
       description: product?.description || '',
-      imageRef: product?.imageRef || '',
+      imageRef: primaryImage ? getImageUrl(primaryImage) : '',
       price: listing.price
     };
   });
@@ -76,20 +78,6 @@ export function RetailerCatalogPage() {
 
   const formatPrice = (price: bigint) => {
     return `R ${Number(price).toFixed(2)}`;
-  };
-
-  // Helper to normalize image URLs
-  const getImageUrl = (imageRef: string) => {
-    if (!imageRef) return '';
-    // If it's already a full URL, return as-is
-    if (imageRef.startsWith('http://') || imageRef.startsWith('https://')) {
-      return imageRef;
-    }
-    // If it looks like a public asset path, normalize it
-    if (imageRef.startsWith('/assets/') || imageRef.startsWith('assets/')) {
-      return publicAssetUrl(imageRef);
-    }
-    return imageRef;
   };
 
   return (
@@ -192,7 +180,7 @@ export function RetailerCatalogPage() {
                 <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative overflow-hidden">
                   {product.imageRef ? (
                     <img
-                      src={getImageUrl(product.imageRef)}
+                      src={product.imageRef}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
