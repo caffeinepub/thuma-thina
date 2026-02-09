@@ -1,16 +1,17 @@
 # Specification
 
 ## Summary
-**Goal:** Add an admin-only Retailers management section with editable retailer details (including operating hours), improve admin listing creation selectors, and prevent ordering while a retailer is closed.
+**Goal:** Fix ZAR pricing so all money values are stored/displayed in rands, enable admin deletion for retailers and products, and deliver a role-based order workflow (customer → shopper → driver) using the existing Internet Identity login.
 
 **Planned changes:**
-- Add a new admin-only Retailers route/section (inside the existing admin gate) for registering retailers and managing existing retailers in one place.
-- Implement a retailers list/table backed by live data with Edit and Remove actions, including a confirmation step for removals and cache refresh after changes.
-- Add/extend backend APIs to list all retailers, update a retailer, and remove a retailer; restrict update/remove to admin callers.
-- Expand the retailer model to store weekly operating hours (Mon–Sun) and date-specific holiday overrides; add admin UI to edit these schedules and persist them.
-- Add backend logic to determine whether a retailer is currently open (using weekly hours + holiday overrides) and surface open/closed status in retailer browsing UI; ensure the UI does not imply orders can be placed while closed.
-- Replace free-text province entry in retailer registration with a dropdown of the 9 South African provinces.
-- Update the existing Admin Dashboard listing creation form so Retailer and Product selectors load from live backend data and support type-to-search.
-- Add safe backend state migration/conditional upgrade logic so existing retailer records gain default operating hours without data loss.
+- Standardize listing/product/order monetary values to ZAR rands (not cents) across backend state, frontend entry forms, catalogue display, and money-related analytics totals.
+- Add a conditional backend migration to convert legacy listing prices stored as cents into rands (divide by 100, rounding down if needed).
+- Implement and wire up admin retailer deletion end-to-end (backend removeRetailer + frontend action), including confirmation and UI refresh without full reload; deletion also removes associated listings.
+- Add admin ability to delete products from the universal catalogue (backend removeProduct + frontend action), including confirmation and UI refresh; deletion also removes associated listings.
+- Implement backend order creation and persistence for customers/users, including line items (listingId, quantity, unit price in rands) and validated status transitions through: placed → shopping → readyForDelivery → outForDelivery → delivered.
+- Add backend shopper APIs to list placed orders, accept an order (assign shopper), and mark shopping done (moves order to readyForDelivery) with role checks.
+- Add backend driver APIs to list ready-for-delivery orders, accept/collect (assign driver), and mark delivered with role checks.
+- Implement role-based frontend dashboards: customers browse listings and place orders; shoppers manage placed orders; drivers manage ready-for-delivery orders; navigation shows dashboards based on role; all UI text remains English.
+- Update admin listing creation/edit UI copy and formatting so price fields clearly use rands and no screen shows cents as rands.
 
-**User-visible outcome:** Admin users can register, view, edit, and remove retailers (including setting weekly hours and holiday overrides). Customers can see when retailers are open/closed, and the UI prevents proceeding as if an order can be placed while a retailer is closed. Admin listing creation has searchable, backend-populated retailer and product dropdowns.
+**User-visible outcome:** Admins see consistent ZAR rand pricing everywhere and can delete retailers/products (with confirmations) while data updates immediately; customers can place orders from listings; shoppers can accept and complete shopping on new orders; drivers can accept deliveries and mark orders delivered, with dashboards shown based on the logged-in user’s role.

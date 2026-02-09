@@ -28,6 +28,32 @@ export const ListingStatus = IDL.Variant({
   'outOfStock' : IDL.Null,
 });
 export const ListingId = IDL.Nat;
+export const Time = IDL.Int;
+export const HolidayOverride = IDL.Record({
+  'closeTime' : IDL.Opt(IDL.Nat),
+  'date' : Time,
+  'name' : IDL.Text,
+  'isOpen' : IDL.Bool,
+  'openTime' : IDL.Opt(IDL.Nat),
+});
+export const WeekdayTimeRange = IDL.Record({
+  'day' : IDL.Nat,
+  'closeTime' : IDL.Nat,
+  'openTime' : IDL.Nat,
+});
+export const OpeningHours = IDL.Record({
+  'holidayOverrides' : IDL.Vec(HolidayOverride),
+  'weeklySchedule' : IDL.Vec(WeekdayTimeRange),
+});
+export const RetailerInput = IDL.Record({
+  'province' : IDL.Text,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'address' : IDL.Text,
+  'openingHours' : OpeningHours,
+  'phone' : IDL.Text,
+  'townSuburb' : IDL.Text,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -41,6 +67,11 @@ export const Listing = IDL.Record({
   'price' : IDL.Nat,
   'retailerId' : RetailerId,
 });
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
+});
 export const ProductRequest = IDL.Record({
   'id' : IDL.Nat,
   'province' : IDL.Text,
@@ -52,6 +83,12 @@ export const Retailer = IDL.Record({
   'id' : RetailerId,
   'province' : IDL.Text,
   'name' : IDL.Text,
+  'createdAt' : Time,
+  'email' : IDL.Text,
+  'updatedAt' : Time,
+  'address' : IDL.Text,
+  'openingHours' : OpeningHours,
+  'phone' : IDL.Text,
   'townSuburb' : IDL.Text,
 });
 export const Product = IDL.Record({
@@ -124,10 +161,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-  'addRetailer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [RetailerId], []),
+  'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDashboardData' : IDL.Func(
       [],
@@ -149,14 +187,28 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
+  'getRetailerById' : IDL.Func([RetailerId], [IDL.Opt(Retailer)], ['query']),
   'getRetailersByTownSuburb' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(RetailerWithListings)],
       ['query'],
     ),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+  'isRetailerOpen' : IDL.Func(
+      [RetailerId, IDL.Opt(Time)],
+      [IDL.Bool],
+      ['query'],
+    ),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'listListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+  'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
   'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
   'requestApproval' : IDL.Func([], [], []),
   'requestNewProduct' : IDL.Func(
@@ -164,9 +216,11 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
   'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
+  'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [], []),
   'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
   'wipeSystem' : IDL.Func([], [], []),
 });
@@ -194,6 +248,32 @@ export const idlFactory = ({ IDL }) => {
     'outOfStock' : IDL.Null,
   });
   const ListingId = IDL.Nat;
+  const Time = IDL.Int;
+  const HolidayOverride = IDL.Record({
+    'closeTime' : IDL.Opt(IDL.Nat),
+    'date' : Time,
+    'name' : IDL.Text,
+    'isOpen' : IDL.Bool,
+    'openTime' : IDL.Opt(IDL.Nat),
+  });
+  const WeekdayTimeRange = IDL.Record({
+    'day' : IDL.Nat,
+    'closeTime' : IDL.Nat,
+    'openTime' : IDL.Nat,
+  });
+  const OpeningHours = IDL.Record({
+    'holidayOverrides' : IDL.Vec(HolidayOverride),
+    'weeklySchedule' : IDL.Vec(WeekdayTimeRange),
+  });
+  const RetailerInput = IDL.Record({
+    'province' : IDL.Text,
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'address' : IDL.Text,
+    'openingHours' : OpeningHours,
+    'phone' : IDL.Text,
+    'townSuburb' : IDL.Text,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -207,6 +287,11 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Nat,
     'retailerId' : RetailerId,
   });
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
+  });
   const ProductRequest = IDL.Record({
     'id' : IDL.Nat,
     'province' : IDL.Text,
@@ -218,6 +303,12 @@ export const idlFactory = ({ IDL }) => {
     'id' : RetailerId,
     'province' : IDL.Text,
     'name' : IDL.Text,
+    'createdAt' : Time,
+    'email' : IDL.Text,
+    'updatedAt' : Time,
+    'address' : IDL.Text,
+    'openingHours' : OpeningHours,
+    'phone' : IDL.Text,
     'townSuburb' : IDL.Text,
   });
   const Product = IDL.Record({
@@ -290,10 +381,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-    'addRetailer' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [RetailerId], []),
+    'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDashboardData' : IDL.Func(
         [],
@@ -315,14 +407,28 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
+    'getRetailerById' : IDL.Func([RetailerId], [IDL.Opt(Retailer)], ['query']),
     'getRetailersByTownSuburb' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(RetailerWithListings)],
         ['query'],
       ),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+    'isRetailerOpen' : IDL.Func(
+        [RetailerId, IDL.Opt(Time)],
+        [IDL.Bool],
+        ['query'],
+      ),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'listListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
+    'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
     'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
     'requestApproval' : IDL.Func([], [], []),
     'requestNewProduct' : IDL.Func(
@@ -330,9 +436,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
     'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
+    'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [], []),
     'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
     'wipeSystem' : IDL.Func([], [], []),
   });

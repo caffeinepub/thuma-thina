@@ -2,12 +2,15 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-a-new-admin-only-retailers-management-section-separate-from-the-existing-admin-dashboard-dedicated-to-retailer-registration-and-ongoing-retailer-management",
-      "featureTitle": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
+      "featureId": "feature-standardize-all-monetary-values-to-be-stored-and-treated-as-zar-rands-not-cents-across-the-backend-and-frontend-including-listing-creation-editing-catalogue-display-and-any-analytics-totals",
+      "featureTitle": "Standardize all monetary values to be stored and treated as ZAR rands (not cents) across the backend and frontend, including listing creation/editing, catalogue display, and any analytics totals.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/admin/AdminRetailersPage.tsx",
-        "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        "frontend/src/components/shop/CataloguePreviewSection.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/shop/AdminDashboardPage.tsx",
+        "frontend/src/pages/shop/ProductDetailPage.tsx",
+        "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+        "frontend/src/utils/money.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -20,15 +23,14 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-87"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-a-retailers-list-in-the-new-admin-retailers-section-that-shows-all-retailers-and-provides-actions-to-edit-retailer-details-and-remove-retailers-with-a-confirmation-step",
-      "featureTitle": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
+      "featureId": "feature-fix-retailer-deletion-end-to-end-implement-the-backend-removeretailer-method-and-ensure-the-frontend-admin-retailer-delete-action-calls-it-successfully-with-a-confirmation-step-and-appropriate-cache-invalidation",
+      "featureTitle": "Fix retailer deletion end-to-end: implement the backend removeRetailer method and ensure the frontend admin retailer delete action calls it successfully, with a confirmation step and appropriate cache invalidation.",
       "files": [
-        "frontend/src/components/admin/RetailerEditDialog.tsx",
         "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/admin/AdminRetailersPage.tsx"
       ],
@@ -43,83 +45,14 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-88"
+        "REQ-3"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-full-per-day-retailer-operating-hours-mon-sun-with-additional-holiday-specific-overrides-store-them-on-the-retailer-model-and-make-them-editable-from-the-admin-retailers-section",
-      "featureTitle": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
+      "featureId": "feature-add-the-ability-to-delete-products-from-the-universal-catalogue-with-a-confirmation-step-deleting-a-product-must-also-remove-any-associated-listings",
+      "featureTitle": "Add the ability to delete products from the universal catalogue with a confirmation step; deleting a product must also remove any associated listings.",
       "files": [
-        "frontend/src/components/admin/RetailerEditDialog.tsx",
-        "frontend/src/components/admin/RetailerHoursEditor.tsx",
-        "frontend/src/hooks/useQueries.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0",
-        "user-approval@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-90"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-prevent-customers-from-placing-orders-while-a-retailer-is-closed-by-adding-backend-level-retailer-open-checks-and-frontend-visibility-of-open-closed-status-on-retailer-browsing-pages",
-      "featureTitle": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0",
-        "user-approval@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-91"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-replace-free-text-province-entry-during-retailer-registration-with-a-dropdown-containing-all-south-african-provinces-eastern-cape-free-state-gauteng-kwazulu-natal-limpopo-mpumalanga-northern-cape-north-west-western-cape",
-      "featureTitle": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
-      "files": [
-        "frontend/src/components/admin/RetailerEditDialog.tsx",
-        "frontend/src/pages/admin/AdminRetailersPage.tsx",
-        "frontend/src/pages/shop/AdminDashboardPage.tsx",
-        "frontend/src/utils/saProvinces.ts"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0",
-        "user-approval@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-92"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-improve-the-admin-listing-creation-ux-by-making-the-retailer-and-product-selectors-populated-from-live-backend-data-and-type-searchable-to-avoid-inefficient-scrolling-for-long-lists",
-      "featureTitle": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
-      "files": [
-        "frontend/src/components/admin/SearchableSelect.tsx",
         "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/shop/AdminDashboardPage.tsx"
       ],
@@ -134,7 +67,55 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-93"
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-role-based-dashboards-in-the-frontend-using-the-existing-single-internet-identity-login-customers-users-can-browse-listings-and-place-orders-personal-shoppers-can-view-accept-complete-newly-placed-orders-delivery-drivers-can-view-accept-mark-delivered-ready-for-delivery-orders",
+      "featureTitle": "Implement role-based dashboards in the frontend using the existing single Internet Identity login: customers/users can browse listings and place orders; personal shoppers can view/accept/complete newly placed orders; delivery drivers can view/accept/mark delivered ready-for-delivery orders.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/shop/DriverDashboardPage.tsx",
+        "frontend/src/pages/shop/ProductDetailPage.tsx",
+        "frontend/src/pages/shop/ShopperDashboardPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-admin-listing-creation-ui-to-reflect-rands-not-cents-and-ensure-all-price-labels-placeholders-and-any-formatting-are-consistent-across-admin-listing-creation-and-catalogue-display",
+      "featureTitle": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels, placeholders, and any formatting are consistent across admin listing creation and catalogue display.",
+      "files": [
+        "frontend/src/pages/shop/AdminDashboardPage.tsx",
+        "frontend/src/utils/money.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
       ],
       "confidence": "high"
     }

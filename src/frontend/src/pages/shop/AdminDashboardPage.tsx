@@ -9,616 +9,608 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import { useDashboardData, useAddProduct, useAddListing, useAllProducts, useAllRetailers, useAdminAnalytics, useAddImageRef, useSetPreferredImage, useRemoveImage } from '../../hooks/useQueries';
-import { Package, Store, List, AlertCircle, BarChart3, Loader2, Upload, X, Star, TrendingUp, Users, ShoppingCart, Truck, Settings } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useDashboardData, useAddProduct, useAddListing, useAllProducts, useAllRetailers, useAdminAnalytics, useAddImageRef, useSetPreferredImage, useRemoveImage, useRemoveProduct } from '../../hooks/useQueries';
+import { Package, Store, List, AlertCircle, BarChart3, Loader2, Upload, X, Star, TrendingUp, Users, ShoppingCart, Truck, Settings, Edit, Trash2 } from 'lucide-react';
 import { ListingStatus, type Product, type ProductId } from '../../backend';
 import { DangerZoneWipeSystemCard } from '../../components/admin/DangerZoneWipeSystemCard';
 import { canAddMoreImages, getRemainingImageSlots, getImageUrl, getAllImages } from '../../utils/productImages';
 import { SearchableSelect, type SearchableSelectOption } from '../../components/admin/SearchableSelect';
+import { ProductEditDialog } from '../../components/admin/ProductEditDialog';
+import { formatZAR, parseZAR, isValidZAR } from '../../utils/money';
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
   const { data: dashboardData, isLoading: dashboardLoading } = useDashboardData();
-  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useAdminAnalytics();
+  const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics();
   const { data: allProducts } = useAllProducts();
   const { data: allRetailers } = useAllRetailers();
 
-  const addProduct = useAddProduct();
-  const addListing = useAddListing();
-  const addImageRef = useAddImageRef();
-  const setPreferredImage = useSetPreferredImage();
-  const removeImage = useRemoveImage();
-
   // Product form state
-  const [productForm, setProductForm] = useState({
-    name: '',
-    category: '',
-    description: '',
-    imageFile: null as File | null
-  });
+  const [productName, setProductName] = useState('');
+  const [productCategory, setProductCategory] = useState('');
+  const [productDescription, setProductDescription] = useState('');
+  const [productImage, setProductImage] = useState<File | null>(null);
 
   // Listing form state
-  const [listingForm, setListingForm] = useState({
-    retailerId: '',
-    productId: '',
-    price: '',
-    stock: '',
-    status: ListingStatus.active
-  });
+  const [selectedRetailerId, setSelectedRetailerId] = useState<string>('');
+  const [selectedProductId, setSelectedProductId] = useState<string>('');
+  const [listingPrice, setListingPrice] = useState('');
+  const [listingStock, setListingStock] = useState('');
+  const [listingStatus, setListingStatus] = useState<ListingStatus>(ListingStatus.active);
 
   // Image management state
   const [selectedProductForImages, setSelectedProductForImages] = useState<ProductId | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [isUploading, setIsUploading] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  // Product edit state
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Product deletion state
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+
+  const addProductMutation = useAddProduct();
+  const addListingMutation = useAddListing();
+  const addImageMutation = useAddImageRef();
+  const setPreferredImageMutation = useSetPreferredImage();
+  const removeImageMutation = useRemoveImage();
+  const removeProductMutation = useRemoveProduct();
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
     try {
-      await addProduct.mutateAsync({
-        name: productForm.name,
-        category: productForm.category,
-        description: productForm.description,
-        preferredImage: productForm.imageFile || undefined
+      await addProductMutation.mutateAsync({
+        name: productName,
+        category: productCategory,
+        description: productDescription,
+        preferredImage: productImage || undefined
       });
-      setSuccess('Product added successfully!');
-      setProductForm({ name: '', category: '', description: '', imageFile: null });
-    } catch (err: any) {
-      setError(err.message || 'Failed to add product');
+      setProductName('');
+      setProductCategory('');
+      setProductDescription('');
+      setProductImage(null);
+    } catch (error: any) {
+      console.error('Error adding product:', error);
     }
   };
 
   const handleAddListing = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    
+    if (!selectedRetailerId || !selectedProductId || !listingPrice || !listingStock) {
+      return;
+    }
+
+    if (!isValidZAR(listingPrice)) {
+      return;
+    }
 
     try {
-      await addListing.mutateAsync({
-        retailerId: BigInt(listingForm.retailerId),
-        productId: BigInt(listingForm.productId),
-        price: BigInt(listingForm.price),
-        stock: BigInt(listingForm.stock),
-        status: listingForm.status
+      await addListingMutation.mutateAsync({
+        retailerId: BigInt(selectedRetailerId),
+        productId: BigInt(selectedProductId),
+        price: parseZAR(listingPrice),
+        stock: BigInt(listingStock),
+        status: listingStatus
       });
-      setSuccess('Listing added successfully!');
-      setListingForm({ retailerId: '', productId: '', price: '', stock: '', status: ListingStatus.active });
-    } catch (err: any) {
-      setError(err.message || 'Failed to add listing');
+      setSelectedRetailerId('');
+      setSelectedProductId('');
+      setListingPrice('');
+      setListingStock('');
+      setListingStatus(ListingStatus.active);
+    } catch (error: any) {
+      console.error('Error adding listing:', error);
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (!selectedProductForImages) {
-      setError('Please select a product first');
-      return;
-    }
-
-    const selectedProduct = allProducts?.find(p => p.id === selectedProductForImages);
-    if (!selectedProduct) {
-      setError('Product not found');
-      return;
-    }
-
-    if (!canAddMoreImages(selectedProduct)) {
-      setError('Maximum of 3 images allowed per product');
-      return;
-    }
-
-    setError(null);
-    setIsUploading(true);
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !selectedProductForImages) return;
+    
+    const file = e.target.files[0];
     setUploadProgress(0);
-
+    
     try {
-      await addImageRef.mutateAsync({
+      await addImageMutation.mutateAsync({
         productId: selectedProductForImages,
         imageFile: file,
         onProgress: (percentage) => setUploadProgress(percentage)
       });
-      setSuccess('Image uploaded successfully!');
       setUploadProgress(0);
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload image');
-    } finally {
-      setIsUploading(false);
+      e.target.value = '';
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleSetPreferredImage = async (productId: ProductId, imageIndex: number) => {
+    const product = allProducts?.find(p => p.id === productId);
+    if (!product) return;
+    
+    const allImages = getAllImages(product);
+    const selectedImage = allImages[imageIndex];
+    
+    try {
+      await setPreferredImageMutation.mutateAsync({
+        productId,
+        preferredImage: selectedImage
+      });
+    } catch (error: any) {
+      console.error('Error setting preferred image:', error);
     }
   };
 
   const handleRemoveImage = async (productId: ProductId, imageIndex: number) => {
-    setError(null);
     try {
-      await removeImage.mutateAsync({
+      await removeImageMutation.mutateAsync({
         productId,
         imageIndex: BigInt(imageIndex)
       });
-      setSuccess('Image removed successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove image');
+    } catch (error: any) {
+      console.error('Error removing image:', error);
     }
   };
 
-  const handleSetPreferred = async (productId: ProductId, imageIndex: number) => {
-    setError(null);
-    const product = allProducts?.find(p => p.id === productId);
-    if (!product) return;
-
-    const allImages = getAllImages(product);
-    const selectedImage = allImages[imageIndex];
-
+  const handleDeleteProduct = async () => {
+    if (!deletingProduct) return;
+    
     try {
-      await setPreferredImage.mutateAsync({
-        productId,
-        preferredImage: selectedImage
-      });
-      setSuccess('Primary image updated successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to set primary image');
+      await removeProductMutation.mutateAsync(deletingProduct.id);
+      setDeletingProduct(null);
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
     }
   };
 
-  const selectedProduct = allProducts?.find(p => p.id === selectedProductForImages);
-  const selectedProductImages = selectedProduct ? getAllImages(selectedProduct) : [];
-
-  // Prepare options for searchable selects
-  const retailerOptions: SearchableSelectOption[] = (allRetailers || []).map(rwl => ({
-    value: rwl.retailer.id.toString(),
-    label: `${rwl.retailer.name} (${rwl.retailer.townSuburb})`,
-    searchText: `${rwl.retailer.name} ${rwl.retailer.townSuburb} ${rwl.retailer.province}`
+  const retailerOptions: SearchableSelectOption[] = (allRetailers || []).map(r => ({
+    value: r.id.toString(),
+    label: `${r.name} (${r.townSuburb})`
   }));
 
-  const productOptions: SearchableSelectOption[] = (allProducts || []).map(product => ({
-    value: product.id.toString(),
-    label: `${product.name} - ${product.category}`,
-    searchText: `${product.name} ${product.category} ${product.description}`
+  const productOptions: SearchableSelectOption[] = (allProducts || []).map(p => ({
+    value: p.id.toString(),
+    label: `${p.name} - ${p.category}`
   }));
 
   return (
-    <div className="container-custom py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage products, retailers, listings, and view analytics</p>
+    <div className="container-custom py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Manage products, listings, and system settings
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate({ to: '/admin/retailers' })}
+            className="hover:bg-primary/10 hover:text-primary"
+          >
+            <Store className="h-4 w-4 mr-2" />
+            Manage Retailers
+          </Button>
         </div>
-        <Button
-          onClick={() => navigate({ to: '/admin/retailers' })}
-          variant="outline"
-          className="gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Manage Retailers
-        </Button>
-      </div>
 
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <Package className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardData?.products.toString() || '0'}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Retailers</CardTitle>
-            <Store className="h-4 w-4 text-accent" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardData?.retailers.toString() || '0'}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Listings</CardTitle>
-            <List className="h-4 w-4 text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardData?.listings.toString() || '0'}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Product Requests</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardData?.requests.toString() || '0'}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Analytics Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Analytics Overview
-          </CardTitle>
-          <CardDescription>Platform performance and user behavior insights</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {analyticsLoading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-
-          {analyticsError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{analyticsError.message}</AlertDescription>
-            </Alert>
-          )}
-
-          {analytics && !analyticsLoading && (
-            <div className="space-y-6">
-              {/* Sales & Orders */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-lg border-2 border-border bg-card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <ShoppingCart className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Sales</p>
-                      <p className="text-2xl font-bold">R {Number(analytics.totalSales).toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border-2 border-border bg-card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-accent/10">
-                      <Package className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Completed Orders</p>
-                      <p className="text-2xl font-bold">{analytics.ordersCount.toString()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border-2 border-border bg-card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-secondary/10">
-                      <Truck className="h-5 w-5 text-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Deliveries</p>
-                      <p className="text-2xl font-bold">{analytics.deliveriesCount.toString()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border-2 border-border bg-card p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Users className="h-5 w-5 text-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Active Users</p>
-                      <p className="text-2xl font-bold">
-                        {(Number(analytics.activeShoppers) + Number(analytics.activeDrivers)).toString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Products & Retailers */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                    <Star className="h-5 w-5 text-primary" />
-                    Top Products
-                  </h3>
-                  {analytics.favouriteProducts.length > 0 ? (
-                    <div className="space-y-2">
-                      {analytics.favouriteProducts.slice(0, 5).map((product) => (
-                        <div key={product.id.toString()} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                          <span className="font-medium">{product.name}</span>
-                          <span className="text-sm text-muted-foreground">{product.category}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">No data available yet</p>
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                    <Store className="h-5 w-5 text-accent" />
-                    Top Retailers
-                  </h3>
-                  {analytics.favouriteRetailers.length > 0 ? (
-                    <div className="space-y-2">
-                      {analytics.favouriteRetailers.slice(0, 5).map((retailer: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                          <span className="font-medium">{retailer.name}</span>
-                          <span className="text-sm text-muted-foreground">{retailer.townSuburb}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">No data available yet</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert className="mb-6 border-primary/50 bg-primary/5">
-          <AlertDescription className="text-primary">{success}</AlertDescription>
-        </Alert>
-      )}
-
-      <Tabs defaultValue="products" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="listings">Listings</TabsTrigger>
-          <TabsTrigger value="images">Product Images</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Product</CardTitle>
-              <CardDescription>Create a new product in the catalog</CardDescription>
+        {/* Analytics Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Retailers</CardTitle>
+              <Store className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleAddProduct} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="product-name">Product Name</Label>
-                    <Input
-                      id="product-name"
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      placeholder="Enter product name"
-                      disabled={addProduct.isPending}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="product-category">Category</Label>
-                    <Input
-                      id="product-category"
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                      placeholder="Enter category"
-                      disabled={addProduct.isPending}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="product-description">Description</Label>
-                  <Textarea
-                    id="product-description"
-                    value={productForm.description}
-                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                    placeholder="Enter product description"
-                    rows={3}
-                    disabled={addProduct.isPending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="product-image">Product Image (Optional)</Label>
-                  <Input
-                    id="product-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      setProductForm({ ...productForm, imageFile: file });
-                    }}
-                    disabled={addProduct.isPending}
-                  />
-                  <p className="text-xs text-muted-foreground">Upload an image for this product</p>
-                </div>
-                <Button type="submit" disabled={addProduct.isPending}>
-                  {addProduct.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add Product
-                </Button>
-              </form>
+              <div className="text-2xl font-bold">
+                {dashboardLoading ? '...' : Number(dashboardData?.retailers || 0)}
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="listings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Listing</CardTitle>
-              <CardDescription>Create a listing for a product at a retailer</CardDescription>
+          <Card className="border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleAddListing} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-retailer">Retailer</Label>
-                    <SearchableSelect
-                      options={retailerOptions}
-                      value={listingForm.retailerId}
-                      onValueChange={(value) => setListingForm({ ...listingForm, retailerId: value })}
-                      placeholder="Select retailer"
-                      emptyText="No retailers found"
-                      disabled={addListing.isPending}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-product">Product</Label>
-                    <SearchableSelect
-                      options={productOptions}
-                      value={listingForm.productId}
-                      onValueChange={(value) => setListingForm({ ...listingForm, productId: value })}
-                      placeholder="Select product"
-                      emptyText="No products found"
-                      disabled={addListing.isPending}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-price">Price (R)</Label>
-                    <Input
-                      id="listing-price"
-                      type="number"
-                      value={listingForm.price}
-                      onChange={(e) => setListingForm({ ...listingForm, price: e.target.value })}
-                      placeholder="0.00"
-                      step="0.01"
-                      disabled={addListing.isPending}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="listing-stock">Stock</Label>
-                    <Input
-                      id="listing-stock"
-                      type="number"
-                      value={listingForm.stock}
-                      onChange={(e) => setListingForm({ ...listingForm, stock: e.target.value })}
-                      placeholder="0"
-                      disabled={addListing.isPending}
-                    />
-                  </div>
-                </div>
-                <Button type="submit" disabled={addListing.isPending}>
-                  {addListing.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add Listing
-                </Button>
-              </form>
+              <div className="text-2xl font-bold">
+                {dashboardLoading ? '...' : Number(dashboardData?.products || 0)}
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="images">
-          <Card>
-            <CardHeader>
-              <CardTitle>Manage Product Images</CardTitle>
-              <CardDescription>Upload, remove, and set primary images for products (max 3 per product)</CardDescription>
+          <Card className="border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Listings</CardTitle>
+              <List className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="image-product">Select Product</Label>
-                <SearchableSelect
-                  options={productOptions}
-                  value={selectedProductForImages?.toString() || ''}
-                  onValueChange={(value) => setSelectedProductForImages(value ? BigInt(value) : null)}
-                  placeholder="Select product"
-                  emptyText="No products found"
-                />
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardLoading ? '...' : Number(dashboardData?.listings || 0)}
               </div>
+            </CardContent>
+          </Card>
 
-              {selectedProductForImages && selectedProduct && (
-                <>
+          <Card className="border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Product Requests</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardLoading ? '...' : Number(dashboardData?.requests || 0)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="products" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="listings">Listings</TabsTrigger>
+            <TabsTrigger value="catalogue">Catalogue</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-6">
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Package className="h-5 w-5 mr-2" />
+                  Add New Product
+                </CardTitle>
+                <CardDescription>
+                  Create a new product in the universal catalogue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddProduct} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="productName">Product Name</Label>
+                      <Input
+                        id="productName"
+                        value={productName}
+                        onChange={(e) => setProductName(e.target.value)}
+                        placeholder="e.g., Fresh Milk 2L"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productCategory">Category</Label>
+                      <Input
+                        id="productCategory"
+                        value={productCategory}
+                        onChange={(e) => setProductCategory(e.target.value)}
+                        placeholder="e.g., Dairy"
+                        required
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="image-upload">Upload Image</Label>
+                    <Label htmlFor="productDescription">Description</Label>
+                    <Textarea
+                      id="productDescription"
+                      value={productDescription}
+                      onChange={(e) => setProductDescription(e.target.value)}
+                      placeholder="Product description..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="productImage">Product Image (Optional)</Label>
                     <Input
-                      id="image-upload"
+                      id="productImage"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file);
-                      }}
-                      disabled={isUploading || !canAddMoreImages(selectedProduct)}
+                      onChange={(e) => setProductImage(e.target.files?.[0] || null)}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {getRemainingImageSlots(selectedProduct)} of 3 slots available
-                    </p>
-                    {isUploading && (
-                      <div className="space-y-2">
-                        <Progress value={uploadProgress} />
-                        <p className="text-xs text-muted-foreground text-center">{uploadProgress}%</p>
-                      </div>
-                    )}
                   </div>
-
-                  {selectedProductImages.length > 0 && (
-                    <div>
-                      <Label className="mb-3 block">Current Images</Label>
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {selectedProductImages.map((image, index) => (
-                          <Card key={index} className="overflow-hidden">
-                            <div className="aspect-square bg-muted relative">
-                              <img
-                                src={getImageUrl(image)}
-                                alt={`Product ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                              {index === 0 && (
-                                <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
-                                  <Star className="h-3 w-3" />
-                                  Primary
-                                </div>
-                              )}
-                            </div>
-                            <CardContent className="p-3 flex gap-2">
-                              {index !== 0 && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleSetPreferred(selectedProductForImages, index)}
-                                  disabled={setPreferredImage.isPending}
-                                  className="flex-1"
-                                >
-                                  <Star className="h-3 w-3 mr-1" />
-                                  Set Primary
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleRemoveImage(selectedProductForImages, index)}
-                                disabled={removeImage.isPending}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              >
-                                <X className="h-3 w-3 mr-1" />
-                                Remove
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
+                  {addProductMutation.isError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {addProductMutation.error?.message || 'Failed to add product'}
+                      </AlertDescription>
+                    </Alert>
                   )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  {addProductMutation.isSuccess && (
+                    <Alert className="border-green-500 text-green-700 bg-green-50">
+                      <AlertDescription>Product added successfully!</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button
+                    type="submit"
+                    disabled={addProductMutation.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {addProductMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Product'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-      <div className="mt-8">
-        <DangerZoneWipeSystemCard />
+          {/* Listings Tab */}
+          <TabsContent value="listings" className="space-y-6">
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <List className="h-5 w-5 mr-2" />
+                  Add New Listing
+                </CardTitle>
+                <CardDescription>
+                  Create a listing for a product at a specific retailer
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddListing} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="retailer">Retailer</Label>
+                      <SearchableSelect
+                        options={retailerOptions}
+                        value={selectedRetailerId}
+                        onValueChange={setSelectedRetailerId}
+                        placeholder="Select retailer..."
+                        emptyText="No retailers found"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="product">Product</Label>
+                      <SearchableSelect
+                        options={productOptions}
+                        value={selectedProductId}
+                        onValueChange={setSelectedProductId}
+                        placeholder="Select product..."
+                        emptyText="No products found"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Price (ZAR)</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={listingPrice}
+                        onChange={(e) => setListingPrice(e.target.value)}
+                        placeholder="e.g., 217.00"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">Enter price in rands (e.g., 217 for R217)</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">Stock Quantity</Label>
+                      <Input
+                        id="stock"
+                        type="number"
+                        min="0"
+                        value={listingStock}
+                        onChange={(e) => setListingStock(e.target.value)}
+                        placeholder="e.g., 50"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <select
+                        id="status"
+                        value={listingStatus}
+                        onChange={(e) => setListingStatus(e.target.value as ListingStatus)}
+                        className="w-full px-3 py-2 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value={ListingStatus.active}>Active</option>
+                        <option value={ListingStatus.outOfStock}>Out of Stock</option>
+                        <option value={ListingStatus.discontinued}>Discontinued</option>
+                      </select>
+                    </div>
+                  </div>
+                  {addListingMutation.isError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {addListingMutation.error?.message || 'Failed to add listing'}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {addListingMutation.isSuccess && (
+                    <Alert className="border-green-500 text-green-700 bg-green-50">
+                      <AlertDescription>Listing added successfully!</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button
+                    type="submit"
+                    disabled={addListingMutation.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {addListingMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Listing'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Catalogue Tab */}
+          <TabsContent value="catalogue" className="space-y-6">
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Package className="h-5 w-5 mr-2" />
+                  Universal Product Catalogue
+                </CardTitle>
+                <CardDescription>
+                  Manage all products and their images
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!allProducts || allProducts.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No products yet. Add your first product above.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Images</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allProducts.map((product) => {
+                          const allImages = getAllImages(product);
+                          const canAddMore = canAddMoreImages(product);
+                          const remaining = getRemainingImageSlots(product);
+                          
+                          return (
+                            <TableRow key={product.id.toString()}>
+                              <TableCell className="font-medium">{product.name}</TableCell>
+                              <TableCell>{product.category}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {allImages.length > 0 ? (
+                                    <div className="flex gap-1">
+                                      {allImages.map((img, idx) => (
+                                        <div key={idx} className="relative group">
+                                          <img
+                                            src={getImageUrl(img)}
+                                            alt={`${product.name} ${idx + 1}`}
+                                            className="h-10 w-10 object-cover rounded border"
+                                          />
+                                          <button
+                                            onClick={() => handleRemoveImage(product.id, idx)}
+                                            className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                          {product.preferredImage && getImageUrl(product.preferredImage) === getImageUrl(img) && (
+                                            <Star className="absolute -bottom-1 -right-1 h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">No images</span>
+                                  )}
+                                  {canAddMore && (
+                                    <label className="cursor-pointer">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          setSelectedProductForImages(product.id);
+                                          handleImageUpload(e);
+                                        }}
+                                      />
+                                      <div className="h-10 w-10 border-2 border-dashed border-border rounded flex items-center justify-center hover:border-primary transition-colors">
+                                        <Upload className="h-4 w-4 text-muted-foreground" />
+                                      </div>
+                                    </label>
+                                  )}
+                                </div>
+                                {uploadProgress > 0 && selectedProductForImages === product.id && (
+                                  <Progress value={uploadProgress} className="mt-2" />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditingProduct(product)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setDeletingProduct(product)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete "{deletingProduct?.name}"? This will also remove all associated listings. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel onClick={() => setDeletingProduct(null)}>
+                                          Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={handleDeleteProduct}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          {removeProductMutation.isPending ? (
+                                            <>
+                                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                              Deleting...
+                                            </>
+                                          ) : (
+                                            'Delete'
+                                          )}
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <DangerZoneWipeSystemCard />
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Product Edit Dialog */}
+      {editingProduct && (
+        <ProductEditDialog
+          product={editingProduct}
+          open={!!editingProduct}
+          onOpenChange={(open) => !open && setEditingProduct(null)}
+          onSuccess={() => setEditingProduct(null)}
+          onError={(error) => console.error('Edit error:', error)}
+        />
+      )}
     </div>
   );
 }

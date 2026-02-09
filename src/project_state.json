@@ -1,1062 +1,137 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 41,
-  "summary": "Build Thuma Thina (part of Mthandeni Umuntu Association) as a full-stack, mobile-responsive Internet Computer (ICP) platform combining (1) a personal shopper + delivery driver network and (2) Ama Dao-zan community pick-up points, with Internet Identity auth, on-chain data, and an integrated NomaYini ICRC-2 token + vesting rewards system from day one.",
+  "projectStateVersion": 3,
+  "summary": "Marketplace/catalogue app with ZAR pricing, role-based dashboards (customers, personal shoppers, delivery drivers), ordering workflow, and admin management (retailers/products) including deletion.",
   "architectural_notes": [
-    "Built on ICP using multiple canisters; all core data (products, orders, profiles, KYC status, rewards, vesting schedules) stored on-chain.",
-    "Authentication via Internet Identity.",
-    "NomaYini implemented as a dedicated ICRC-2 token canister (ICRC-1/ICRC-2 compatible) with vesting/time-lock logic for reward balances.",
-    "Asset/image storage required for product images and KYC uploads (asset canister or equivalent).",
-    "Role-based access control across canisters: customers, cashiers/operators, personal shoppers, drivers, master admin.",
-    "Payments must support ICP and NomaYini at launch; ZAR is a placeholder for later integration.",
-    "Notifications required (in-app) for order lifecycle + rewards/vesting events.",
-    "Frontend framework preference: React/Next.js or SvelteKit (mobile-responsive, mobile-first).",
-    "Branding: Slogan to appear in product UI/marketing copy — \"Yonke into, yonke indawo, ngaso sonke isikhathi\" (Everything, everywhere, all the time).",
-    "Frontend UI foundation uses Tailwind + shadcn-ui component set (config + shared components) to accelerate consistent mobile-first UI development."
+    "Single login system used by all roles; dashboard/content varies by role (customer/user, personal shopper, delivery driver).",
+    "Pricing canonical unit is ZAR rands for storage and display (no cents).",
+    "Order state flow includes: placed -> shopper accepted/in progress -> shopping done -> driver accepted/collected -> delivered."
   ],
   "known_issues": [
-    "Generated homepage hero image file is 1200x600, but project image requirements specify 1600x900 (consider regenerating/resizing to the required dimensions).",
-    "First authenticated user is not being auto-assigned/recognized as Master Admin, so the user is not routed/loaded into the admin portal and cannot populate products or view analytics.",
-    "Login workflow results in a blank screen after clicking 'Log in' (auth flow/UI not loading).",
-    "Login now reaches the app but shows an error: \"receiving end does not exist\" (likely actor/canister communication issue) after authentication."
+    "Build/deploy pipeline failed with: 'Our AI couldn't handle that request.' (build retry requested).",
+    "Retailer deletion currently fails with error: 'actor.function.delete is not an action'.",
+    "Prices appear inconsistent: cents used in listings vs rands in catalogue/analytics."
   ],
-  "isFixRequest": false,
-  "generatedImages": [
-    {
-      "filename": "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
-      "description": "Primary wordmark logo reading 'Thuma Thina' with subtle 'Ama Dao-zan' secondary text.",
-      "targetWidth": 512,
-      "targetHeight": 512
-    },
-    {
-      "filename": "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
-      "description": "Homepage hero illustration featuring a shopper, a delivery driver, and a community pick-up point in warm green/yellow/earth tones.",
-      "targetWidth": 1200,
-      "targetHeight": 600
-    }
-  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "IF-1",
-      "title": "Static brand assets generated and integrated in frontend",
-      "synonyms": [
-        "Brand assets",
-        "Logo + hero illustration"
-      ],
-      "description": "Added generated Thuma Thina wordmark logo and homepage hero illustration under frontend/public/assets/generated and wired for use in the frontend UI/header/home experience.",
+      "id": "feature-standardize-all-monetary-values-to-be-stored-and-treated-as-zar-rands-not-cents-across-the-backend-and-frontend-including-listing-creation-editing-catalogue-display-and-any-analytics-totals",
+      "title": "Standardize all monetary values to be stored and treated as ZAR rands (not cents) across the backend and frontend, including listing creation/editing, catalogue display, and any analytics totals.",
       "reqIds": [
-        "REQ-43"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "IF-2",
-      "title": "Initial Shop section UI (location browsing + catalog pages)",
-      "synonyms": [
-        "Shop pages",
-        "Location-based browsing"
-      ],
-      "description": "Implemented shop browsing flow pages for Province → Town/Suburb → Retailers, retailer catalog listing, and product detail page scaffolding in the React frontend.",
+      "id": "feature-fix-retailer-deletion-end-to-end-implement-the-backend-removeretailer-method-and-ensure-the-frontend-admin-retailer-delete-action-calls-it-successfully-with-a-confirmation-step-and-appropriate-cache-invalidation",
+      "title": "Fix retailer deletion end-to-end: implement the backend removeRetailer method and ensure the frontend admin retailer delete action calls it successfully, with a confirmation step and appropriate cache invalidation.",
       "reqIds": [
-        "REQ-5",
-        "REQ-19",
-        "REQ-33"
+        "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "IF-3",
-      "title": "Request-new product/retailer page (frontend)",
-      "synonyms": [
-        "Product request form",
-        "Retailer request form"
-      ],
-      "description": "Added a 'Request new product/retailer' page in the Shop section UI for submitting requests (storage/on-chain review integration to be validated).",
+      "id": "feature-add-the-ability-to-delete-products-from-the-universal-catalogue-with-a-confirmation-step-deleting-a-product-must-also-remove-any-associated-listings",
+      "title": "Add the ability to delete products from the universal catalogue with a confirmation step; deleting a product must also remove any associated listings.",
       "reqIds": [
-        "REQ-5",
-        "REQ-19",
-        "REQ-33"
+        "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "IF-4",
-      "title": "Internet Identity integration scaffold in frontend",
-      "synonyms": [
-        "II auth hooks",
-        "Authenticated actor hook"
-      ],
-      "description": "Added frontend hooks/utilities for Internet Identity sign-in and authenticated backend actor access (useInternetIdentity/useActor) to support gated flows.",
+      "id": "feature-implement-role-based-dashboards-in-the-frontend-using-the-existing-single-internet-identity-login-customers-users-can-browse-listings-and-place-orders-personal-shoppers-can-view-accept-complete-newly-placed-orders-delivery-drivers-can-view-accept-mark-delivered-ready-for-delivery-orders",
+      "title": "Implement role-based dashboards in the frontend using the existing single Internet Identity login: customers/users can browse listings and place orders; personal shoppers can view/accept/complete newly placed orders; delivery drivers can view/accept/mark delivered ready-for-delivery orders.",
       "reqIds": [
-        "REQ-2",
-        "REQ-15",
-        "REQ-30"
+        "REQ-8"
       ],
       "version": 1
     },
     {
-      "id": "IF-5",
-      "title": "ICP build/deploy template scaffolding added",
-      "synonyms": [
-        "Build template",
-        "Docker + deploy scripts",
-        "ICP CLI export template"
-      ],
-      "description": "Added a reusable build-template including Dockerfile, deploy scripts, ICP config (icp.yaml/canister.yaml), workspace package manifests, and supporting tooling/scripts to standardize building and deploying the full-stack app on ICP.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-6",
-      "title": "Shadcn UI + Tailwind-based frontend UI foundation integrated",
-      "synonyms": [
-        "shadcn-ui component library",
-        "Tailwind UI system"
-      ],
-      "description": "Integrated a Tailwind + shadcn-ui component foundation (shared UI components, utilities, lint rules, and config) to support consistent, mobile-first UI implementation across the frontend.",
+      "id": "feature-update-admin-listing-creation-ui-to-reflect-rands-not-cents-and-ensure-all-price-labels-placeholders-and-any-formatting-are-consistent-across-admin-listing-creation-and-catalogue-display",
+      "title": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels, placeholders, and any formatting are consistent across admin listing creation and catalogue display.",
       "reqIds": [
-        "REQ-13",
-        "REQ-27",
-        "REQ-41"
-      ],
-      "version": 1
-    },
-    {
-      "id": "IF-7",
-      "title": "Backend role-based authorization + access control utilities",
-      "synonyms": [
-        "Authorization mixin",
-        "Access control module",
-        "RBAC enforcement helpers"
-      ],
-      "description": "Added/updated Motoko authorization infrastructure (authorization mixin + access-control helpers) to support role-based gating of backend methods and admin-only operations.",
-      "reqIds": [
-        "REQ-2",
-        "REQ-15",
-        "REQ-30"
-      ],
-      "version": 1
-    },
-    {
-      "id": "IF-8",
-      "title": "Backend user approval workflow scaffold (role applications/approvals)",
-      "synonyms": [
-        "User approval canister module",
-        "Admin approval pipeline",
-        "Role application approvals"
-      ],
-      "description": "Implemented/updated backend user-approval components to support an approval workflow for role applications (e.g., pending/approved/rejected) that can be used by Master Admin flows.",
-      "reqIds": [
-        "REQ-8",
-        "REQ-9",
-        "REQ-22",
-        "REQ-36",
-        "REQ-37"
-      ],
-      "version": 1
-    },
-    {
-      "id": "IF-9",
-      "title": "Frontend role application and approval pages (Join Us, application status, admin review)",
-      "synonyms": [
-        "Role application UI",
-        "Applicant status UI",
-        "Master Admin role applications page"
-      ],
-      "description": "Added frontend pages and navigation for role applications and tracking: Join Us page, applicant application status page, and a Master Admin role applications review page, wired into the existing Shop layout/header/footer.",
-      "reqIds": [
-        "REQ-8",
-        "REQ-9",
-        "REQ-12",
-        "REQ-22",
-        "REQ-26",
-        "REQ-36",
-        "REQ-37"
-      ],
-      "version": 1
-    },
-    {
-      "id": "IF-10",
-      "title": "Asset/storage client utility scaffold in frontend",
-      "synonyms": [
-        "Storage client",
-        "Upload client helper"
-      ],
-      "description": "Added a frontend StorageClient utility scaffold to support future ICP asset-canister (or equivalent) upload/download integration for product images and KYC documents.",
-      "reqIds": [
-        "REQ-11",
-        "REQ-25",
-        "REQ-39"
-      ],
-      "version": 1
-    },
-    {
-      "id": "IF-11",
-      "title": "Build-template enhancements for ICP deployment + frontend component baseline",
-      "synonyms": [
-        "Template refresh",
-        "Image tooling scripts",
-        "React build template"
-      ],
-      "description": "Expanded/updated the reusable build-template (Docker/deploy/icp configs, React frontend baseline, lint rules) including utility scripts to prune unused images and resize images as part of the build tooling.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-12",
-      "title": "Shop UI layout components (header/footer/landing hero) integrated",
-      "synonyms": [
-        "Shop layout shell",
-        "Shop header/footer",
-        "Shop landing hero"
-      ],
-      "description": "Implemented reusable Shop section layout components (ShopLayout, ShopHeader, ShopFooter, ShopLandingHero) and supporting utilities (public asset URL helper, URL params helpers, shared query hooks) to provide consistent navigation and structure across Shop-related pages.",
-      "reqIds": [
-        "REQ-12",
-        "REQ-26",
-        "REQ-40"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-remove-the-master-admin-role-from-the-join-us-page-so-nobody-can-apply-for-it-while-keeping-the-admin-only-review-applications-entry-point-visible-only-for-admins",
-      "title": "Remove the Master Admin role from the Join Us page so nobody can apply for it, while keeping the admin-only “Review Applications” entry point visible only for admins.",
-      "reqIds": [
-        "REQ-63"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-support-browsing-both-1-by-retailer-retailer-catalogue-derived-from-listings-and-2-by-product-product-detail-view-that-can-show-which-retailers-list-the-product-and-at-what-price",
-      "title": "Support browsing both (1) by retailer (retailer catalogue derived from listings) and (2) by product (product detail view that can show which retailers list the product and at what price).",
-      "reqIds": [
-        "REQ-66"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-home-page-route-to-display-a-catalogue-preview-section-below-the-existing-landing-hero-rendering-preview-items-from-live-backend-data-and-linking-into-existing-browsing-routes-retailer-catalog-and-or-product-detail-use-english-for-all-new-user-facing-text",
-      "title": "Update the home page route ('/') to display a “Catalogue” preview section below the existing landing hero, rendering preview items from live backend data and linking into existing browsing routes (retailer catalog and/or product detail). Use English for all new user-facing text.",
-      "reqIds": [
-        "REQ-68"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-trigger-the-backend-master-admin-bootstrap-from-the-frontend-after-a-user-logs-in-with-internet-identity-without-modifying-any-frontend-immutable-paths-and-ensure-the-call-is-safe-to-run-multiple-times",
-      "title": "Trigger the backend Master Admin bootstrap from the frontend after a user logs in with Internet Identity, without modifying any frontend immutable paths, and ensure the call is safe to run multiple times.",
-      "reqIds": [
-        "REQ-72"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-an-admin-only-admin-entry-point-in-the-shop-ui-that-is-visible-only-when-iscalleradmin-is-true-and-route-to-an-admin-dashboard-page-where-the-admin-can-start-populating-catalog-data-and-view-basic-analytics-counts",
-      "title": "Add an admin-only 'Admin' entry point in the shop UI that is visible only when `isCallerAdmin` is true, and route to an Admin Dashboard page where the admin can start populating catalog data and view basic analytics counts.",
-      "reqIds": [
-        "REQ-73"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-user-visible-non-blank-fallback-ui-for-unexpected-runtime-errors-during-after-login-e-g-actor-creation-query-failures-so-the-app-never-renders-a-completely-blank-screen-the-fallback-must-show-an-english-error-message-and-a-recovery-action-e-g-reload-page-return-home",
-      "title": "Add a user-visible, non-blank fallback UI for unexpected runtime errors during/after login (e.g., actor creation/query failures), so the app never renders a completely blank screen. The fallback must show an English error message and a recovery action (e.g., reload page / return home).",
-      "reqIds": [
-        "REQ-75"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-login-workflow-provides-a-clear-loading-state-during-the-internet-identity-round-trip-and-the-immediate-post-login-initialization-phase-without-modifying-any-immutable-hook-files",
-      "title": "Ensure the login workflow provides a clear loading state during the Internet Identity round-trip and the immediate post-login initialization phase (without modifying any immutable hook files).",
-      "reqIds": [
-        "REQ-76"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-frontend-support-to-trigger-the-full-system-wipe-from-an-admin-only-ui-entry-point-e-g-a-danger-zone-section-in-the-existing-admin-dashboard-page-with-an-explicit-confirmation-step-and-ensure-the-ui-recovers-cleanly-after-the-wipe-e-g-refresh-queries-and-prompt-the-user-to-re-login-use-english-for-all-user-facing-text",
-      "title": "Add frontend support to trigger the full system wipe from an admin-only UI entry point (e.g., a \"Danger Zone\" section in the existing Admin Dashboard page) with an explicit confirmation step, and ensure the UI recovers cleanly after the wipe (e.g., refresh queries and prompt the user to re-login). Use English for all user-facing text.",
-      "reqIds": [
-        "REQ-80"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-replace-external-product-image-links-with-on-platform-product-image-uploads-stored-on-the-internet-computer-supporting-1-recommended-image-and-up-to-3-images-maximum-per-product-and-persist-only-platform-hosted-asset-references-on-chain",
-      "title": "Replace external product image links with on-platform product image uploads stored on the Internet Computer, supporting 1 recommended image and up to 3 images maximum per product, and persist only platform-hosted asset references on-chain.",
-      "reqIds": [
-        "REQ-81"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-admin-ui-to-upload-and-manage-product-images-within-the-existing-admin-dashboard-experience-including-showing-current-images-adding-images-up-to-the-max-of-3-selecting-a-primary-image-and-removing-images",
-      "title": "Add admin UI to upload and manage product images within the existing Admin Dashboard experience, including showing current images, adding images up to the max of 3, selecting a primary image, and removing images.",
-      "reqIds": [
-        "REQ-83"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-customer-facing-browsing-pages-to-render-the-new-multi-image-product-model-using-the-primary-image-by-default-and-gracefully-handling-missing-or-broken-image-assets-with-the-existing-fallback-behavior",
-      "title": "Update customer-facing browsing pages to render the new multi-image product model, using the primary image by default and gracefully handling missing or broken image assets with the existing fallback behavior.",
-      "reqIds": [
-        "REQ-84"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-admin-dashboard-ui-to-display-the-expanded-analytics-daily-sales-completed-orders-only-number-of-shoppers-number-of-drivers-number-of-orders-and-deliveries-and-top-favourite-products-and-retailers-based-on-actual-user-behavior",
-      "title": "Update the Admin Dashboard UI to display the expanded analytics: daily sales (completed orders only), number of shoppers, number of drivers, number of orders and deliveries, and top/favourite products and retailers based on actual user behavior.",
-      "reqIds": [
-        "REQ-86"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-new-admin-only-retailers-management-section-separate-from-the-existing-admin-dashboard-dedicated-to-retailer-registration-and-ongoing-retailer-management",
-      "title": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
-      "reqIds": [
-        "REQ-87"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-a-retailers-list-in-the-new-admin-retailers-section-that-shows-all-retailers-and-provides-actions-to-edit-retailer-details-and-remove-retailers-with-a-confirmation-step",
-      "title": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
-      "reqIds": [
-        "REQ-88"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-full-per-day-retailer-operating-hours-mon-sun-with-additional-holiday-specific-overrides-store-them-on-the-retailer-model-and-make-them-editable-from-the-admin-retailers-section",
-      "title": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
-      "reqIds": [
-        "REQ-90"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-prevent-customers-from-placing-orders-while-a-retailer-is-closed-by-adding-backend-level-retailer-open-checks-and-frontend-visibility-of-open-closed-status-on-retailer-browsing-pages",
-      "title": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
-      "reqIds": [
-        "REQ-91"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-replace-free-text-province-entry-during-retailer-registration-with-a-dropdown-containing-all-south-african-provinces-eastern-cape-free-state-gauteng-kwazulu-natal-limpopo-mpumalanga-northern-cape-north-west-western-cape",
-      "title": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
-      "reqIds": [
-        "REQ-92"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-improve-the-admin-listing-creation-ux-by-making-the-retailer-and-product-selectors-populated-from-live-backend-data-and-type-searchable-to-avoid-inefficient-scrolling-for-long-lists",
-      "title": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
-      "reqIds": [
-        "REQ-93"
+        "REQ-9"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
+      "id": "AR-1",
+      "summary": "Store and display all prices in ZAR rands (not cents) across listings, catalogue, and analytics.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
       "id": "AR-2",
-      "summary": "Implement end-to-end order flow: cart → delivery method (home vs Ama Dao-zan pickup) → payments (ICP/NomaYini/placeholder ZAR) → apply NomaYini balance → order status updates (shopper purchases, driver delivers, pickup collection)",
+      "summary": "Fix retailer deletion: implement delete action with confirmation (resolve 'actor.function.delete is not an action').",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Create NomaYini Token Rewards system: up to 15% cashback rewards per order with vesting (50% after 6 months, 50% after 3 years), including dashboard showing locked/unlocked balances and unlock dates",
+      "summary": "Add ability to delete products from the catalogue (with confirmation).",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Build role-based registration + KYC + approval workflow for Personal Shoppers, Delivery Drivers, and Ama Dao-zan Pick-up Points (upload SA ID + proof of residence; pending until Master Admin approval)",
+      "summary": "Activate order placement for customers/users.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "Create role-based dashboards for Customer, Personal Shopper, Driver, Pick-up Point Cashier/Operator, and Master Admin (orders, earnings, NomaYini stats, KYC approvals, product/retailer management, analytics, reward pool management)",
+      "summary": "Personal shopper dashboard: view newly placed orders, accept to start shopping, mark shopping done.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-6",
-      "summary": "Integrate Internet Identity authentication + wallet features: ICP wallet integration, NomaYini (ICRC-1/ICRC-2) support, send/receive, on-chain transaction history, and vesting breakdown",
+      "summary": "Delivery driver dashboard: see orders ready for delivery, accept/collect delivery, mark delivered.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-7",
-      "summary": "Implement on-chain stats & history for all roles (orders completed, earnings, NomaYini earned, vesting progress)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Implement image uploads/storage for product images and KYC documents via asset canister (or equivalent ICP asset storage approach)",
+      "summary": "Single login for all roles with role-based dashboards/visibility (customers vs shoppers vs drivers).",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-9",
-      "summary": "Add notification system (in-app alerts for order events, vesting unlocks, rewards received)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Frontend UI/UX: mobile-first modern African-inspired theme (greens/yellows/earth tones), homepage + footer referencing MUA and note about fees supporting humanitarian aid; start implementation with homepage, shop, wallet/dashboard, order flow",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Create the core data model and on-chain persistence for Thuma Thina, including: user profiles (by Principal), roles (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin), location hierarchy (Province → Town/Suburb → Retailers), product catalog (name, description, category, price, image reference), pick-up points (Ama Dao-zan), carts, orders, order events/status transitions, notifications, and user statistics.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading, ensuring the UI gates role-specific dashboards and actions based on the user’s assigned role(s).",
+      "summary": "Add a conditional state migration that converts any existing persisted listing prices that were stored as cents into rands (divide by 100, rounding down if needed) so legacy data displays correctly after upgrade.",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
     },
     {
+      "id": "AR-12",
+      "summary": "Implement backend order placement and persistence: allow customer/user accounts to create orders containing one or more listing line items (listingId + quantity + unit price in rands), and store order status through the workflow (placed → accepted by shopper → shopping done → accepted by driver/collected → delivered).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
       "id": "AR-13",
-      "summary": "Implement the NomaYini token system in the backend from day one, including: balance accounting per user, transfers between users, and a vesting schedule for rewards where 50% unlocks after 6 months and 50% unlocks after 3 years. Expose APIs for (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the user.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years). Ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan).",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-16",
-      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking.",
+      "summary": "Add shopper workflow backend APIs: shoppers can list newly placed orders awaiting processing, accept an order to start shopping, and mark shopping as done which makes the order available for delivery drivers.",
       "reqIds": [
         "REQ-6"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-17",
-      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track orders and view history; each dashboard shows relevant stats and NomaYini earned.",
+      "id": "AR-14",
+      "summary": "Add driver workflow backend APIs: drivers can list orders ready for delivery, accept/collect a delivery, and mark the order as delivered.",
       "reqIds": [
         "REQ-7"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-18",
-      "summary": "Implement separate registration flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence). Store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-19",
-      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications, manage retailers and products (create/edit/deactivate), review new product/retailer requests, view basic analytics (counts of users/orders/rewards issued), and manage reward pool parameters (e.g., cashback percent up to 15%).",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-20",
-      "summary": "Implement in-app notifications (on-chain stored) for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability. Provide a notification center UI with unread/read state.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-21",
-      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents. Ensure uploaded assets can be retrieved and rendered in the UI. Enforce reasonable file size/type limits and store references on-chain.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-22",
-      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini balances + vesting breakdown + send token flow, and (4) cart/checkout/order tracking. Include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid. Use English for all user-facing UI text.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-23",
-      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and ensure it remains consistent across all new pages and dashboards.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-24",
-      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-25",
-      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading; gate UI routes, dashboards, and actions based on the user’s assigned role(s).",
-      "reqIds": [
-        "REQ-15"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-26",
-      "summary": "Create the core on-chain data model and persistence in the single Motoko actor for Thuma Thina, covering: user profiles (by Principal), roles (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin), Province→Town/Suburb→Retailers location hierarchy, product catalog (name, description, category, price, image reference), Ama Dao-zan pick-up points, carts, orders, order events/status transitions, notifications, KYC applications, and user statistics.",
-      "reqIds": [
-        "REQ-16"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-27",
-      "summary": "Implement the NomaYini token system in the backend from day one, including per-user balance accounting, transfers between users, and vesting-based reward lots where 50% unlocks after 6 months and 50% unlocks after 3 years; expose APIs for (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the authenticated user.",
-      "reqIds": [
-        "REQ-17"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-28",
-      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years), and ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan).",
-      "reqIds": [
-        "REQ-18"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-30",
-      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
-      "reqIds": [
-        "REQ-20"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-31",
-      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track orders and view history; each dashboard shows relevant stats and NomaYini earned.",
-      "reqIds": [
-        "REQ-21"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-32",
-      "summary": "Implement separate registration/application flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence); store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
-      "reqIds": [
-        "REQ-22"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-33",
-      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications; manage retailers and products (create/edit/deactivate); review new product/retailer requests; view basic analytics (counts of users/orders/rewards issued); and manage reward pool parameters (e.g., cashback percent up to 15%).",
-      "reqIds": [
-        "REQ-23"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-34",
-      "summary": "Implement in-app notifications stored on-chain for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability; provide a notification center UI with unread/read state.",
-      "reqIds": [
-        "REQ-24"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-35",
-      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents using an ICP asset storage approach; ensure uploaded assets can be retrieved and rendered in the UI; enforce reasonable file size/type limits and store references on-chain.",
-      "reqIds": [
-        "REQ-25"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-36",
-      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini balances + vesting breakdown + send token flow, and (4) cart/checkout/order tracking; include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid; use English for all user-facing UI text.",
-      "reqIds": [
-        "REQ-26"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-37",
-      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and ensure it remains consistent across all new pages and dashboards.",
-      "reqIds": [
-        "REQ-27"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-38",
-      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
-      "reqIds": [
-        "REQ-28"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-39",
-      "summary": "Implement the core on-chain data model and persistence in the single Motoko backend actor for Thuma Thina, including: user profiles keyed by Principal; role assignments (Customer, Cashier, Personal Shopper, Delivery Driver, Pick-up Point Operator, Master Admin); Province→Town/Suburb→Retailers hierarchy; Ama Dao-zan pick-up points; product catalog (name, description, category, price, image reference); carts; orders; order status transitions and event history; KYC applications; notifications; and user statistics.",
-      "reqIds": [
-        "REQ-29"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-40",
-      "summary": "Implement Internet Identity authentication on the frontend and connect the authenticated Principal to backend user profile creation/loading; gate role-specific routes, dashboards, and actions based on the user’s assigned role(s).",
-      "reqIds": [
-        "REQ-30"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-41",
-      "summary": "Implement the NomaYini token system in the backend from day one, including: per-user balance accounting; transfers between users; vesting-based reward lots where 50% unlocks after 6 months and 50% unlocks after 3 years; and APIs to fetch (a) total balance, (b) unlocked balance, (c) locked balance, (d) vesting lots with unlock timestamps, and (e) transfer history relevant to the authenticated user.",
-      "reqIds": [
-        "REQ-31"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-42",
-      "summary": "Implement cashback rewards on every completed order: award up to 15% of the order amount in NomaYini, split into two vesting lots (6 months and 3 years), and ensure rewards are triggered only when the order reaches a defined completion state (delivered to home OR collected at Ama Dao-zan). Allow Master Admin to configure the cashback percent with an enforced maximum of 15%.",
-      "reqIds": [
-        "REQ-32"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-44",
-      "summary": "Implement an end-to-end order flow: add to cart, review cart, choose delivery method (Home delivery vs Collect at Ama Dao-zan pick-up point), select payment option (ICP tokens / NomaYini Token / placeholder ZAR), apply NomaYini balance toward purchase when paying with NomaYini, place the order, and show order status tracking with event history.",
-      "reqIds": [
-        "REQ-34"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-45",
-      "summary": "Implement role-specific order operations and dashboards: Personal Shopper can view/accept new orders and mark items purchased/ready; Delivery Driver can view/accept ready orders and mark delivered; Pick-up Point Cashier/Operator can mark orders as collected at Ama Dao-zan; Customers can track active orders and view order history; each dashboard shows relevant stats and NomaYini earned/credited for the user.",
-      "reqIds": [
-        "REQ-35"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-46",
-      "summary": "Implement separate registration/application flows for Personal Shopper, Delivery Driver, and Ama Dao-zan Pick-up Point applications, each requiring KYC uploads (South African ID document and Proof of Residence); store application status on-chain as pending until Master Admin approval, and provide applicant-facing status visibility.",
-      "reqIds": [
-        "REQ-36"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-47",
-      "summary": "Build a Master Admin dashboard with on-chain management capabilities: approve/reject KYC applications; manage retailers and products (create/edit/deactivate); review new product/retailer requests; view basic analytics (counts of users/orders/rewards issued); and manage reward pool parameters (e.g., cashback percent up to 15%).",
-      "reqIds": [
-        "REQ-37"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-48",
-      "summary": "Implement in-app notifications stored on-chain for key events: order assigned/accepted, order marked purchased/ready, order delivered/collected, rewards issued, and vesting unlock availability; provide a notification center UI with unread/read state.",
-      "reqIds": [
-        "REQ-38"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-49",
-      "summary": "Implement image/document upload handling for (a) product images and (b) KYC documents using an ICP asset storage approach; ensure uploaded assets can be retrieved and rendered in the UI; enforce reasonable file size/type limits and store references on-chain.",
-      "reqIds": [
-        "REQ-39"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-50",
-      "summary": "Create the initial frontend experience starting with: (1) homepage introducing Thuma Thina + Ama Dao-zan and the slogan, (2) shop browsing pages, (3) wallet/dashboard page with NomaYini total/unlocked/locked balances, vesting lots and unlock dates, and send-token flow, and (4) cart/checkout/order tracking. Include a footer linking to Mthandeni Umuntu Association (MUA) and a note that platform fees support humanitarian aid. Use English for all user-facing UI text.",
-      "reqIds": [
-        "REQ-40"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-51",
-      "summary": "Apply a consistent mobile-first, modern African-inspired visual theme across the frontend using warm greens, yellows, and earth tones, with clear typography and accessible contrast, and enforce it consistently across all new pages and dashboards.",
-      "reqIds": [
-        "REQ-41"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-52",
-      "summary": "Provide developer-facing documentation within the repo that includes: a project structure overview, a canister architecture overview describing how the backend supports token-like operations and vesting, and a list of the key Motoko interfaces/functions used by the frontend for auth, shop, orders, KYC, notifications, and NomaYini.",
-      "reqIds": [
-        "REQ-42"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-53",
-      "summary": "Bootstrap governance: the first user to authenticate (via Internet Identity) is automatically assigned the Master Admin/Master Owner role; thereafter only Master Admin can approve other role applications and manage privileged actions.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-54",
-      "summary": "Homepage/landing enhancements: display the shop catalogue on the landing page and add inventory + product/retailer listing/management workflows (e.g., create/edit/deactivate listings) surfaced from the landing experience.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-55",
-      "summary": "Implement governance bootstrapping so the first Internet Identity Principal who successfully authenticates and interacts with the backend is automatically assigned the Master Owner/Master Admin permission, without requiring an admin token. After the Master Owner exists, only a Master Owner can approve other users and perform privileged actions.",
-      "reqIds": [
-        "REQ-44"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-56",
-      "summary": "Update backend authorization on catalogue/inventory mutation endpoints so that retailer/product listing management operations are restricted to Master Owner (or admin permission), while read-only catalogue browsing endpoints remain publicly accessible.",
-      "reqIds": [
-        "REQ-45"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-57",
-      "summary": "Add backend read APIs needed to render a landing-page catalogue preview (e.g., fetch a list of retailers and/or a mixed list of products across retailers) so the frontend can display a catalogue section on the landing page without forcing the user to drill into a specific retailer first.",
-      "reqIds": [
-        "REQ-46"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-58",
-      "summary": "Enhance the shop landing page (current route: '/') to display a 'Catalogue' section below the hero that renders a browsable preview of available retailers/products and links into the existing browsing routes (retailer catalog, product detail, province/town flows). Use English for any new user-facing text.",
-      "reqIds": [
-        "REQ-47"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-59",
-      "summary": "Surface product and retailer listing workflows from the landing experience by adding an admin-only 'Manage Listings' area (visible only to Master Owner/admin) that supports creating new retailers and adding products to a retailer (and any newly supported deactivate/edit actions), reusing the existing app styling and interaction patterns (dialogs/forms). Use English for all UI text.",
-      "reqIds": [
-        "REQ-48"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-60",
-      "summary": "Implement governance bootstrapping so the first Internet Identity Principal who successfully calls the backend is automatically assigned the Master Admin permission (\"first user to log in master admin\"). After a Master Admin exists, do not auto-promote any other Principals.",
-      "reqIds": [
-        "REQ-49"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-61",
-      "summary": "Remove the need for a user-provided admin token for initial setup by introducing a backend method (or equivalent flow) that safely performs the one-time Master Admin bootstrap without requiring secrets in the frontend.",
-      "reqIds": [
-        "REQ-50"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-62",
-      "summary": "Ensure all privileged backend operations (e.g., approving users/role applications and any catalogue/inventory mutations) are restricted to Master Admin, while catalogue read/browse endpoints remain publicly accessible (anonymous/unauthenticated).",
-      "reqIds": [
-        "REQ-51"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-63",
-      "summary": "Add backend read API(s) needed to render a homepage catalogue preview without forcing the user to drill into a specific town/retailer first (e.g., a mixed preview list of retailers and/or products across retailers).",
-      "reqIds": [
-        "REQ-52"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-64",
-      "summary": "Update the home page (current route '/') to display a 'Catalogue' section below the existing landing hero so visitors can immediately see what is available. The section must render a preview using live backend data and link into existing browsing routes (e.g., retailer catalog and product detail). Use English for all new user-facing text.",
-      "reqIds": [
-        "REQ-53"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-65",
-      "summary": "Trigger the Master Admin bootstrap from the frontend after a user logs in with Internet Identity, without modifying any frontend immutable paths. The bootstrap call should be safe to run multiple times (idempotent) and should not block normal browsing for non-admin users.",
-      "reqIds": [
-        "REQ-54"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-66",
-      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call the backend is automatically assigned the Master Admin role/permission, and no subsequent Principals are auto-promoted.",
-      "reqIds": [
-        "REQ-55"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-67",
-      "summary": "Remove the requirement for a user-provided admin token for initial setup by deprecating or disabling the current token-based initializeMasterAdmin flow, ensuring initial admin setup can be completed without frontend secrets.",
-      "reqIds": [
-        "REQ-56"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-68",
-      "summary": "Expose a backend query API for the frontend to determine whether the current caller is an admin (e.g., `isCallerAdmin : async Bool`) and ensure admin checks consistently gate privileged operations.",
-      "reqIds": [
-        "REQ-57"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-69",
-      "summary": "Trigger the Master Admin bootstrap from the frontend after a user logs in with Internet Identity using an idempotent backend call (safe to run multiple times), without modifying any frontend immutable paths.",
-      "reqIds": [
-        "REQ-58"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-70",
-      "summary": "Refactor catalogue data model to avoid duplicate products: maintain a single global product catalog (shared name/description/image/category) and add per-retailer \"listings\" that reference a global product and store retailer-specific fields (price, stock, availability/status). Support browsing both by product (see retailers/prices) and by retailer (retailer’s catalogue from listings).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-71",
-      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call the backend is automatically assigned the Master Admin permission, and no subsequent Principals are auto-promoted.",
-      "reqIds": [
-        "REQ-59"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-72",
-      "summary": "Remove the requirement for a user-provided admin token for initial setup by deprecating/neutralizing the current token-based initializeMasterAdmin flow and replacing it with a safe bootstrap method that does not require frontend secrets.",
-      "reqIds": [
-        "REQ-60"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-73",
-      "summary": "Expose a backend query API for the frontend to determine whether the current caller is a Master Admin (e.g., isCallerAdmin : async Bool) and ensure all privileged operations are consistently gated by this admin check.",
-      "reqIds": [
-        "REQ-61"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-74",
-      "summary": "Update the frontend to trigger the Master Admin bootstrap after a user logs in with Internet Identity using an idempotent backend call, without modifying any frontend immutable paths.",
-      "reqIds": [
-        "REQ-62"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-76",
-      "summary": "Allow an existing Master Admin to upgrade any already-registered user into Master Admin via backend admin-only methods.",
-      "reqIds": [
-        "REQ-64"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-77",
-      "summary": "Refactor the backend catalogue data model to avoid duplicate products by maintaining a single global Product catalog (shared name/description/image/category) and adding per-retailer Listings that reference a global product and store retailer-specific fields (price, stock, availability/status).",
-      "reqIds": [
-        "REQ-65"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-79",
-      "summary": "Add backend read API(s) needed to render a homepage catalogue preview without forcing users to drill into a specific province/town/retailer first (e.g., a mixed preview list of listings/products and/or featured retailers).",
-      "reqIds": [
-        "REQ-67"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-81",
-      "summary": "Add a conditional data migration for existing on-chain state to convert any existing retailer-embedded products into the new global product + listing model (or safely reset/initialize catalogue state if migration cannot be losslessly performed).",
-      "reqIds": [
-        "REQ-69"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-82",
-      "summary": "Implement one-time governance bootstrapping in the Motoko backend so that the first Internet Identity Principal to successfully call a dedicated bootstrap method is automatically assigned the admin permission, and no subsequent Principals are auto-promoted.",
-      "reqIds": [
-        "REQ-70"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-83",
-      "summary": "Expose backend APIs needed by the frontend to reliably gate admin-only UI: add a query method to check whether the current caller is an admin.",
-      "reqIds": [
-        "REQ-71"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-84",
-      "summary": "Fix the post-login blank-screen failure by ensuring the frontend actor initialization cannot be broken by access-control secret initialization when no admin token is provided (e.g., empty `caffeineAdminToken`). Specifically, make the backend access-control initialization path safe to call with empty tokens so the authenticated actor can still be created and used for normal browsing.",
-      "reqIds": [
-        "REQ-74"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-85",
-      "summary": "Add a full system reset/wipe capability for dev/test: wipe all users/roles (including current Master Admin), products, retailers, and listings so the next login behaves like a fresh install where the first user becomes Master Admin again.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-86",
-      "summary": "Add a backend query method `isCallerAdmin : async Bool` that returns whether the current caller has admin permission, so the frontend admin-gating queries do not fail with a missing method error.",
-      "reqIds": [
-        "REQ-77"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-87",
-      "summary": "Update backend authorization rules so that only the Master Admin (admin permission) can create or modify catalog data: add retailers, add listings, and update listing status. Remove the ability for merely \"approved\" users to perform these mutations for now.",
-      "reqIds": [
-        "REQ-78"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-88",
-      "summary": "Implement a backend \"full system wipe\" capability that removes all stored users/roles/approvals (including the current Master Admin), products, retailers, listings, provinces, and product requests; resets all ID counters; and returns the canister to a fresh-install state where the next login can bootstrap a new first Master Admin.",
-      "reqIds": [
-        "REQ-79"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-89",
-      "summary": "Replace external product image links with on-platform image uploads: allow admin to upload product images directly in-app, storing assets on ICP (asset canister or equivalent) and persisting on-chain references; support 1 recommended image per product with up to 3 images max.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-90",
-      "summary": "Expand Admin analytics: compute daily sales based on completed orders only; show counts of active shoppers and drivers, number of orders and deliveries, and identify favourite/most-used products and retailers based on actual user behaviour (e.g., most ordered/most purchased), not manual curation.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-92",
-      "summary": "Update backend product APIs to support multiple images per product (up to 3) and add admin-only methods to add/replace/remove product images without requiring direct manual editing of image reference strings.",
-      "reqIds": [
-        "REQ-82"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-95",
-      "summary": "Expand backend analytics to support: daily sales totals calculated from completed orders only, counts of orders and deliveries, counts of active shoppers and active drivers, and “favourite” products and retailers based on actual user behavior.",
-      "reqIds": [
-        "REQ-85"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-96",
-      "summary": "Implement a dedicated Admin \"Retailers\" section: register retailer with South African province selection, show a retailers list, and support edit + remove retailers.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-97",
-      "summary": "Add retailer operating hours with full per-day schedules (Mon–Sun) including weekends and holidays, and prevent customers from placing orders while a retailer is closed.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-98",
-      "summary": "Improve Admin listing creation UX: populate retailer and product dropdowns from live data and make them type-searchable to handle long lists (avoid inefficient scrolling).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-99",
-      "summary": "Add Admin management sections for Personal Shoppers and Delivery Drivers (list + edit details + remove/disable bad actors), similar in spirit to the Retailers admin section.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-102",
-      "summary": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
-      "reqIds": [
-        "REQ-89"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-107",
-      "summary": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
-      "reqIds": [
-        "REQ-94"
-      ],
-      "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Thuma Thina",
+  "projectName": "Fix ZAR pricing units, enable deletion for retailers/products, and implement role-based order workflow (customer → shopper → driver)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

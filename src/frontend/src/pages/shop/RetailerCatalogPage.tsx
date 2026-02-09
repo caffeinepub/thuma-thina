@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useActor } from '../../hooks/useActor';
 import type { Product } from '../../backend';
 import { getPrimaryImage, getImageUrl } from '../../utils/productImages';
+import { formatZAR } from '../../utils/money';
 
 export function RetailerCatalogPage() {
   const { retailerId } = useParams({ strict: false });
@@ -74,10 +75,6 @@ export function RetailerCatalogPage() {
         productId: productId.toString() 
       } 
     });
-  };
-
-  const formatPrice = (price: bigint) => {
-    return `R ${Number(price).toFixed(2)}`;
   };
 
   return (
@@ -208,7 +205,7 @@ export function RetailerCatalogPage() {
                     </p>
                   </div>
                   <p className="font-display text-xl font-bold text-primary">
-                    {formatPrice(product.price)}
+                    {formatZAR(product.price)}
                   </p>
                 </div>
               </button>

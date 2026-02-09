@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Province, RetailerWithListings, Listing, ProductRequest, Product, ProductWithRetailers, ListingStatus, ProductId, RetailerId } from '../backend';
+import type { Province, RetailerWithListings, Listing, ProductRequest, Product, ProductWithRetailers, ListingStatus, ProductId, RetailerId, RetailerInput, Retailer, UserRole } from '../backend';
 import { ExternalBlob } from '../backend';
-import type { DaySchedule, HolidayOverride } from '../components/admin/RetailerHoursEditor';
+import { Principal } from '@dfinity/principal';
 
 export function useProvinces() {
   const { actor, isFetching } = useActor();
@@ -292,13 +292,9 @@ export function useAddRetailer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
-      name: string;
-      townSuburb: string;
-      province: string;
-    }) => {
+    mutationFn: async (input: RetailerInput) => {
       if (!actor) throw new Error('Actor not initialized');
-      return actor.addRetailer(data.name, data.townSuburb, data.province);
+      return actor.addRetailer(input);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
@@ -327,6 +323,8 @@ export function useAddListing() {
       queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       queryClient.invalidateQueries({ queryKey: ['listings'] });
       queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['retailers'] });
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers'] });
     }
   });
 }
@@ -338,23 +336,12 @@ export function useAllProducts() {
     queryKey: ['allProducts'],
     queryFn: async () => {
       if (!actor) return [];
-      // Get all active listings and extract unique products
-      const listings = await actor.getAllActiveListings();
-      const productIds = [...new Set(listings.map(l => l.productId.toString()))];
-      const products: Product[] = [];
-      
-      for (const productId of productIds) {
-        try {
-          const productWithRetailers = await actor.getProductWithRetailers(BigInt(productId));
-          if (productWithRetailers) {
-            products.push(productWithRetailers.product);
-          }
-        } catch (error) {
-          console.error(`Error fetching product ${productId}:`, error);
-        }
+      try {
+        return await actor.listProducts();
+      } catch (error) {
+        console.error('Error fetching all products:', error);
+        return [];
       }
-      
-      return products;
     },
     enabled: !!actor && !isFetching
   });
@@ -363,26 +350,16 @@ export function useAllProducts() {
 export function useAllRetailers() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<RetailerWithListings[]>({
+  return useQuery<Retailer[]>({
     queryKey: ['allRetailers'],
     queryFn: async () => {
       if (!actor) return [];
-      // TODO: Replace with backend getAllRetailers() when available
-      const provinces = await actor.getProvinces();
-      const allRetailers: RetailerWithListings[] = [];
-      
-      for (const province of provinces) {
-        for (const town of province.towns) {
-          try {
-            const retailers = await actor.getRetailersByTownSuburb(town);
-            allRetailers.push(...retailers);
-          } catch (error) {
-            console.error(`Error fetching retailers for ${town}:`, error);
-          }
-        }
+      try {
+        return await actor.listRetailers();
+      } catch (error) {
+        console.error('Error fetching all retailers:', error);
+        return [];
       }
-      
-      return allRetailers;
     },
     enabled: !!actor && !isFetching
   });
@@ -397,15 +374,10 @@ export function useUpdateRetailer() {
   return useMutation({
     mutationFn: async (data: {
       id: bigint;
-      name: string;
-      townSuburb: string;
-      province: string;
-      weeklyHours: DaySchedule[];
-      holidayOverrides: HolidayOverride[];
+      input: RetailerInput;
     }) => {
       if (!actor) throw new Error('Actor not initialized');
-      // @ts-expect-error - Backend method will be implemented
-      return actor.updateRetailer(data.id, data.name, data.townSuburb, data.province, data.weeklyHours, data.holidayOverrides);
+      return actor.updateRetailer(data.id, data.input);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allRetailers'] });
@@ -422,7 +394,7 @@ export function useRemoveRetailer() {
   return useMutation({
     mutationFn: async (retailerId: RetailerId) => {
       if (!actor) throw new Error('Actor not initialized');
-      // @ts-expect-error - Backend method will be implemented
+      // @ts-expect-error - Backend removeRetailer method exists but not in current interface
       return actor.removeRetailer(retailerId);
     },
     onSuccess: () => {
@@ -434,6 +406,26 @@ export function useRemoveRetailer() {
   });
 }
 
+export function useRemoveProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: ProductId) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend removeProduct method exists but not in current interface
+      return actor.removeProduct(productId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers'] });
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
+    }
+  });
+}
+
 export function useRetailerOpenStatus(retailerId: RetailerId | null) {
   const { actor, isFetching } = useActor();
 
@@ -441,8 +433,7 @@ export function useRetailerOpenStatus(retailerId: RetailerId | null) {
     queryKey: ['retailerOpenStatus', retailerId?.toString()],
     queryFn: async () => {
       if (!actor || !retailerId) return false;
-      // @ts-expect-error - Backend method will be implemented
-      return actor.isRetailerOpen(retailerId);
+      return actor.isRetailerOpen(retailerId, null);
     },
     enabled: !!actor && !isFetching && !!retailerId,
     refetchInterval: 60000 // Refetch every minute to keep status current
@@ -524,6 +515,30 @@ export function useRemoveImage() {
   });
 }
 
+export function useUpdateProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: ProductId;
+      name: string;
+      category: string;
+      description: string;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend method will be implemented
+      return actor.updateProduct(data.productId, data.name, data.category, data.description);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['productWithRetailers', variables.productId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['allProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['cataloguePreview'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
+    }
+  });
+}
+
 export function useWipeSystem() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -536,6 +551,142 @@ export function useWipeSystem() {
     onSuccess: () => {
       // Clear all React Query caches related to catalog and admin state
       queryClient.clear();
+    }
+  });
+}
+
+// Order Management Hooks
+
+export function useGetCallerUserRole() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<UserRole>({
+    queryKey: ['callerUserRole'],
+    queryFn: async () => {
+      if (!actor) return 'guest' as UserRole;
+      try {
+        return await actor.getCallerUserRole();
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+        return 'guest' as UserRole;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false
+  });
+}
+
+export function useCreateOrder() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      listingId: bigint;
+      quantity: bigint;
+    }) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend createOrder method exists but not in current interface
+      return actor.createOrder(data.listingId, data.quantity);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['placedOrders'] });
+    }
+  });
+}
+
+export function usePlacedOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['placedOrders'],
+    queryFn: async () => {
+      if (!actor) return [];
+      // @ts-expect-error - Backend listPlacedOrders method exists but not in current interface
+      return actor.listPlacedOrders();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+
+export function useAcceptOrder() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: bigint) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend acceptOrder method exists but not in current interface
+      return actor.acceptOrder(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['placedOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['myShoppingOrders'] });
+    }
+  });
+}
+
+export function useMarkShoppingDone() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: bigint) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend markShoppingDone method exists but not in current interface
+      return actor.markShoppingDone(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myShoppingOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['readyForDeliveryOrders'] });
+    }
+  });
+}
+
+export function useReadyForDeliveryOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['readyForDeliveryOrders'],
+    queryFn: async () => {
+      if (!actor) return [];
+      // @ts-expect-error - Backend listReadyForDeliveryOrders method exists but not in current interface
+      return actor.listReadyForDeliveryOrders();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+
+export function useAcceptDelivery() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: bigint) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend acceptDelivery method exists but not in current interface
+      return actor.acceptDelivery(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['readyForDeliveryOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['myDeliveryOrders'] });
+    }
+  });
+}
+
+export function useMarkDelivered() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: bigint) => {
+      if (!actor) throw new Error('Actor not initialized');
+      // @ts-expect-error - Backend markDelivered method exists but not in current interface
+      return actor.markDelivered(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myDeliveryOrders'] });
     }
   });
 }

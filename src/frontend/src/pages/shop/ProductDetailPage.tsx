@@ -1,19 +1,16 @@
+import { useState } from 'react';
 import { useProductWithRetailers } from '../../hooks/useQueries';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronLeft, Loader2, Package, Tag, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getPrimaryImage, getAllImages, getImageUrl } from '../../utils/productImages';
-import { useState } from 'react';
+import { formatZAR } from '../../utils/money';
 
 export function ProductDetailPage() {
   const { retailerId, productId } = useParams({ strict: false });
   const { data: productWithRetailers, isLoading } = useProductWithRetailers(productId || '');
   const navigate = useNavigate();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
-  const formatPrice = (price: bigint) => {
-    return `R ${Number(price).toFixed(2)}`;
-  };
 
   if (isLoading) {
     return (
@@ -170,7 +167,7 @@ export function ProductDetailPage() {
                         </div>
                       </div>
                       <p className="font-display text-xl font-bold text-primary">
-                        {formatPrice(listing.price)}
+                        {formatZAR(listing.price)}
                       </p>
                     </button>
                   ))}

@@ -16,6 +16,8 @@ import { RoleApplicationsStatusPage } from './pages/shop/RoleApplicationsStatusP
 import { MasterAdminRoleApplicationsPage } from './pages/shop/MasterAdminRoleApplicationsPage';
 import { AdminDashboardPage } from './pages/shop/AdminDashboardPage';
 import { AdminRetailersPage } from './pages/admin/AdminRetailersPage';
+import { ShopperDashboardPage } from './pages/shop/ShopperDashboardPage';
+import { DriverDashboardPage } from './pages/shop/DriverDashboardPage';
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,18 @@ const adminRetailersRoute = createRoute({
   )
 });
 
+const shopperRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/shopper',
+  component: ShopperDashboardPage
+});
+
+const driverRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/driver',
+  component: DriverDashboardPage
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   townSuburbRoute,
@@ -113,7 +127,9 @@ const routeTree = rootRoute.addChildren([
   joinStatusRoute,
   joinAdminRoute,
   adminRoute,
-  adminRetailersRoute
+  adminRetailersRoute,
+  shopperRoute,
+  driverRoute
 ]);
 
 const router = createRouter({ routeTree });

@@ -1,59 +1,124 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T12:10:42.871Z",
-  "summary": "Frontend adds a new admin-only /admin/retailers route and UI for registering retailers, listing them, editing details, and confirming removal. It also adds SA province constants and a reusable searchable select used in the Admin Dashboard listing creation flow. Backend diff shown does not evidence the required retailer-management APIs, expanded retailer model (hours/holidays), open/closed checks, or migration logic.",
+  "generatedAt": "2026-02-09T14:14:27.891Z",
+  "summary": "Diff adds ZAR formatting utilities and updates several shop/admin pages to display prices using a new formatZAR helper. It also adds new Shopper/Driver dashboard pages and routes, plus React Query hooks mentioned in summaries. However, the diff evidence is insufficient to confirm required backend APIs (migration, deletion, orders/workflows) were implemented in backend/main.mo, and there is no evidence of an upgrade-time migration module. Several unrelated UI/theme/asset changes were also introduced.",
   "missing_requirements": [
     {
-      "id": "REQ-89",
-      "requirement": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
-      "reason": "The backend diff excerpt only shows the existing Retailer type (id/name/townSuburb/province) and does not show any new query/mutation methods for listing all retailers, updating, or removing retailers with admin-only traps.",
+      "id": "REQ-2",
+      "requirement": "Add a conditional state migration that converts existing persisted listing prices stored as cents into rands on upgrade.",
+      "reason": "No evidence of an upgrade hook or migration logic, and no backend/migration.mo was added. The only backend evidence shown is a type comment changing Listing.price semantics.",
       "evidence": [
-        "backend/main.mo"
+        "backend/main.mo (truncated)",
+        "ADDED FILES list (no backend/migration.mo present)"
       ]
     },
     {
-      "id": "REQ-90",
-      "requirement": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
-      "reason": "Frontend adds an hours editor UI, but the edit dialog explicitly contains a TODO to load existing hours from the retailer when backend supports it, and the backend Retailer type shown is not expanded to include weekly hours or holiday overrides.",
+      "id": "REQ-3",
+      "requirement": "Fix retailer deletion end-to-end: implement backend removeRetailer and ensure frontend calls it successfully, with confirmation and cache invalidation; deletion removes retailer and associated listings.",
+      "reason": "Frontend wiring for delete appears to be updated (AdminRetailersPage uses useRemoveRetailer), but the diff summary provides no evidence that backend/main.mo implements removeRetailer or that it deletes associated listings.",
       "evidence": [
-        "frontend/src/components/admin/RetailerEditDialog.tsx",
-        "frontend/src/components/admin/RetailerHoursEditor.tsx",
-        "backend/main.mo"
+        "frontend/src/pages/admin/AdminRetailersPage.tsx (truncated)",
+        "backend/main.mo (truncated)",
+        "frontend-file-summaries.txt (mentions updated useRemoveRetailer)"
       ]
     },
     {
-      "id": "REQ-91",
-      "requirement": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
-      "reason": "No diff evidence shows a backend query to determine if a retailer is currently open or a reusable backend guard/check, and no changes are shown on shop browsing pages to display open/closed status or gate ordering paths.",
+      "id": "REQ-4",
+      "requirement": "Add ability to delete products from universal catalogue with confirmation; backend removeProduct must remove related listings; UI must invalidate queries.",
+      "reason": "Frontend references useRemoveProduct and has deletingProduct state, but there is no diff evidence that backend/main.mo exposes removeProduct or removes associated listings.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend-file-summaries.txt"
+        "frontend/src/pages/shop/AdminDashboardPage.tsx (truncated)",
+        "frontend-file-summaries.txt (mentions useRemoveProduct)",
+        "backend/main.mo (truncated)"
       ]
     },
     {
-      "id": "REQ-94",
-      "requirement": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
-      "reason": "No migration file changes are present, and the backend Retailer type shown is not expanded; there is no diff evidence of upgrade logic to backfill default hours/empty overrides for existing retailer records.",
+      "id": "REQ-5",
+      "requirement": "Implement backend order placement and persistence (createOrder, stored orders, rands totals, validated status transitions).",
+      "reason": "New shopper/driver dashboard UI and hooks are referenced, but the backend/main.mo diff is truncated and shows no order types/state, no createOrder method, and no status transition validation evidence.",
       "evidence": [
-        "backend/main.mo"
+        "backend/main.mo (truncated)",
+        "frontend-file-summaries.txt (mentions new order management hooks)"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Add shopper workflow backend APIs (list placed orders, accept, mark shopping done; role checks).",
+      "reason": "ShopperDashboardPage is added and uses hooks, but there is no diff evidence that backend/main.mo implements the required shopper query/actions or role enforcement.",
+      "evidence": [
+        "frontend/src/pages/shop/ShopperDashboardPage.tsx (truncated)",
+        "backend/main.mo (truncated)",
+        "frontend-file-summaries.txt (mentions usePlacedOrders/useAcceptOrder/useMarkShoppingDone)"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Add driver workflow backend APIs (list readyForDelivery orders, accept/collect, mark delivered; role checks).",
+      "reason": "DriverDashboardPage is added and uses hooks, but there is no diff evidence that backend/main.mo implements the required driver query/actions or role enforcement.",
+      "evidence": [
+        "frontend/src/pages/shop/DriverDashboardPage.tsx (truncated)",
+        "backend/main.mo (truncated)",
+        "frontend-file-summaries.txt (mentions useReadyForDeliveryOrders/useAcceptDelivery/useMarkDelivered)"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Implement role-based dashboards and customer order placement in the frontend; navigation should only expose shopper/driver dashboards for those roles; placing an order requires being logged in as a user.",
+      "reason": "Routes for /shopper and /driver are added and the header shows Shopper/Driver buttons based on useGetCallerUserRole, but there is no evidence of route-level access guards for these dashboards, and no evidence of any customer 'place order' UI flow being added/updated in the diff shown.",
+      "evidence": [
+        "frontend/src/App.tsx (truncated)",
+        "frontend/src/components/shop/ShopHeader.tsx (truncated)",
+        "frontend-file-summaries.txt (mentions role-based dashboards and order hooks but no customer checkout/place-order UI file changes shown)"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels/placeholders/formatting are consistent.",
+      "reason": "AdminDashboardPage imports formatZAR/parseZAR/isValidZAR, but the diff snippet is truncated before showing the actual listing price label/placeholder text. The evidence is insufficient to confirm the UI no longer references 'cents' and uses rands-appropriate placeholders.",
+      "evidence": [
+        "frontend/src/pages/shop/AdminDashboardPage.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.72,
+  "hallucinated_features": [
+    {
+      "description": "Major theme/styling overhaul (new OKLCH warm African-inspired color system, new shadow utilities, animation timing changes).",
+      "reason": "Not requested by any REQ; BuildRequest focuses on pricing units, deletions, and order workflow.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/index.css, frontend/tailwind.config.js)"
+      ]
+    },
+    {
+      "description": "New branding/illustration assets (generated logo and hero image) and associated hero/landing page redesign elements.",
+      "reason": "Not requested by any REQ; additionally may introduce non-English text if the hero slogan is shown in multiple languages.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png, frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png, frontend/src/components/shop/ShopLandingHero.tsx)"
+      ]
+    },
+    {
+      "description": "Footer content changes including added attribution/humanitarian aid note.",
+      "reason": "Not requested by any REQ.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/components/shop/ShopFooter.tsx)"
+      ]
+    }
+  ],
+  "confidence": 0.66,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/App.tsx",
-    "frontend/src/components/admin/RetailerEditDialog.tsx",
-    "frontend/src/components/admin/RetailerHoursEditor.tsx",
-    "frontend/src/components/admin/SearchableSelect.tsx",
+    "frontend/src/components/shop/CataloguePreviewSection.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/admin/AdminRetailersPage.tsx",
     "frontend/src/pages/shop/AdminDashboardPage.tsx",
-    "frontend/src/utils/saProvinces.ts",
+    "frontend/src/pages/shop/DriverDashboardPage.tsx",
+    "frontend/src/pages/shop/ProductDetailPage.tsx",
+    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+    "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+    "frontend/src/utils/money.ts",
     "project_state.json"
   ]
 }

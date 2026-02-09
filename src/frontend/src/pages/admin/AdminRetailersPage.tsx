@@ -1,343 +1,374 @@
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useAllRetailers, useAddRetailer, useUpdateRetailer, useRemoveRetailer } from '../../hooks/useQueries';
-import { ChevronLeft, Store, Loader2, AlertCircle, Plus, Edit, Trash2, MapPin } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useAddRetailer, useAllRetailers, useRemoveRetailer } from '../../hooks/useQueries';
+import { Store, AlertCircle, Loader2, Edit, Trash2 } from 'lucide-react';
+import type { Retailer, RetailerInput } from '../../backend';
 import { SA_PROVINCES } from '../../utils/saProvinces';
+import { RetailerHoursEditor, type DaySchedule, type HolidayOverride } from '../../components/admin/RetailerHoursEditor';
 import { RetailerEditDialog } from '../../components/admin/RetailerEditDialog';
-import type { Retailer } from '../../backend';
-import type { DaySchedule, HolidayOverride } from '../../components/admin/RetailerHoursEditor';
 
-const DEFAULT_WEEKLY_HOURS: DaySchedule[] = [
-  { day: 'Monday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Tuesday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Wednesday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Thursday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Friday', isOpen: true, openTime: '08:00', closeTime: '20:00' },
-  { day: 'Saturday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
-  { day: 'Sunday', isOpen: true, openTime: '09:00', closeTime: '18:00' }
-];
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export function AdminRetailersPage() {
-  const navigate = useNavigate();
   const { data: allRetailers, isLoading } = useAllRetailers();
-  const addRetailer = useAddRetailer();
-  const updateRetailer = useUpdateRetailer();
-  const removeRetailer = useRemoveRetailer();
+  const addRetailerMutation = useAddRetailer();
+  const removeRetailerMutation = useRemoveRetailer();
 
-  // Registration form state
+  // Form state
   const [name, setName] = useState('');
   const [townSuburb, setTownSuburb] = useState('');
   const [province, setProvince] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  
+  // Initialize weekly hours with default closed state
+  const [weeklyHours, setWeeklyHours] = useState<DaySchedule[]>(
+    DAYS_OF_WEEK.map(day => ({
+      day,
+      isOpen: false,
+      openTime: '08:00',
+      closeTime: '20:00'
+    }))
+  );
+  const [holidayOverrides, setHolidayOverrides] = useState<HolidayOverride[]>([]);
 
-  // Edit dialog state
+  // Edit/Delete state
   const [editingRetailer, setEditingRetailer] = useState<Retailer | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  // Delete confirmation state
   const [deletingRetailer, setDeletingRetailer] = useState<Retailer | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  const handleAddRetailer = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!name.trim() || !townSuburb.trim() || !province) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
+    
     try {
-      await addRetailer.mutateAsync({
-        name: name.trim(),
-        townSuburb: townSuburb.trim(),
-        province
+      // Convert UI hours format to backend format
+      const weeklySchedule = weeklyHours
+        .filter(day => day.isOpen)
+        .map(day => {
+          const dayIndex = DAYS_OF_WEEK.indexOf(day.day);
+          const openTime = parseInt(day.openTime.replace(':', ''));
+          const closeTime = parseInt(day.closeTime.replace(':', ''));
+          return {
+            day: BigInt(dayIndex),
+            openTime: BigInt(openTime),
+            closeTime: BigInt(closeTime)
+          };
+        });
+
+      const holidayOverridesBackend = holidayOverrides.map(override => {
+        const dateTimestamp = new Date(override.date).getTime() * 1000000; // Convert to nanoseconds
+        return {
+          date: BigInt(dateTimestamp),
+          isOpen: override.isOpen,
+          openTime: override.isOpen ? BigInt(parseInt(override.openTime.replace(':', ''))) : undefined,
+          closeTime: override.isOpen ? BigInt(parseInt(override.closeTime.replace(':', ''))) : undefined,
+          name: override.description
+        };
       });
-      setSuccess('Retailer registered successfully!');
+
+      await addRetailerMutation.mutateAsync({
+        name,
+        townSuburb,
+        province,
+        address,
+        phone,
+        email,
+        openingHours: {
+          weeklySchedule,
+          holidayOverrides: holidayOverridesBackend
+        }
+      });
+      
+      // Reset form
       setName('');
       setTownSuburb('');
       setProvince('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to register retailer');
+      setAddress('');
+      setPhone('');
+      setEmail('');
+      setWeeklyHours(
+        DAYS_OF_WEEK.map(day => ({
+          day,
+          isOpen: false,
+          openTime: '08:00',
+          closeTime: '20:00'
+        }))
+      );
+      setHolidayOverrides([]);
+    } catch (error: any) {
+      console.error('Error adding retailer:', error);
     }
   };
 
-  const handleEditRetailer = async (data: {
-    id: bigint;
-    name: string;
-    townSuburb: string;
-    province: string;
-    weeklyHours: DaySchedule[];
-    holidayOverrides: HolidayOverride[];
-  }) => {
-    await updateRetailer.mutateAsync(data);
-    setSuccess('Retailer updated successfully!');
-  };
-
-  const handleDeleteRetailer = async () => {
+  const handleDelete = async () => {
     if (!deletingRetailer) return;
-
-    setError(null);
-    setSuccess(null);
-
+    
     try {
-      await removeRetailer.mutateAsync(deletingRetailer.id);
-      setSuccess('Retailer removed successfully!');
-      setDeleteDialogOpen(false);
+      await removeRetailerMutation.mutateAsync(deletingRetailer.id);
       setDeletingRetailer(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove retailer');
-      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error deleting retailer:', error);
     }
   };
-
-  const openEditDialog = (retailer: Retailer) => {
-    setEditingRetailer(retailer);
-    setEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (retailer: Retailer) => {
-    setDeletingRetailer(retailer);
-    setDeleteDialogOpen(true);
-  };
-
-  // Extract unique retailers from RetailerWithListings
-  const retailers = allRetailers?.map(rwl => rwl.retailer) || [];
 
   return (
-    <div className="container-custom py-8">
-      <div className="mb-8">
-        <button
-          onClick={() => navigate({ to: '/admin' })}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 transition-colors font-medium"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Admin Dashboard
-        </button>
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">Retailers Management</h1>
-        <p className="text-muted-foreground">Register new retailers and manage existing ones</p>
-      </div>
+    <div className="container-custom py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-2">
+            Retailer Management
+          </h1>
+          <p className="text-muted-foreground">
+            Register and manage retailers in the system
+          </p>
+        </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert className="mb-6 border-primary/50 bg-primary/5">
-          <AlertDescription className="text-primary">{success}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-2">
         {/* Registration Form */}
-        <Card>
+        <Card className="border-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center">
+              <Store className="h-5 w-5 mr-2" />
               Register New Retailer
             </CardTitle>
-            <CardDescription>Add a new retailer to the platform</CardDescription>
+            <CardDescription>
+              Add a new retailer with operating hours
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAddRetailer} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Retailer Name *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter retailer name"
-                  disabled={addRetailer.isPending}
-                />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Retailer Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Pick n Pay"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="townSuburb">Town/Suburb</Label>
+                  <Input
+                    id="townSuburb"
+                    value={townSuburb}
+                    onChange={(e) => setTownSuburb(e.target.value)}
+                    placeholder="e.g., Sandton"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="province">Province *</Label>
-                <Select value={province} onValueChange={setProvince} disabled={addRetailer.isPending}>
-                  <SelectTrigger id="province">
-                    <SelectValue placeholder="Select province" />
-                  </SelectTrigger>
-                  <SelectContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="province">Province</Label>
+                  <select
+                    id="province"
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    <option value="">Select province...</option>
                     {SA_PROVINCES.map((prov) => (
-                      <SelectItem key={prov} value={prov}>
+                      <option key={prov} value={prov}>
                         {prov}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g., +27 11 123 4567"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g., store@example.com"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="e.g., 123 Main Street"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="townSuburb">Town/Suburb *</Label>
-                <Input
-                  id="townSuburb"
-                  value={townSuburb}
-                  onChange={(e) => setTownSuburb(e.target.value)}
-                  placeholder="Enter town or suburb"
-                  disabled={addRetailer.isPending}
+                <Label>Operating Hours</Label>
+                <RetailerHoursEditor
+                  weeklyHours={weeklyHours}
+                  holidayOverrides={holidayOverrides}
+                  onWeeklyHoursChange={setWeeklyHours}
+                  onHolidayOverridesChange={setHolidayOverrides}
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={addRetailer.isPending}>
-                {addRetailer.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Register Retailer
+              {addRetailerMutation.isError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {addRetailerMutation.error?.message || 'Failed to add retailer'}
+                  </AlertDescription>
+                </Alert>
+              )}
+              {addRetailerMutation.isSuccess && (
+                <Alert className="border-green-500 text-green-700 bg-green-50">
+                  <AlertDescription>Retailer registered successfully!</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                disabled={addRetailerMutation.isPending}
+                className="w-full sm:w-auto"
+              >
+                {addRetailerMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Registering...
+                  </>
+                ) : (
+                  'Register Retailer'
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Quick Stats */}
-        <Card>
+        {/* Retailers List */}
+        <Card className="border-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-accent" />
-              Retailers Overview
-            </CardTitle>
-            <CardDescription>Current platform statistics</CardDescription>
+            <CardTitle>Registered Retailers</CardTitle>
+            <CardDescription>
+              View and manage all retailers in the system
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-card">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Retailers</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : retailers.length}
-                  </p>
-                </div>
-                <Store className="h-12 w-12 text-accent/30" />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg border-2 border-border bg-card">
-                <div>
-                  <p className="text-sm text-muted-foreground">Provinces Covered</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {isLoading ? (
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    ) : (
-                      new Set(retailers.map(r => r.province)).size
-                    )}
-                  </p>
-                </div>
-                <MapPin className="h-12 w-12 text-primary/30" />
+            ) : !allRetailers || allRetailers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No retailers registered yet
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Retailers List */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>All Retailers</CardTitle>
-          <CardDescription>Manage existing retailers and their operating hours</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            </div>
-          )}
-
-          {!isLoading && retailers.length === 0 && (
-            <div className="text-center py-12">
-              <Store className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-              <p className="text-muted-foreground">No retailers registered yet</p>
-            </div>
-          )}
-
-          {!isLoading && retailers.length > 0 && (
-            <div className="rounded-lg border">
+            ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Province</TableHead>
-                    <TableHead>Town/Suburb</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {retailers.map((retailer) => (
+                  {allRetailers.map((retailer) => (
                     <TableRow key={retailer.id.toString()}>
                       <TableCell className="font-medium">{retailer.name}</TableCell>
-                      <TableCell>{retailer.province}</TableCell>
-                      <TableCell>{retailer.townSuburb}</TableCell>
+                      <TableCell>
+                        {retailer.townSuburb}, {retailer.province}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{retailer.phone}</div>
+                          <div className="text-muted-foreground">{retailer.email}</div>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex justify-end gap-2">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => openEditDialog(retailer)}
-                            disabled={updateRetailer.isPending}
+                            onClick={() => setEditingRetailer(retailer)}
                           >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
+                            <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openDeleteDialog(retailer)}
-                            disabled={removeRetailer.isPending}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeletingRetailer(retailer)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Retailer</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{deletingRetailer?.name}"? This will also remove all associated listings. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setDeletingRetailer(null)}>
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={handleDelete}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {removeRetailerMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Deleting...
+                                    </>
+                                  ) : (
+                                    'Delete'
+                                  )}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Edit Dialog */}
-      <RetailerEditDialog
-        retailer={editingRetailer}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSave={handleEditRetailer}
-        isSaving={updateRetailer.isPending}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Retailer</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove <strong>{deletingRetailer?.name}</strong>? This action cannot be undone and will remove all associated listings.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteRetailer}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {removeRetailer.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Remove Retailer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {editingRetailer && (
+        <RetailerEditDialog
+          retailer={editingRetailer}
+          open={!!editingRetailer}
+          onOpenChange={(open) => !open && setEditingRetailer(null)}
+          onSuccess={() => setEditingRetailer(null)}
+          onError={(error) => console.error('Edit error:', error)}
+        />
+      )}
     </div>
   );
 }

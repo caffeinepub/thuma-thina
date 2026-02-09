@@ -1,119 +1,129 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T12:10:42.876Z",
+  "generatedAt": "2026-02-09T14:14:27.894Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 8,
-    "implemented": 6,
+    "total": 9,
+    "implemented": 5,
     "items": [
       {
-        "id": "REQ-87",
-        "summary": "Create a new admin-only “Retailers” management section (separate from the existing Admin Dashboard) dedicated to retailer registration and ongoing retailer management.",
+        "id": "REQ-1",
+        "summary": "Standardize all monetary values to be stored and treated as ZAR rands (not cents) across the backend and frontend, including listing creation/editing, catalogue display, and any analytics totals.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-88",
-        "summary": "Implement a Retailers list in the new admin Retailers section that shows all retailers and provides actions to edit retailer details and remove retailers with a confirmation step.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx"
-        ]
-      },
-      {
-        "id": "REQ-89",
-        "summary": "Add backend APIs to support retailer management: list all retailers, update an existing retailer, and remove an existing retailer; restrict all retailer mutation endpoints to admin callers.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-90",
-        "summary": "Add full per-day retailer operating hours (Mon–Sun) with additional holiday-specific overrides, store them on the retailer model, and make them editable from the admin Retailers section.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/RetailerHoursEditor.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/RetailerHoursEditor.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-91",
-        "summary": "Prevent customers from placing orders while a retailer is closed by adding backend-level “retailer open” checks and frontend visibility of open/closed status on retailer browsing pages.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/shop/RetailerListPage.tsx",
+          "frontend/src/utils/money.ts",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
           "frontend/src/pages/shop/RetailerCatalogPage.tsx",
-          "frontend/src/pages/shop/ProductDetailPage.tsx"
+          "frontend/src/components/shop/CataloguePreviewSection.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
+          "frontend/src/utils/money.ts",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "frontend/src/components/shop/CataloguePreviewSection.tsx",
           "frontend/src/hooks/useQueries.ts"
         ]
       },
       {
-        "id": "REQ-92",
-        "summary": "Replace free-text province entry during retailer registration with a dropdown containing all South African provinces (Eastern Cape, Free State, Gauteng, KwaZulu-Natal, Limpopo, Mpumalanga, Northern Cape, North West, Western Cape).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/saProvinces.ts",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/saProvinces.ts",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx"
-        ]
-      },
-      {
-        "id": "REQ-93",
-        "summary": "Improve the admin listing creation UX by making the Retailer and Product selectors populated from live backend data and type-searchable (to avoid inefficient scrolling for long lists).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/SearchableSelect.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/SearchableSelect.tsx",
-          "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-94",
-        "summary": "Update backend state persistence safely to support the expanded retailer model (operating hours + holiday overrides) for existing canister state by adding/adjusting conditional migration logic.",
+        "id": "REQ-2",
+        "summary": "Add a conditional state migration that converts any existing persisted listing prices that were stored as cents into rands (divide by 100, rounding down if needed) so legacy data displays correctly after upgrade.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Fix retailer deletion end-to-end: implement the backend removeRetailer method and ensure the frontend admin retailer delete action calls it successfully, with a confirmation step and appropriate cache invalidation.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add the ability to delete products from the universal catalogue with a confirmation step; deleting a product must also remove any associated listings.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Implement backend order placement and persistence: allow customer/user accounts to create orders containing one or more listing line items (listingId + quantity + unit price in rands), and store order status through the workflow (placed → accepted by shopper → shopping done → accepted by driver/collected → delivered).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Add shopper workflow backend APIs: shoppers can list newly placed orders awaiting processing, accept an order to start shopping, and mark shopping as done which makes the order available for delivery drivers.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Add driver workflow backend APIs: drivers can list orders ready for delivery, accept/collect a delivery, and mark the order as delivered.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Implement role-based dashboards in the frontend using the existing single Internet Identity login: customers/users can browse listings and place orders; personal shoppers can view/accept/complete newly placed orders; delivery drivers can view/accept/mark delivered ready-for-delivery orders.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+          "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "frontend/src/components/shop/ShopHeader.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+          "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "frontend/src/components/shop/ShopHeader.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels, placeholders, and any formatting are consistent across admin listing creation and catalogue display.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/utils/money.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "frontend/src/utils/money.ts"
+        ]
       }
     ]
   },
@@ -124,13 +134,17 @@
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/App.tsx",
-    "frontend/src/components/admin/RetailerEditDialog.tsx",
-    "frontend/src/components/admin/RetailerHoursEditor.tsx",
-    "frontend/src/components/admin/SearchableSelect.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/components/shop/CataloguePreviewSection.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/admin/AdminRetailersPage.tsx",
     "frontend/src/pages/shop/AdminDashboardPage.tsx",
-    "frontend/src/utils/saProvinces.ts",
+    "frontend/src/pages/shop/DriverDashboardPage.tsx",
+    "frontend/src/pages/shop/ProductDetailPage.tsx",
+    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+    "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+    "frontend/src/utils/money.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

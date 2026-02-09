@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ShoppingBag, Plus, Users, LogIn, LogOut, Shield, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Plus, Users, LogIn, LogOut, Shield, AlertCircle, Truck, ShoppingCart } from 'lucide-react';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
-import { useIsCallerAdmin } from '../../hooks/useQueries';
+import { useIsCallerAdmin, useGetCallerUserRole } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BrandImage } from '../brand/BrandImage';
@@ -11,8 +11,12 @@ export function ShopHeader() {
   const navigate = useNavigate();
   const { identity, login, clear, isLoggingIn, isLoginError, loginError } = useInternetIdentity();
   const { data: isAdmin } = useIsCallerAdmin();
+  const { data: userRole } = useGetCallerUserRole();
 
   const isAuthenticated = !!identity;
+  // Check if user has shopper or driver role (when backend supports these roles)
+  const isShopper = (userRole && String(userRole) === 'shopper') || isAdmin;
+  const isDriver = (userRole && String(userRole) === 'driver') || isAdmin;
 
   const handleAuthClick = async () => {
     if (isAuthenticated) {
@@ -74,6 +78,28 @@ export function ShopHeader() {
               >
                 <Shield className="h-4 w-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">Admin</span>
+              </Button>
+            )}
+            {isShopper && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate({ to: '/shopper' })}
+                className="hover:bg-accent/10 hover:text-accent"
+              >
+                <ShoppingCart className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Shopper</span>
+              </Button>
+            )}
+            {isDriver && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate({ to: '/driver' })}
+                className="hover:bg-secondary/20 hover:text-secondary-foreground"
+              >
+                <Truck className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Driver</span>
               </Button>
             )}
             <Button
