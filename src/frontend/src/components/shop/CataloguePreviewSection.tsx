@@ -40,11 +40,10 @@ export function CataloguePreviewSection() {
     enabled: !!actor && !!previewListings && previewListings.length > 0
   });
 
-  const handleProductClick = (productId: bigint, retailerId: bigint) => {
+  const handleProductClick = (productId: bigint) => {
     navigate({ 
-      to: '/product/$retailerId/$productId', 
+      to: '/product/$productId', 
       params: { 
-        retailerId: retailerId.toString(), 
         productId: productId.toString() 
       } 
     });
@@ -87,7 +86,7 @@ export function CataloguePreviewSection() {
               <Card
                 key={listing.id.toString()}
                 className="group cursor-pointer border-2 hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-warm overflow-hidden"
-                onClick={() => handleProductClick(listing.productId, listing.retailerId)}
+                onClick={() => handleProductClick(listing.productId)}
               >
                 <div className="aspect-square bg-gradient-to-br from-muted/30 to-muted/50 relative overflow-hidden">
                   {primaryImage ? (

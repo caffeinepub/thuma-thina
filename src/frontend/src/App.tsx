@@ -1,9 +1,7 @@
+import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createRouter, RouterProvider, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
-import { InternetIdentityProvider } from './hooks/useInternetIdentity';
-import { AdminBootstrapper } from './components/auth/AdminBootstrapper';
-import { AdminOnly } from './components/auth/AdminOnly';
-import { GlobalErrorBoundary } from './components/errors/GlobalErrorBoundary';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from 'next-themes';
 import { ShopLayout } from './components/shop/ShopLayout';
 import { ProvinceListPage } from './pages/shop/ProvinceListPage';
 import { TownSuburbListPage } from './pages/shop/TownSuburbListPage';
@@ -14,17 +12,27 @@ import { RequestNewProductPage } from './pages/shop/RequestNewProductPage';
 import { JoinUsPage } from './pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from './pages/shop/RoleApplicationsStatusPage';
 import { MasterAdminRoleApplicationsPage } from './pages/shop/MasterAdminRoleApplicationsPage';
-import { AdminDashboardPage } from './pages/shop/AdminDashboardPage';
+import AdminDashboardPage from './pages/shop/AdminDashboardPage';
 import { AdminRetailersPage } from './pages/admin/AdminRetailersPage';
+import AdminManageListingsPage from './pages/admin/AdminManageListingsPage';
 import { ShopperDashboardPage } from './pages/shop/ShopperDashboardPage';
 import { DriverDashboardPage } from './pages/shop/DriverDashboardPage';
+import { AdminOnly } from './components/auth/AdminOnly';
+import { GlobalErrorBoundary } from './components/errors/GlobalErrorBoundary';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
+  }
+});
 
 const rootRoute = createRootRoute({
   component: () => (
     <ShopLayout>
-      <AdminBootstrapper />
       <Outlet />
     </ShopLayout>
   )
@@ -36,19 +44,19 @@ const indexRoute = createRoute({
   component: ProvinceListPage
 });
 
-const townSuburbRoute = createRoute({
+const provinceRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/province/$provinceName',
+  path: '/province/$provinceName/$townSuburb',
   component: TownSuburbListPage
 });
 
-const retailerRoute = createRoute({
+const retailersRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/province/$provinceName/$townSuburb',
+  path: '/retailers/$townSuburb',
   component: RetailerListPage
 });
 
-const catalogRoute = createRoute({
+const retailerCatalogRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/retailer/$retailerId',
   component: RetailerCatalogPage
@@ -56,35 +64,39 @@ const catalogRoute = createRoute({
 
 const productDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/product/$retailerId/$productId',
+  path: '/product/$productId',
   component: ProductDetailPage
 });
 
-const requestRoute = createRoute({
+const requestProductRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/request',
+  path: '/request-product',
   component: RequestNewProductPage
 });
 
-const joinRoute = createRoute({
+const joinUsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/join',
+  path: '/join-us',
   component: JoinUsPage
 });
 
-const joinStatusRoute = createRoute({
+const roleApplicationsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/join/status',
+  path: '/my-applications',
   component: RoleApplicationsStatusPage
 });
 
-const joinAdminRoute = createRoute({
+const adminRoleApplicationsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/join/admin/applications',
-  component: MasterAdminRoleApplicationsPage
+  path: '/admin/role-applications',
+  component: () => (
+    <AdminOnly>
+      <MasterAdminRoleApplicationsPage />
+    </AdminOnly>
+  )
 });
 
-const adminRoute = createRoute({
+const adminDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
   component: () => (
@@ -104,13 +116,23 @@ const adminRetailersRoute = createRoute({
   )
 });
 
-const shopperRoute = createRoute({
+const adminListingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/listings',
+  component: () => (
+    <AdminOnly>
+      <AdminManageListingsPage />
+    </AdminOnly>
+  )
+});
+
+const shopperDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/shopper',
   component: ShopperDashboardPage
 });
 
-const driverRoute = createRoute({
+const driverDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/driver',
   component: DriverDashboardPage
@@ -118,18 +140,19 @@ const driverRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  townSuburbRoute,
-  retailerRoute,
-  catalogRoute,
+  provinceRoute,
+  retailersRoute,
+  retailerCatalogRoute,
   productDetailRoute,
-  requestRoute,
-  joinRoute,
-  joinStatusRoute,
-  joinAdminRoute,
-  adminRoute,
+  requestProductRoute,
+  joinUsRoute,
+  roleApplicationsRoute,
+  adminRoleApplicationsRoute,
+  adminDashboardRoute,
   adminRetailersRoute,
-  shopperRoute,
-  driverRoute
+  adminListingsRoute,
+  shopperDashboardRoute,
+  driverDashboardRoute
 ]);
 
 const router = createRouter({ routeTree });
@@ -140,16 +163,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
-function App() {
+export default function App() {
   return (
     <GlobalErrorBoundary>
-      <InternetIdentityProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
+          <Toaster />
         </QueryClientProvider>
-      </InternetIdentityProvider>
+      </ThemeProvider>
     </GlobalErrorBoundary>
   );
 }
-
-export default App;

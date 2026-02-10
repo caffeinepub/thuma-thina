@@ -36,7 +36,7 @@ export function ProvinceListPage() {
                 </p>
               </div>
               <button
-                onClick={() => navigate({ to: '/join' })}
+                onClick={() => navigate({ to: '/join-us' })}
                 className="group inline-flex items-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md whitespace-nowrap"
               >
                 Join Us

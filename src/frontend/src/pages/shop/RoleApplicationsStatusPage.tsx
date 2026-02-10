@@ -32,7 +32,7 @@ export function RoleApplicationsStatusPage() {
     <div className="container-custom py-8 sm:py-12">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate({ to: '/join' })}
+          onClick={() => navigate({ to: '/join-us' })}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors font-medium"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
@@ -66,12 +66,12 @@ export function RoleApplicationsStatusPage() {
         {!isLoading && applications && applications.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-12 text-center">
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-            <p className="text-muted-foreground text-lg mb-4">No applications yet</p>
+            <p className="text-muted-foreground text-lg mb-4">You haven't submitted any applications yet</p>
             <button
-              onClick={() => navigate({ to: '/join' })}
-              className="text-primary hover:text-primary/80 font-medium underline decoration-primary/30 hover:decoration-primary/60 transition-colors"
+              onClick={() => navigate({ to: '/join-us' })}
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
             >
-              Apply for a role
+              Browse Available Roles
             </button>
           </div>
         )}
@@ -93,7 +93,7 @@ export function RoleApplicationsStatusPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-sm text-foreground mb-2">Motivation:</h4>
+                    <h4 className="font-semibold text-sm text-foreground mb-2">Your Motivation:</h4>
                     <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 p-4 rounded-lg border border-border">
                       {app.motivation}
                     </p>
@@ -102,7 +102,16 @@ export function RoleApplicationsStatusPage() {
                     <Alert variant="destructive" className="border-2">
                       <AlertDescription>
                         <p className="font-semibold text-sm mb-1">Rejection Reason:</p>
-                        <p className="text-sm opacity-90">{app.rejectionReason}</p>
+                        <p className="text-sm">{app.rejectionReason}</p>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {app.status === 'approved' && (
+                    <Alert className="border-2 border-primary/30 bg-primary/5">
+                      <AlertDescription>
+                        <p className="text-sm text-foreground">
+                          Congratulations! Your application has been approved. You will be contacted soon with next steps.
+                        </p>
                       </AlertDescription>
                     </Alert>
                   )}

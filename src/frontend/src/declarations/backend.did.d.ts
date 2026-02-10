@@ -24,6 +24,7 @@ export interface HolidayOverride {
 export interface Listing {
   'id' : ListingId,
   'status' : ListingStatus,
+  'createdAt' : Time,
   'productId' : ProductId,
   'stock' : bigint,
   'price' : bigint,
@@ -141,6 +142,11 @@ export interface _SERVICE {
   >,
   'addProvince' : ActorMethod<[string, Array<string>], undefined>,
   'addRetailer' : ActorMethod<[RetailerInput], RetailerId>,
+  'adminDeleteListing' : ActorMethod<[ListingId], undefined>,
+  'adminUpdateListing' : ActorMethod<
+    [ListingId, [] | [bigint], [] | [bigint], [] | [ListingStatus]],
+    undefined
+  >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bootstrapAdmin' : ActorMethod<[string, string], undefined>,
   'getAllActiveListings' : ActorMethod<[], Array<Listing>>,

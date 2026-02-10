@@ -1,56 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Marketplace/catalogue app with ZAR pricing, role-based dashboards (customers, personal shoppers, delivery drivers), ordering workflow, and admin management (retailers/products) including deletion.",
+  "summary": "Project to build an admin-managed system; next feature is an in-house admin Manage Listing dashboard to view and manage all retailer listings (create, edit price/inventory/status, disable, delete).",
   "architectural_notes": [
-    "Single login system used by all roles; dashboard/content varies by role (customer/user, personal shopper, delivery driver).",
-    "Pricing canonical unit is ZAR rands for storage and display (no cents).",
-    "Order state flow includes: placed -> shopper accepted/in progress -> shopping done -> driver accepted/collected -> delivered."
+    "Only main admin (in-house) manages retailers and listings; retailers do not have system access yet."
   ],
-  "known_issues": [
-    "Build/deploy pipeline failed with: 'Our AI couldn't handle that request.' (build retry requested).",
-    "Retailer deletion currently fails with error: 'actor.function.delete is not an action'.",
-    "Prices appear inconsistent: cents used in listings vs rands in catalogue/analytics."
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-standardize-all-monetary-values-to-be-stored-and-treated-as-zar-rands-not-cents-across-the-backend-and-frontend-including-listing-creation-editing-catalogue-display-and-any-analytics-totals",
-      "title": "Standardize all monetary values to be stored and treated as ZAR rands (not cents) across the backend and frontend, including listing creation/editing, catalogue display, and any analytics totals.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-fix-retailer-deletion-end-to-end-implement-the-backend-removeretailer-method-and-ensure-the-frontend-admin-retailer-delete-action-calls-it-successfully-with-a-confirmation-step-and-appropriate-cache-invalidation",
-      "title": "Fix retailer deletion end-to-end: implement the backend removeRetailer method and ensure the frontend admin retailer delete action calls it successfully, with a confirmation step and appropriate cache invalidation.",
+      "id": "feature-create-a-new-admin-manage-listings-page-that-shows-all-listings-grouped-by-retailer-displaying-listing-date-price-zar-and-inventory-status-with-actions-to-edit-disable-delete-and-create-a-new-listing",
+      "title": "Create a new Admin “Manage Listings” page that shows all listings grouped by retailer, displaying listing date, price (ZAR), and inventory status, with actions to edit, disable, delete, and create a new listing.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-the-ability-to-delete-products-from-the-universal-catalogue-with-a-confirmation-step-deleting-a-product-must-also-remove-any-associated-listings",
-      "title": "Add the ability to delete products from the universal catalogue with a confirmation step; deleting a product must also remove any associated listings.",
+      "id": "feature-add-extend-react-query-hooks-needed-for-listing-management-to-support-the-manage-listings-page-ui-fetch-all-listings-and-perform-update-delete-mutations",
+      "title": "Add/extend React Query hooks needed for listing management to support the Manage Listings page UI (fetch all listings and perform update/delete mutations).",
       "reqIds": [
         "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-role-based-dashboards-in-the-frontend-using-the-existing-single-internet-identity-login-customers-users-can-browse-listings-and-place-orders-personal-shoppers-can-view-accept-complete-newly-placed-orders-delivery-drivers-can-view-accept-mark-delivered-ready-for-delivery-orders",
-      "title": "Implement role-based dashboards in the frontend using the existing single Internet Identity login: customers/users can browse listings and place orders; personal shoppers can view/accept/complete newly placed orders; delivery drivers can view/accept/mark delivered ready-for-delivery orders.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-admin-listing-creation-ui-to-reflect-rands-not-cents-and-ensure-all-price-labels-placeholders-and-any-formatting-are-consistent-across-admin-listing-creation-and-catalogue-display",
-      "title": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels, placeholders, and any formatting are consistent across admin listing creation and catalogue display.",
-      "reqIds": [
-        "REQ-9"
       ],
       "version": 1
     }
@@ -58,80 +28,28 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Store and display all prices in ZAR rands (not cents) across listings, catalogue, and analytics.",
+      "summary": "Admin Manage Listing dashboard showing all listings per retailer with listing date, price, inventory status; allow create new listing, edit, delete, and disable (out of stock/emergency closure).",
       "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "AR-2",
-      "summary": "Fix retailer deletion: implement delete action with confirmation (resolve 'actor.function.delete is not an action').",
-      "reqIds": [],
+      "summary": "Extend the backend Listing model to include a listing creation timestamp so the admin UI can display a “listing date” for each listing.",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Add ability to delete products from the catalogue (with confirmation).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Activate order placement for customers/users.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Personal shopper dashboard: view newly placed orders, accept to start shopping, mark shopping done.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Delivery driver dashboard: see orders ready for delivery, accept/collect delivery, mark delivered.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Single login for all roles with role-based dashboards/visibility (customers vs shoppers vs drivers).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add a conditional state migration that converts any existing persisted listing prices that were stored as cents into rands (divide by 100, rounding down if needed) so legacy data displays correctly after upgrade.",
+      "summary": "Add backend admin-only APIs to manage listings: update listing price/stock/status, and delete a listing.",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Implement backend order placement and persistence: allow customer/user accounts to create orders containing one or more listing line items (listingId + quantity + unit price in rands), and store order status through the workflow (placed → accepted by shopper → shopping done → accepted by driver/collected → delivered).",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Add shopper workflow backend APIs: shoppers can list newly placed orders awaiting processing, accept an order to start shopping, and mark shopping as done which makes the order available for delivery drivers.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Add driver workflow backend APIs: drivers can list orders ready for delivery, accept/collect a delivery, and mark the order as delivered.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "status": "pending"
     }
   ],
-  "projectName": "Fix ZAR pricing units, enable deletion for retailers/products, and implement role-based order workflow (customer → shopper → driver)",
+  "projectName": "Add Admin Manage Listings dashboard (grouped by retailer) with create/edit/disable/delete",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

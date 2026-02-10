@@ -62,6 +62,7 @@ export const UserRole = IDL.Variant({
 export const Listing = IDL.Record({
   'id' : ListingId,
   'status' : ListingStatus,
+  'createdAt' : Time,
   'productId' : ProductId,
   'stock' : IDL.Nat,
   'price' : IDL.Nat,
@@ -162,6 +163,12 @@ export const idlService = IDL.Service({
     ),
   'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
   'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
+  'adminDeleteListing' : IDL.Func([ListingId], [], []),
+  'adminUpdateListing' : IDL.Func(
+      [ListingId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(ListingStatus)],
+      [],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
@@ -282,6 +289,7 @@ export const idlFactory = ({ IDL }) => {
   const Listing = IDL.Record({
     'id' : ListingId,
     'status' : ListingStatus,
+    'createdAt' : Time,
     'productId' : ProductId,
     'stock' : IDL.Nat,
     'price' : IDL.Nat,
@@ -382,6 +390,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
     'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
+    'adminDeleteListing' : IDL.Func([ListingId], [], []),
+    'adminUpdateListing' : IDL.Func(
+        [ListingId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(ListingStatus)],
+        [],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),

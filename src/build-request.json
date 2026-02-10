@@ -1,204 +1,110 @@
 {
   "kind": "build_request",
-  "title": "Fix ZAR pricing units, enable deletion for retailers/products, and implement role-based order workflow (customer → shopper → driver)",
+  "title": "Add Admin Manage Listings dashboard (grouped by retailer) with create/edit/disable/delete",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Standardize all monetary values to be stored and treated as ZAR rands (not cents) across the backend and frontend, including listing creation/editing, catalogue display, and any analytics totals.",
-      "target": "both",
+      "text": "Extend the backend Listing model to include a listing creation timestamp so the admin UI can display a “listing date” for each listing.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "price is cents when listing but in zar on the catalogue... kindly correct this listings and catalogue and all analytics should be in rands not cents",
-          "all should be stored and displayed in rands"
+          "1 listing should show listing date price and inventory status"
         ]
       },
       "acceptanceCriteria": [
-        "When an admin creates a listing, the entered price is interpreted as rands and is stored as rands in backend state.",
-        "Catalogue pages and product detail pages display listing prices in rands consistently (no implicit cents→rands mismatch).",
-        "Any analytics values that represent money are returned/displayed in rands (not cents)."
+        "Backend Listing type includes a new createdAt field (Time.Time) that is set when a listing is created.",
+        "Existing listing creation (addListing) persists createdAt for newly created listings.",
+        "A state migration is added (backend/migration.mo, conditional) to populate createdAt for any existing persisted listings (use a sensible default such as the upgrade time or 0), and the canister upgrades without trapping."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add a conditional state migration that converts any existing persisted listing prices that were stored as cents into rands (divide by 100, rounding down if needed) so legacy data displays correctly after upgrade.",
+      "text": "Add backend admin-only APIs to manage listings: update listing price/stock/status, and delete a listing.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "zar 21700 cents appears as 21700 rands",
-          "all should be stored and displayed in rands"
+          "yes besides edit admin should be able to delete or disable(out of stock or emergency closure)",
+          "i need a manage listing dashboard that has all listings per retailer."
         ]
       },
       "acceptanceCriteria": [
-        "On upgrade, existing listings with prices previously stored in cents are converted so that 21700 becomes 217.",
-        "Migration runs only when needed (conditional), and does not break fresh deployments with empty state.",
-        "After migration, listing.price values in canister state represent rands going forward."
+        "A shared admin-only method exists to update a listing by id, allowing price, stock, and status to be changed in one operation (and traps with clear messages on not-found/unauthorized).",
+        "A shared admin-only method exists to delete a listing by id (and traps with clear messages on not-found/unauthorized).",
+        "Listing management actions correctly persist to stable state and are reflected in subsequent queries (e.g., listListings)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Fix retailer deletion end-to-end: implement the backend removeRetailer method and ensure the frontend admin retailer delete action calls it successfully, with a confirmation step and appropriate cache invalidation.",
-      "target": "both",
+      "text": "Create a new Admin “Manage Listings” page that shows all listings grouped by retailer, displaying listing date, price (ZAR), and inventory status, with actions to edit, disable, delete, and create a new listing.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "i cant delete retailers... when i delete it says actor.function.delete is not an action",
-          "you can add confirmation step."
+          "so i need a manage listing dashboard that has all listings per retailer.",
+          "1 listing should show listing date price and inventory status",
+          "yes besides edit admin should be able to delete or disable(out of stock or emergency closure) admin can also create a new listing on this dashboard"
         ]
       },
       "acceptanceCriteria": [
-        "AdminRetailersPage deletion no longer throws 'actor.function.delete is not an action'.",
-        "Deleting a retailer removes the retailer and all associated listings in backend state.",
-        "The confirmation dialog remains, and on success the retailer disappears from the list without a full page reload."
+        "A new route exists for the page (e.g., /admin/listings) and is wrapped with the existing <AdminOnly> protection.",
+        "The page lists retailers, and within each retailer section lists that retailer’s listings.",
+        "Each listing row shows: listing date (derived from createdAt), price formatted as ZAR, and inventory status (including stock quantity and the listing status).",
+        "Each listing row provides actions: Edit (price/stock/status), Disable (sets status to out-of-stock/discontinued as appropriate), and Delete (with confirmation).",
+        "The page provides a way to create a new listing (either an inline form or a clearly visible action that opens a form) using the existing retailer/product selectors and ZAR validation rules already used in admin listing creation.",
+        "All user-facing text on this page is in English.",
+        "After any mutation (create/update/status change/delete), the listings view refreshes via React Query cache invalidation so changes appear without a manual reload."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Add the ability to delete products from the universal catalogue with a confirmation step; deleting a product must also remove any associated listings.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "i should also be able to delete products from catalogue."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin Dashboard product catalogue table includes a delete action with confirmation.",
-        "Backend exposes a removeProduct method callable by admins.",
-        "Deleting a product removes it from listProducts() results and removes related listings.",
-        "UI updates immediately after deletion via React Query invalidation."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement backend order placement and persistence: allow customer/user accounts to create orders containing one or more listing line items (listingId + quantity + unit price in rands), and store order status through the workflow (placed → accepted by shopper → shopping done → accepted by driver/collected → delivered).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "lets activate order placing",
-          "customers/users just see listings and can order"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend exposes a createOrder method for authenticated users (role: user) that creates a new order with status 'placed'.",
-        "Orders persist in canister state and can be queried by relevant parties (customer, shopper, driver, admin as appropriate).",
-        "Order items store prices in rands and totals computed in rands.",
-        "Order status transitions are validated (cannot skip required steps)."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Add shopper workflow backend APIs: shoppers can list newly placed orders awaiting processing, accept an order to start shopping, and mark shopping as done which makes the order available for delivery drivers.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "have a screen for personal shoppers to view all newly placed orders and accept them to start shopping , mark done when finished shopping",
-          "shoppers see placed orders waiting to be processed"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend provides a query for 'placed' orders available to shoppers.",
-        "Backend provides an action for a shopper to accept an order (assigns shopper principal and sets status to 'shopping').",
-        "Backend provides an action for a shopper to mark the order shopping as done (sets status to 'readyForDelivery').",
-        "Role checks prevent non-shoppers from calling shopper actions."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Add driver workflow backend APIs: drivers can list orders ready for delivery, accept/collect a delivery, and mark the order as delivered.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "the order then goes to delivery drivers section where they can accept collect delivery and mark delivered on it.",
-          "drivers see order ready for delivery."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend provides a query for orders in 'readyForDelivery' status.",
-        "Backend provides an action for a driver to accept/collect an order (assigns driver principal and sets status to 'outForDelivery' or equivalent).",
-        "Backend provides an action for a driver to mark delivered (sets status to 'delivered').",
-        "Role checks prevent non-drivers from calling driver actions."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Implement role-based dashboards in the frontend using the existing single Internet Identity login: customers/users can browse listings and place orders; personal shoppers can view/accept/complete newly placed orders; delivery drivers can view/accept/mark delivered ready-for-delivery orders.",
+      "text": "Add/extend React Query hooks needed for listing management to support the Manage Listings page UI (fetch all listings and perform update/delete mutations).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages"
         ],
         "quotes": [
-          "login is the same for all roles, but dashboard differs between roles customers/users just see listings and can order, shoppers see placed orders waiting to be processed, drivers see order ready for delivery."
+          "build now"
         ]
       },
       "acceptanceCriteria": [
-        "Navigation exposes shopper and driver dashboards only when the logged-in user has the corresponding role.",
-        "Customer browsing routes remain accessible; placing an order requires being logged in as a user.",
-        "Shopper dashboard shows a list of placed orders with actions: Accept, Mark Shopping Done.",
-        "Driver dashboard shows a list of ready-for-delivery orders with actions: Accept/Collect, Mark Delivered.",
-        "All user-facing text is in English."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Update admin listing creation UI to reflect rands (not cents) and ensure all price labels, placeholders, and any formatting are consistent across admin listing creation and catalogue display.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "all should be stored and displayed in rands",
-          "price is cents when listing but in zar on the catalogue"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin 'Add New Listing' form no longer labels price as 'cents' and uses rands-appropriate placeholder/examples.",
-        "No page displays a raw cents value as rands."
+        "A query hook exists to fetch all listings for admin usage (built on the existing backend listListings query).",
+        "Mutation hooks exist for updating a listing and deleting a listing, calling the new backend methods from REQ-2.",
+        "On success, hooks invalidate the relevant query keys so retailer/listing/product detail views remain consistent (at minimum: ['listings'], ['dashboardData'], and any listing-dependent keys already used in the app)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor with all logic in backend/main.mo; create backend/migration.mo only if required for the listing price unit conversion.",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui/*.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only as required for the Listing schema upgrade.",
+    "Do not edit any files under frontend/src/components/ui or other frontend immutablePaths (compose existing UI components instead).",
+    "Admin-only access control must be enforced server-side for all listing management mutations."
   ],
   "nonGoals": [
-    "Implementing third-party authentication (anything beyond Internet Identity).",
-    "Real-time updates via WebSockets/push notifications.",
-    "Integrations with external databases or off-chain services.",
-    "Payments processing (e.g., Stripe) unless explicitly requested later."
+    "Do not add retailer self-service access or retailer-specific authentication/portals (system remains in-house admin managed).",
+    "Do not implement new real-time updates (no websockets/push); rely on standard React Query refetch/invalidation.",
+    "Do not change unrelated order workflow features."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

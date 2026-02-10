@@ -105,7 +105,7 @@ export function ShopHeader() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate({ to: '/join' })}
+              onClick={() => navigate({ to: '/join-us' })}
               className="hover:bg-accent/10 hover:text-accent"
             >
               <Users className="h-4 w-4 sm:mr-1.5" />
@@ -114,7 +114,7 @@ export function ShopHeader() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate({ to: '/request' })}
+              onClick={() => navigate({ to: '/request-product' })}
               className="hover:bg-secondary/20 hover:text-secondary-foreground"
             >
               <Plus className="h-4 w-4 mr-1.5" />

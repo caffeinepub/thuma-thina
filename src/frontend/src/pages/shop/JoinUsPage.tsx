@@ -166,7 +166,7 @@ export function JoinUsPage() {
           <div className="flex flex-wrap gap-3 justify-center mb-10">
             <Button
               variant="outline"
-              onClick={() => navigate({ to: '/join/status' })}
+              onClick={() => navigate({ to: '/my-applications' })}
               className="border-2 shadow-sm hover:shadow-md transition-shadow"
             >
               <FileText className="h-4 w-4 mr-2" />
@@ -175,43 +175,43 @@ export function JoinUsPage() {
             {isAdmin && (
               <Button
                 variant="outline"
-                onClick={() => navigate({ to: '/join/admin/applications' })}
+                onClick={() => navigate({ to: '/admin/role-applications' })}
                 className="border-2 shadow-sm hover:shadow-md transition-shadow"
               >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Master Admin: Review Applications
+                <Users className="h-4 w-4 mr-2" />
+                Review Applications (Admin)
               </Button>
             )}
           </div>
         )}
 
-        {/* Roles Grid */}
+        {/* Role Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {roles.map((role) => (
-            <Card 
-              key={role.id} 
-              className="flex flex-col border-2 hover:border-primary/40 hover:shadow-warm transition-all duration-300"
+            <Card
+              key={role.id}
+              className="group hover:shadow-warm transition-all duration-300 border-2 hover:border-primary/30 flex flex-col"
             >
               <CardHeader>
-                <div className="flex items-center justify-center h-16 w-16 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 text-primary mb-4 shadow-sm">
-                  {role.icon}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-primary group-hover:scale-110 transition-transform">
+                    {role.icon}
+                  </div>
+                  <CardTitle className="text-xl">{role.title}</CardTitle>
                 </div>
-                <CardTitle className="font-display text-xl">
-                  {role.title}
-                </CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
+                <CardDescription className="text-base leading-relaxed">
                   {role.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 <div className="mb-6 flex-1">
-                  <h4 className="font-semibold text-sm text-foreground mb-3">
+                  <h4 className="font-semibold text-sm text-foreground mb-3 uppercase tracking-wide">
                     Benefits:
                   </h4>
                   <ul className="space-y-2">
                     {role.benefits.map((benefit, index) => (
-                      <li key={index} className="flex items-start text-sm text-muted-foreground">
-                        <span className="mr-2 mt-0.5 text-primary font-bold">•</span>
+                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <ArrowRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <span>{benefit}</span>
                       </li>
                     ))}
@@ -219,83 +219,81 @@ export function JoinUsPage() {
                 </div>
                 <Button
                   onClick={role.ctaAction}
-                  className="w-full shadow-sm hover:shadow-md transition-shadow"
-                  variant={role.id === 'customer' ? 'default' : 'secondary'}
+                  disabled={!role.available}
+                  className="w-full group-hover:shadow-md transition-shadow"
+                  variant={role.id === 'customer' ? 'default' : 'outline'}
                 >
                   {role.ctaText}
-                  {role.id === 'customer' && <ArrowRight className="ml-2 h-4 w-4" />}
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Bottom CTA */}
-        <div className="mt-12 text-center">
-          <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-card to-muted/30 p-8 sm:p-10 shadow-sm">
-            <h3 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-3">
-              Ready to Get Started?
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
-              Start shopping now or apply for a role to join our community of service providers.
-            </p>
-            <Button 
-              size="lg"
-              onClick={() => navigate({ to: '/' })}
-              className="shadow-md hover:shadow-lg transition-shadow"
-            >
-              Browse Products
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
+        {/* Info Section */}
+        <div className="mt-16 text-center">
+          <Card className="border-2 bg-gradient-to-br from-muted/30 to-muted/10">
+            <CardContent className="py-10 px-6">
+              <h2 className="font-display text-2xl font-bold text-foreground mb-4">
+                Why Join Thuma Thina?
+              </h2>
+              <p className="text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-6">
+                Thuma Thina is more than just a platform—it's a community-driven initiative that brings together local retailers, 
+                service providers, and customers to create a thriving local economy. Whether you're looking to shop, work, or 
+                grow your business, we provide the tools and support you need to succeed.
+              </p>
+              <div className="grid gap-6 md:grid-cols-3 mt-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">100%</div>
+                  <div className="text-sm text-muted-foreground">Community Focused</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">24/7</div>
+                  <div className="text-sm text-muted-foreground">Platform Access</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary mb-2">Local</div>
+                  <div className="text-sm text-muted-foreground">Support & Service</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Application Dialog */}
       <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
-        <DialogContent className="sm:max-w-[500px] border-2">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Apply for {selectedRole}</DialogTitle>
-            <DialogDescription className="text-base">
+            <DialogTitle>Apply for {selectedRole}</DialogTitle>
+            <DialogDescription>
               Tell us why you'd like to join as a {selectedRole}. Your application will be reviewed by our team.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="motivation" className="text-base font-semibold">Motivation</Label>
+              <Label htmlFor="motivation">Motivation</Label>
               <Textarea
                 id="motivation"
-                placeholder="Explain why you want this role and what makes you a good fit..."
                 value={motivation}
                 onChange={(e) => setMotivation(e.target.value)}
+                placeholder="Tell us about your experience, skills, and why you want this role..."
                 rows={6}
-                className="resize-none border-2"
+                className="resize-none"
               />
-              <p className="text-xs text-muted-foreground">
-                Minimum 20 characters required
-              </p>
             </div>
-            {submitApplication.isError && (
-              <Alert variant="destructive" className="border-2">
-                <AlertDescription>
-                  Failed to submit application. Please try again.
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowApplicationDialog(false)}
-              disabled={submitApplication.isPending}
-              className="border-2"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmitApplication}
-              disabled={!motivation.trim() || motivation.trim().length < 20 || submitApplication.isPending}
-              className="shadow-sm"
+              disabled={!motivation.trim() || submitApplication.isPending}
             >
               {submitApplication.isPending ? 'Submitting...' : 'Submit Application'}
             </Button>
@@ -305,20 +303,26 @@ export function JoinUsPage() {
 
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-[400px] border-2">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Application Submitted!</DialogTitle>
-            <DialogDescription className="text-base">
-              Your application has been received and will be reviewed by our team. You can check the status in your applications page.
+            <DialogTitle>Application Submitted!</DialogTitle>
+            <DialogDescription>
+              Your application for {selectedRole} has been successfully submitted. We'll review it and get back to you soon.
             </DialogDescription>
           </DialogHeader>
+          <div className="py-4">
+            <Alert>
+              <AlertDescription>
+                You can check the status of your application anytime by visiting the "My Applications" page.
+              </AlertDescription>
+            </Alert>
+          </div>
           <DialogFooter>
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                navigate({ to: '/join/status' });
+                navigate({ to: '/my-applications' });
               }}
-              className="w-full shadow-sm"
             >
               View My Applications
             </Button>

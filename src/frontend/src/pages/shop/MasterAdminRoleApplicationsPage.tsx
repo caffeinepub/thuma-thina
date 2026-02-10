@@ -70,7 +70,7 @@ export function MasterAdminRoleApplicationsPage() {
     <div className="container-custom py-8 sm:py-12">
       <div className="max-w-5xl mx-auto">
         <button
-          onClick={() => navigate({ to: '/join' })}
+          onClick={() => navigate({ to: '/join-us' })}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors font-medium"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />

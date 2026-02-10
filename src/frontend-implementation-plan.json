@@ -1,167 +1,61 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend fixes for ZAR pricing, admin deletions, and role-based order dashboards",
+  "title": "Admin Manage Listings dashboard (grouped by retailer) with create/edit/disable/delete",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Treat and present all money values as ZAR rands consistently in UI (admin listing form, catalogue, product detail, and analytics display).",
+      "id": "REQ-3",
+      "summary": "Create an admin Manage Listings page (grouped by retailer) that displays listing date, ZAR price, inventory status, and supports create/edit/disable/delete with cache refresh.",
       "acceptanceCriteria": [
-        "When an admin creates a listing, the entered price is interpreted as rands and is stored as rands in backend state.",
-        "Catalogue pages and product detail pages display listing prices in rands consistently (no implicit cents→rands mismatch).",
-        "Any analytics values that represent money are returned/displayed in rands (not cents)."
+        "A new route exists for the page (e.g., /admin/listings) and is wrapped with the existing <AdminOnly> protection.",
+        "The page lists retailers, and within each retailer section lists that retailer’s listings.",
+        "Each listing row shows: listing date (derived from createdAt), price formatted as ZAR, and inventory status (including stock quantity and the listing status).",
+        "Each listing row provides actions: Edit (price/stock/status), Disable (sets status to out-of-stock/discontinued as appropriate), and Delete (with confirmation).",
+        "The page provides a way to create a new listing (either an inline form or a clearly visible action that opens a form) using the existing retailer/product selectors and ZAR validation rules already used in admin listing creation.",
+        "All user-facing text on this page is in English.",
+        "After any mutation (create/update/status change/delete), the listings view refreshes via React Query cache invalidation so changes appear without a manual reload."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/money.ts",
+          "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
           "operation": "create",
-          "description": "Add a small money utility focused on ZAR rands (e.g., safe parsing from input to bigint rands, and formatting bigint rands for display)."
+          "description": "Implement the Admin “Manage Listings” page UI grouped by retailer: fetch retailers + admin listings, render a retailer section with a table of listings showing listing date (from createdAt), price formatted via existing money utils, and inventory status (stock + ListingStatus). Provide actions per listing: Edit (open a dialog/form to change price/stock/status), Disable (set status to outOfStock or discontinued), and Delete (confirmation dialog). Include a Create Listing form (inline or dialog) that reuses the existing retailer/product selectors (SearchableSelect) and the existing ZAR validation/parsing rules (money utils). Use existing shadcn-ui building blocks (Card, Table, Button, Dialog/AlertDialog, Inputs) from the project to compose the UI; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add a new protected admin route for the Manage Listings page (e.g., /admin/listings) wrapped with the existing <AdminOnly> component, and wire it to render AdminManageListingsPage so it is reachable via navigation."
         },
         {
           "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Update the admin 'Add New Listing' form to be explicitly in rands (labels/placeholders/help text) and ensure the value passed to the listing creation mutation is interpreted as rands (no cents conversion). Use shadcn-ui form inputs/labels already in this page; Verify the component's usage instructions before implementing."
+          "description": "Add a clear navigation entry (e.g., a button) from the existing Admin Dashboard to the new Manage Listings page route so the page is discoverable and not orphaned. Use existing shadcn-ui Button styling; verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
-          "operation": "modify",
-          "description": "Ensure all listing price displays use the shared ZAR rands formatting helper (no implicit cents→rands mismatch)."
-        },
-        {
-          "path": "frontend/src/pages/shop/RetailerCatalogPage.tsx",
-          "operation": "modify",
-          "description": "Ensure all listing price displays use the shared ZAR rands formatting helper (no implicit cents→rands mismatch)."
-        },
-        {
-          "path": "frontend/src/components/shop/CataloguePreviewSection.tsx",
-          "operation": "modify",
-          "description": "Ensure preview listing price displays use the shared ZAR rands formatting helper so the landing/preview grid is consistent with catalogue and product detail pages."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update any money-like analytics mock totals (and any future money fields used by admin analytics UI) to be treated/displayed as rands, and centralize formatting via the shared money utility where values are rendered."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Fix admin retailer deletion flow to call the correct backend capability, keep confirmation, and invalidate cached retailer/listing data so UI updates without reload.",
-      "acceptanceCriteria": [
-        "AdminRetailersPage deletion no longer throws 'actor.function.delete is not an action'.",
-        "Deleting a retailer removes the retailer and all associated listings in backend state.",
-        "The confirmation dialog remains, and on success the retailer disappears from the list without a full page reload."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Extend the typed backend interface to include the removeRetailer capability so the frontend can call it without type errors."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update the retailer deletion mutation to call the typed removeRetailer capability (remove temporary ts-expect-error), and confirm React Query invalidation covers retailer lists, listings, and dashboard counts."
-        },
-        {
-          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the delete action uses the existing confirmation dialog (shadcn-ui AlertDialog) and triggers the updated mutation; verify success clears dialog state and the table reflects deletion via React Query invalidation (no full reload). Verify the component's usage instructions before implementing."
+          "path": "frontend/src/utils/time.ts",
+          "operation": "create",
+          "description": "Add a small frontend time formatting utility to convert IC Time (bigint) into a human-readable English date string for the listing date column (derived from createdAt). Keep formatting consistent and locale-safe for English UI."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Add admin ability to delete products from the universal catalogue with confirmation, and refresh UI state via React Query invalidation.",
+      "summary": "Add/extend React Query hooks for admin listing management: fetch all listings and perform update/delete mutations with proper cache invalidation.",
       "acceptanceCriteria": [
-        "Admin Dashboard product catalogue table includes a delete action with confirmation.",
-        "Backend exposes a removeProduct method callable by admins.",
-        "Deleting a product removes it from listProducts() results and removes related listings.",
-        "UI updates immediately after deletion via React Query invalidation."
+        "A query hook exists to fetch all listings for admin usage (built on the existing backend listListings query).",
+        "Mutation hooks exist for updating a listing and deleting a listing, calling the new backend methods from REQ-2.",
+        "On success, hooks invalidate the relevant query keys so retailer/listing/product detail views remain consistent (at minimum: ['listings'], ['dashboardData'], and any listing-dependent keys already used in the app)."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Extend the typed backend interface to include the removeProduct capability so the frontend can call it without type errors."
-        },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add a product deletion mutation (e.g., useRemoveProduct) calling removeProduct and invalidate relevant queries (allProducts, catalogue preview, productWithRetailers, listings, dashboardData)."
+          "description": "Add React Query hooks for admin listing management using the existing actor methods exposed in the frontend backend interface: (1) an admin listings query hook built on listListings, and (2) mutation hooks for adminUpdateListing and adminDeleteListing. Ensure onSuccess invalidates at minimum ['listings'] and ['dashboardData'], and also invalidates other listing-dependent keys already used (e.g., retailer/product detail keys such as ['retailers'], ['cataloguePreview'], and ['productWithRetailers'] where applicable) so UI refreshes without manual reload."
         },
         {
-          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
           "operation": "modify",
-          "description": "Add a delete action to the universal product catalogue table with a shadcn-ui confirmation dialog (AlertDialog) and wire it to the new delete mutation; update the table immediately via React Query invalidation. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Implement role-based dashboards and ordering UI using the existing Internet Identity login, showing customer ordering, shopper processing, and driver delivery workflows based on role.",
-      "acceptanceCriteria": [
-        "Navigation exposes shopper and driver dashboards only when the logged-in user has the corresponding role.",
-        "Customer browsing routes remain accessible; placing an order requires being logged in as a user.",
-        "Shopper dashboard shows a list of placed orders with actions: Accept, Mark Shopping Done.",
-        "Driver dashboard shows a list of ready-for-delivery orders with actions: Accept/Collect, Mark Delivered.",
-        "All user-facing text is in English."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Update frontend types to support the order workflow and roles needed by dashboards (e.g., add shopper/driver roles to UserRole and add order-related types and backend capabilities used by the new UI)."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add React Query hooks/mutations for: fetching caller role, creating orders (user), listing placed orders (shopper), accepting/marking shopping done (shopper), listing ready-for-delivery orders (driver), accepting/collecting and marking delivered (driver). Ensure mutations invalidate the relevant order lists."
-        },
-        {
-          "path": "frontend/src/pages/shop/ShopperDashboardPage.tsx",
-          "operation": "create",
-          "description": "Create a shopper dashboard page showing newly placed orders and actions (Accept, Mark Shopping Done) using shadcn-ui tables/buttons/dialog patterns. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
-          "operation": "create",
-          "description": "Create a driver dashboard page showing ready-for-delivery orders and actions (Accept/Collect, Mark Delivered) using shadcn-ui tables/buttons/dialog patterns. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
-          "operation": "modify",
-          "description": "Add a customer/user order placement UI for a selected listing (quantity input + Place Order action). Require Internet Identity authentication before allowing submit; handle authorization errors gracefully with English messages; on success, show a clear success message and invalidate/refresh any relevant order queries. Use shadcn-ui input/button/alert patterns already used in the app; Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/shop/ShopHeader.tsx",
-          "operation": "modify",
-          "description": "Update navigation to conditionally show links for Shopper Dashboard and Driver Dashboard only when the logged-in user has those roles; keep existing public browsing navigation accessible. Use existing header UI primitives (shadcn-ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register routes for the new shopper and driver dashboard pages and ensure they are reachable via navigation. Add route-level guards/wrappers as needed so only authorized roles can access each dashboard (without introducing new authentication beyond existing Internet Identity)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Update admin listing creation UI to clearly reflect rands (not cents) and keep pricing labels/placeholders/formatting consistent with catalogue display.",
-      "acceptanceCriteria": [
-        "Admin 'Add New Listing' form no longer labels price as 'cents' and uses rands-appropriate placeholder/examples.",
-        "No page displays a raw cents value as rands."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Replace 'Price (cents)' labeling and examples with ZAR rands (e.g., 'Price (ZAR)' and rands-appropriate examples), and ensure any helper text aligns with catalogue/product price display. Use existing shadcn-ui Label/Input; Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/utils/money.ts",
-          "operation": "modify",
-          "description": "(If needed after integration) Ensure the money utility supports consistent formatting and input parsing rules used by both admin listing creation and catalogue/product display to prevent any cents/rands mismatch."
+          "description": "Wire the Manage Listings page to the new React Query hooks (admin listings query + update/delete mutations) and ensure user actions trigger the appropriate mutations and rely on cache invalidation for refresh. Use existing shadcn-ui components for dialogs and forms; verify the component's usage instructions before implementing."
         }
       ]
     }

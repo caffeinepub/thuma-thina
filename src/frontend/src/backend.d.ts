@@ -27,6 +27,7 @@ export type Time = bigint;
 export interface Listing {
     id: ListingId;
     status: ListingStatus;
+    createdAt: Time;
     productId: ProductId;
     stock: bigint;
     price: bigint;
@@ -112,9 +113,7 @@ export enum ListingStatus {
 export enum UserRole {
     admin = "admin",
     user = "user",
-    guest = "guest",
-    shopper = "shopper",
-    driver = "driver"
+    guest = "guest"
 }
 export interface backendInterface {
     addImageRef(productId: ProductId, imageRef: ExternalBlob): Promise<void>;
@@ -122,6 +121,8 @@ export interface backendInterface {
     addProduct(name: string, category: string, description: string, preferredImage: ExternalBlob | null): Promise<ProductId>;
     addProvince(name: string, towns: Array<string>): Promise<void>;
     addRetailer(input: RetailerInput): Promise<RetailerId>;
+    adminDeleteListing(listingId: ListingId): Promise<void>;
+    adminUpdateListing(listingId: ListingId, price: bigint | null, stock: bigint | null, status: ListingStatus | null): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(adminToken: string, userProvidedToken: string): Promise<void>;
     getAllActiveListings(): Promise<Array<Listing>>;
@@ -148,23 +149,13 @@ export interface backendInterface {
     listProducts(): Promise<Array<Product>>;
     listRetailers(): Promise<Array<Retailer>>;
     removeImage(productId: ProductId, imageIndex: bigint): Promise<void>;
-    removeProduct(productId: ProductId): Promise<void>;
-    removeRetailer(retailerId: RetailerId): Promise<void>;
     requestApproval(): Promise<void>;
     requestNewProduct(productName: string, retailerName: string, townSuburb: string, province: string): Promise<bigint>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPreferredImage(productId: ProductId, preferredImage: ExternalBlob | null): Promise<void>;
     updateListingStatus(listingId: ListingId, newStatus: ListingStatus): Promise<void>;
-    updateProduct(productId: ProductId, name: string, category: string, description: string): Promise<void>;
     updateRetailer(id: RetailerId, input: RetailerInput): Promise<void>;
     upgradeToAdmin(user: Principal): Promise<void>;
     wipeSystem(): Promise<void>;
-    createOrder(listingId: ListingId, quantity: bigint): Promise<bigint>;
-    listPlacedOrders(): Promise<Array<any>>;
-    acceptOrder(orderId: bigint): Promise<void>;
-    markShoppingDone(orderId: bigint): Promise<void>;
-    listReadyForDeliveryOrders(): Promise<Array<any>>;
-    acceptDelivery(orderId: bigint): Promise<void>;
-    markDelivered(orderId: bigint): Promise<void>;
 }

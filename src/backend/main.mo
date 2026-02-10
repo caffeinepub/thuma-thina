@@ -12,7 +12,9 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   type RetailerId = Nat;
   type ProductId = Nat;
@@ -40,6 +42,7 @@ actor {
     price : Nat; // Now always ZAR, not cents
     stock : Nat;
     status : ListingStatus;
+    createdAt : Time.Time;
   };
 
   public type Retailer = {
@@ -298,12 +301,48 @@ actor {
               price;
               stock;
               status;
+              createdAt = Time.now();
             };
             listings.add(nextListingId, listing);
             nextListingId += 1;
             nextListingId - 1;
           };
         };
+      };
+    };
+  };
+
+  public shared ({ caller }) func adminUpdateListing(listingId : ListingId, price : ?Nat, stock : ?Nat, status : ?ListingStatus) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (listings.get(listingId)) {
+      case (null) { Runtime.trap("Listing not found") };
+      case (?existing) {
+        let updatedListing = {
+          id = existing.id;
+          retailerId = existing.retailerId;
+          productId = existing.productId;
+          price = switch (price) { case (null) { existing.price }; case (?p) { p } };
+          stock = switch (stock) { case (null) { existing.stock }; case (?s) { s } };
+          status = switch (status) { case (null) { existing.status }; case (?ns) { ns } };
+          createdAt = existing.createdAt;
+        };
+        listings.add(listingId, updatedListing);
+      };
+    };
+  };
+
+  public shared ({ caller }) func adminDeleteListing(listingId : ListingId) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (listings.get(listingId)) {
+      case (null) { Runtime.trap("Listing not found") };
+      case (?_) {
+        listings.remove(listingId);
       };
     };
   };
