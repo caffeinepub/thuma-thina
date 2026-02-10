@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, Users, Package, Store, FileText } from 'lucide-react';
+import { Info, Users, Package, Store, FileText, MapPin } from 'lucide-react';
 import { useListApprovals, useSetApproval } from '@/hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { ApprovalStatus } from '@/backend';
 import { toast } from 'sonner';
+import { navigate } from '@/router/HashRouter';
 
 export function AdminDashboardPage() {
   const { data: approvals, isLoading } = useListApprovals();
@@ -60,7 +61,7 @@ export function AdminDashboardPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>Platform Development Status</AlertTitle>
           <AlertDescription>
-            The full admin console is being implemented. Currently available: user approval management. Coming soon: product catalog, retailer management, listings, and application reviews.
+            The full admin console is being implemented. Currently available: user approval management and towns management. Coming soon: product catalog, retailer management, listings, and application reviews.
           </AlertDescription>
         </Alert>
 
@@ -181,8 +182,24 @@ export function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Coming Soon Sections */}
+        {/* Management Sections */}
         <div className="grid md:grid-cols-2 gap-6">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/towns')}
+          >
+            <CardHeader>
+              <MapPin className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Towns Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Manage the list of towns where Thuma Thina operates
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="opacity-50">
             <CardHeader>
               <Package className="h-8 w-8 text-muted-foreground mb-2" />

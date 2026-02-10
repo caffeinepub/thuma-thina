@@ -9,6 +9,7 @@ import { OrderDetailPage } from '@/pages/shop/OrderDetailPage';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { RequireAdmin } from '@/components/auth/RequireAdmin';
 import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
+import { AdminTownsPage } from '@/pages/admin/AdminTownsPage';
 import { JoinUsPage } from '@/pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from '@/pages/shop/RoleApplicationsStatusPage';
 
@@ -31,6 +32,16 @@ export function HashRouter() {
         <RequireAuth>
           <RequireAdmin>
             <AdminDashboardPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/towns') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminTownsPage />
           </RequireAdmin>
         </RequireAuth>
       );

@@ -14,9 +14,9 @@ import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Migration "migration";
 
-// Apply data migration from old to new state
 (with migration = Migration.run)
 actor {
+  type TownId = Nat;
   type RetailerId = Nat;
   type ProductId = Nat;
   type ListingId = Nat;
@@ -238,6 +238,21 @@ actor {
     };
   };
 
+  public type TownStatus = {
+    #active;
+    #removed;
+  };
+
+  public type Town = {
+    id : TownId;
+    name : Text;
+    province : Text;
+    status : TownStatus;
+    createdAt : Time.Time;
+    updatedAt : Time.Time;
+  };
+
+  var towns = Map.empty<TownId, Town>();
   var provinces = List.empty<Province>();
   var retailers = Map.empty<RetailerId, Retailer>();
   var products = Map.empty<ProductId, Product>();
@@ -254,6 +269,7 @@ actor {
   var approvedDrivers = Map.empty<Principal, Bool>();
   var approvedPickupPoints = Map.empty<Nat, Principal>();
 
+  var nextTownId = 0;
   var nextRetailerId = 0;
   var nextProductId = 0;
   var nextListingId = 0;
@@ -268,7 +284,6 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // Add additional required user approval functions
   public query ({ caller }) func isCallerApproved() : async Bool {
     AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
   };
@@ -291,5 +306,88 @@ actor {
     UserApproval.listApprovals(approvalState);
   };
 
-  // [Rest of canister unchanged - existing business logic]
+  public shared ({ caller }) func createTown(name : Text, province : Text) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    let now = Time.now();
+    let townId = nextTownId;
+    let newTown : Town = {
+      id = townId;
+      name;
+      province;
+      status = #active;
+      createdAt = now;
+      updatedAt = now;
+    };
+
+    towns.add(townId, newTown);
+    nextTownId += 1;
+
+    newTown;
+  };
+
+  public shared ({ caller }) func updateTown(id : TownId, name : Text, province : Text) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (towns.get(id)) {
+      case (null) {
+        Runtime.trap("Town not found");
+      };
+      case (?existing) {
+        if (existing.status == #removed) {
+          Runtime.trap("Cannot update removed town");
+        };
+
+        let updatedTown : Town = {
+          existing with name;
+          province;
+          updatedAt = Time.now();
+        };
+
+        towns.add(id, updatedTown);
+        updatedTown;
+      };
+    };
+  };
+
+  public shared ({ caller }) func removeTown(id : TownId) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (towns.get(id)) {
+      case (null) {
+        Runtime.trap("Town not found");
+      };
+      case (?existing) {
+        if (existing.status == #removed) {
+          Runtime.trap("Town already removed");
+        };
+
+        let removedTown : Town = {
+          existing with
+          status = #removed;
+          updatedAt = Time.now();
+        };
+
+        towns.add(id, removedTown);
+        removedTown;
+      };
+    };
+  };
+
+  public query ({ caller }) func listTowns() : async [Town] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    towns.values().toArray();
+  };
+
+  public query ({ caller }) func getActiveTowns() : async [Town] {
+    towns.values().toArray().filter(func(town) { town.status == #active });
+  };
 };

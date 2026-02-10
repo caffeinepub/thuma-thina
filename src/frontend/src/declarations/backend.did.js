@@ -24,6 +24,20 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const TownId = IDL.Nat;
+export const TownStatus = IDL.Variant({
+  'active' : IDL.Null,
+  'removed' : IDL.Null,
+});
+export const Time = IDL.Int;
+export const Town = IDL.Record({
+  'id' : TownId,
+  'status' : TownStatus,
+  'province' : IDL.Text,
+  'name' : IDL.Text,
+  'createdAt' : Time,
+  'updatedAt' : Time,
+});
 export const ApprovalStatus = IDL.Variant({
   'pending' : IDL.Null,
   'approved' : IDL.Null,
@@ -63,12 +77,17 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'createTown' : IDL.Func([IDL.Text, IDL.Text], [Town], []),
+  'getActiveTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
+  'removeTown' : IDL.Func([TownId], [Town], []),
   'requestApproval' : IDL.Func([], [], []),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+  'updateTown' : IDL.Func([TownId, IDL.Text, IDL.Text], [Town], []),
 });
 
 export const idlInitArgs = [];
@@ -89,6 +108,17 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const TownId = IDL.Nat;
+  const TownStatus = IDL.Variant({ 'active' : IDL.Null, 'removed' : IDL.Null });
+  const Time = IDL.Int;
+  const Town = IDL.Record({
+    'id' : TownId,
+    'status' : TownStatus,
+    'province' : IDL.Text,
+    'name' : IDL.Text,
+    'createdAt' : Time,
+    'updatedAt' : Time,
   });
   const ApprovalStatus = IDL.Variant({
     'pending' : IDL.Null,
@@ -129,12 +159,17 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'createTown' : IDL.Func([IDL.Text, IDL.Text], [Town], []),
+    'getActiveTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
+    'removeTown' : IDL.Func([TownId], [Town], []),
     'requestApproval' : IDL.Func([], [], []),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
+    'updateTown' : IDL.Func([TownId, IDL.Text, IDL.Text], [Town], []),
   });
 };
 

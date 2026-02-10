@@ -1,288 +1,144 @@
 {
   "kind": "build_request",
-  "title": "Implement multi-retailer catalogue, auth-gated checkout, and role-based order workflow dashboards (admin/shopper/driver/pickup point)",
+  "title": "Admin towns management module (CRUD) for curated towns list",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Replace the current public landing page experience with a customer-facing global catalogue page that shows listed products ready to be ordered, including showing all available retailer price options for the same product and letting the customer choose which retailer/price to add to cart (i.e., cart items are specific to a listing/retailer-price option).",
-      "target": "frontend",
+      "text": "Implement persistent Towns data model and storage in the Motoko main actor, including an admin-curated list of towns with fields sufficient for admin management (at minimum: unique identifier, town name, province, created/updated timestamps, and a removal state that supports “remove towns” without breaking referential integrity later).",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-1",
           "msg-2"
         ],
         "quotes": [
-          "ok home page should have a catalogue of listed items ready to be ordered.",
-          "if more than one retailer offers that product the user should see prices for all retailers and choose from which retailer or price they wanna shop."
+          "add only towns management now",
+          "the admin will populate a list of towns where we are acting and users choose from these towns"
         ]
       },
       "acceptanceCriteria": [
-        "The default route (\"/\") presents a browsable/searchable catalogue of products with per-product retailer price options.",
-        "Adding to cart requires selecting a specific retailer/price option when multiple are available.",
-        "Cart items clearly indicate product name, retailer name, unit price, and quantity."
+        "Towns are stored in canister state and persist across canister upgrades (no data loss on redeploy/upgrade).",
+        "Each town has a stable unique identifier (not derived solely from name/province).",
+        "Removing a town is supported in a way that allows it to be excluded from active lists while still being retained in state for future linking/audit use.",
+        "Timestamps are set server-side."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement an auth-gated checkout flow: users can browse the catalogue while logged out, but attempting to proceed to checkout (placing an order) prompts the user to register/log in via Internet Identity before the order can be submitted.",
-      "target": "frontend",
+      "text": "Add backend methods for towns management with admin-only authorization: list towns, create town, update town, and remove town. These methods must trap with a clear error when called by a non-admin.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "if users want to checkout they should then be prompted to register or log in."
+          "only the towns module for now, where admins can add, edit, and remove towns",
+          "the admin will populate a list of towns"
         ]
       },
       "acceptanceCriteria": [
-        "Unauthenticated users can browse catalogue and manage cart locally.",
-        "When an unauthenticated user attempts to place an order, the UI blocks submission and shows a clear login/register prompt (Internet Identity) and resumes checkout after successful login.",
-        "Authenticated users can complete checkout without being re-prompted."
+        "Non-admin callers cannot create/update/remove towns (calls trap/return error).",
+        "Admin callers can create a town, see it in list results, update it, and remove it.",
+        "List method returns a consistent shape used by the frontend (including removal state so UI can hide removed towns by default)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add backend support for an admin-managed global catalogue comprised of: (1) Products, (2) Retailers, and (3) Listings that link a product to a retailer with a specific price and stock/status; expose actor methods required for the frontend to list the global catalogue grouped by product with all retailer listing options.",
-      "target": "backend",
+      "text": "Update the existing React Query towns hooks (frontend/src/hooks/useTowns.ts) to call the new backend towns methods instead of placeholder implementations, including cache invalidation using the existing townKeys.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2",
-          "msg-3"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "for the catalogue on admin can list items linking retailer and product with a specif price.",
-          "after adding product it should go into the global catalogue where it will be able to be edited deleted or listed"
+          "add only towns management now",
+          "build"
         ]
       },
       "acceptanceCriteria": [
-        "Backend provides query methods to fetch products and their available retailer listings (including retailer metadata and listing price/stock/status).",
-        "Backend provides admin-only methods to create/update/delete products and create/update/delete listings that link product+retailer+price(+stock/status).",
-        "Non-admin callers cannot create/update/delete products, retailers, listings, or towns (requests trap/return an error)."
+        "useListTowns returns backend data (not an empty array) when the actor is available.",
+        "useCreateTown triggers backend create and invalidates towns queries on success.",
+        "A new update-town mutation hook exists (or equivalent) and invalidates towns queries on success.",
+        "useDeleteTown (or remove-town) triggers backend remove and invalidates towns queries on success."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Implement the admin UI for product and listing management: admin can add a product, then create one or more retailer listings for that product (retailer + specific price + stock/status), and the global catalogue reflects these listings; admin can also edit/delete/list products and listings.",
+      "text": "Add an Admin Towns management page (new React page component) that allows admins to: view the current towns list, add a town, edit a town, and remove a town, with basic validation (required name and province) and a confirmation step for removal.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "also impliment the product adding function for the admin. after adding product it should go into the global catalogue where it will be able to be edited deleted or listed"
+          "only the towns module for now, where admins can add, edit, and remove towns",
+          "the admin will populate a list of towns"
         ]
       },
       "acceptanceCriteria": [
-        "Admin can navigate to an admin management area and create a product with required fields.",
-        "Admin can link the product to one or more retailers by creating listings with a specific price and stock/status.",
-        "Admin can edit and delete products and listings from the admin UI.",
-        "After admin changes, the customer catalogue updates to reflect the new/edited/removed products/listings."
+        "The page is protected by the existing RequireAuth + RequireAdmin guards (non-admin cannot access).",
+        "Admins can add a town via a form/dialog and see it appear in the list without a full page refresh.",
+        "Admins can edit an existing town and see updated values reflected in the list.",
+        "Admins can remove a town with a confirmation prompt; removed towns are not shown in the default active list view (unless an explicit ‘show removed’ toggle is provided).",
+        "Errors from backend mutations are shown to the admin in clear English (toast or inline), and loading states are handled."
       ]
     },
     {
       "id": "REQ-5",
-      "text": "Implement admin-managed towns and require role-based users (shoppers, drivers, pickup points) to register/select a town from the admin-created list; use the town to filter which orders are visible/assignable to shoppers and drivers.",
-      "target": "both",
+      "text": "Expose navigation to the new Admin Towns page by adding an admin route in the hash router and linking to it from the admin area UI (e.g., from the existing Admin dashboard page).",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "admin will create a list of towns shoppers drivers and pick up points will register and be filtered on this."
+          "build towns management workflow for admins",
+          "only the towns module for now"
         ]
       },
       "acceptanceCriteria": [
-        "Admin can create and manage the list of towns.",
-        "Shopper/driver/pickup point profiles include a selected town from the admin list (not free-text).",
-        "Shopper and driver dashboards only show eligible orders for their registered town."
+        "A new route exists (e.g., /admin/towns) and renders the Towns admin page inside ShopLayout.",
+        "Admins can reach the Towns page from the existing /admin dashboard via a visible UI link/button.",
+        "Navigating directly to the new route respects auth/admin guards (prompt login if not authenticated; block if not admin)."
       ]
     },
     {
       "id": "REQ-6",
-      "text": "Implement customer order creation in the backend and frontend: checkout submits an order containing selected listingIds and quantities, delivery method, payment method, total amount, and order status; persist and expose order retrieval required for customer tracking and for role dashboards.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1",
-          "msg-2"
-        ],
-        "quotes": [
-          "home page should have a catalogue of listed items ready to be ordered.",
-          "they use the same catalogue and checkout flow as normal users"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Authenticated checkout submits an order and receives a persisted order id.",
-        "Orders are queryable by the customer who placed them (order history/details).",
-        "Orders are queryable by role dashboards according to the workflow and town-filtering rules."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Implement the shopper workflow: a shopper dashboard shows nearby (town-filtered) customer orders that are ready for assignment; a shopper can accept an order, record shop progress, and mark the order as complete for handoff to drivers; shoppers can record retailer-specific out-of-stock notes per ordered item/listing.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1",
-          "msg-2",
-          "msg-4"
-        ],
-        "quotes": [
-          "lets also build dashboards for personal shoppers, they should be able to view orders checked out by customers, they can the accept a order thats close for them to complete, go and buy the items them mark the order as complete.",
-          "shoppers can help and mark a note of out of stock if a certain retailer does not have stock of a product even though on the system the count says they should stock, if a shopper goes to the store and finds product out of stock they can note that on the order and it will update the system, admin will have to mark product instock agian once retailer has restocked.",
-          "if a shopper marks item out of stock it only applies to that specific retailer the customer was trying to shop from."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Shopper dashboard lists only orders in the shopper’s town that are available for shopper acceptance.",
-        "A shopper can accept an order; the order state reflects the assigned shopper.",
-        "A shopper can add out-of-stock notes for specific items (and they apply only to the relevant retailer listing).",
-        "When an out-of-stock note is submitted, the associated listing is marked out-of-stock for that retailer until an admin resets it to in-stock.",
-        "A shopper can mark the order as completed/ready for delivery, making it eligible for drivers."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Implement the driver workflow: a driver dashboard shows nearby (town-filtered) orders that have been completed by a shopper and are ready for delivery; a driver can accept an order, mark it as picked up, delivered, and completed.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1",
-          "msg-2"
-        ],
-        "quotes": [
-          "this then goes to drivers dashboard and any driver available and close can accept the order go and collect it and deliver it and mark complete.",
-          "2 shoppers and drivers should see only orders near them by town"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Driver dashboard lists only driver-eligible orders in the driver’s town.",
-        "A driver can accept a delivery; the order state reflects the assigned driver.",
-        "A driver can mark delivery milestones and finalize the order as delivered/completed.",
-        "Once delivered, the order no longer appears in available driver queues."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Implement pickup point ordering and tracking: pickup points can place orders using the same catalogue/checkout flow as customers but with additional required fields (beneficiary name and contact number); pickup points can track progress and mark orders as received and waiting for pick up after arrival.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1",
-          "msg-2"
-        ],
-        "quotes": [
-          "pick up points dashboard should should allow pic up points to place orders on behalf of community that cant use the app for themselves, on the dashboard pick up points should be able to follow progress of their placed orders and see if they have been completed by shoppers or if its with the driver. mark orders recieved and waiting for pick up once it arrives at the pick up point.",
-          "they use the same catalogue and checkout flow as normal users, but they can have 2 additional fields beneficiary name and contact number"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Pickup point checkout requires beneficiary name and contact number (in addition to the standard checkout fields).",
-        "Pickup point dashboard shows the status timeline of its placed orders (shopper stage vs driver stage).",
-        "Pickup point can mark an order as received/waiting for pickup when it arrives at the pickup point, and this status is reflected consistently across dashboards."
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Implement admin oversight dashboards and basic analytics views: admin can view all orders across statuses, and view per-role summaries/analytics for individual shoppers, drivers, and pickup points (at minimum counts of accepted/completed orders and current active assignments).",
+      "text": "Apply a coherent, non-blue/non-purple visual treatment specifically for the Admin Towns page (layout, typography, spacing, and component styling) consistent with the existing app design system (shadcn + Tailwind), keeping user-facing text in English.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
-        ],
-        "quotes": [
-          "admin should be able to view all dashboards, aswell as individual shoppers drivers and pick up points analytics."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin can view a consolidated orders view with filters by status/town/role assignment.",
-        "Admin can open a detail view for a specific shopper/driver/pickup point showing basic activity metrics (counts and current assignments).",
-        "Admin views are access-controlled and not accessible to non-admin users."
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Ensure all user-facing UI copy is in English (including catalogue, checkout, dashboards, and admin management screens).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-0"
         ],
         "quotes": [
           "Use English for any user-facing text in the build request."
         ]
       },
       "acceptanceCriteria": [
-        "New UI text introduced for the requested features is written in English.",
-        "Any replaced/updated sections directly related to the new flows present English primary text."
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Create and add missing theme images as static assets and ensure the frontend references them via deployment-safe public asset URLs so theme images do not render as broken links.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-ps"
-        ],
-        "quotes": [
-          "Frontend theme images (logo space and web page images) are currently showing as broken links.",
-          "Regenerate all missing frontend theme images (logo and all page/theme assets) in the same style/color palette and update the project so images no longer show as broken links."
-        ]
-      },
-      "acceptanceCriteria": [
-        "The required images exist in frontend/public/assets/generated and load successfully in local dev and when deployed under an IC canister base path.",
-        "Theme image references use the existing publicAssetUrl helper (directly or via the existing themeAssets utility) and do not produce broken links.",
-        "All pages that reference THEME_ASSETS render images without fallback due to missing files."
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "text": "Apply a cohesive visual theme refresh across the new catalogue and dashboard pages that matches the existing warm earth-tone Thuma Thina style (avoid blue/purple-dominant palettes), with consistent spacing, typography, and component usage.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "ok home page should have a catalogue of listed items ready to be ordered."
-        ]
-      },
-      "acceptanceCriteria": [
-        "New pages (catalogue, checkout, dashboards, admin management) use a consistent warm earth-tone visual language aligned with the existing app styling.",
-        "Layouts are responsive and use existing UI components rather than custom one-offs where possible."
+        "All labels, buttons, helper text, empty states, and error messages on the Towns admin page are in English.",
+        "The page uses a consistent style (cards/tables/dialogs) aligned with existing UI components and does not introduce a conflicting color palette."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; add migration.mo only if existing stable state requires migration.",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any files under frontend/src/components/ui; compose them instead.",
-    "Retailers do not have access to the system; all retailer management must be admin-only.",
-    "Order proximity filtering must be by admin-defined town (not GPS/geolocation).",
-    "Out-of-stock reporting by shoppers must apply only to the specific retailer listing involved in the order; admin must be able to reset listings back to in-stock."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Only generate backend/migration.mo changes if required for preserving existing state during upgrade; follow the conditional migration policy.",
+    "Do not edit files in frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui.",
+    "Do not implement linking towns to retailers/shoppers/drivers/pickup points in this build; towns module only."
   ],
   "nonGoals": [
-    "Implementing a retailer-facing dashboard or retailer authentication.",
-    "Integrating third-party authentication providers (only Internet Identity is used).",
-    "Real-time features (websockets/push notifications) for order updates.",
-    "Distance calculations beyond town-based filtering (no maps/GPS)."
+    "Building management modules for retailers, shoppers, drivers, or pickup points.",
+    "Adding town selection to shopper/driver/retailer/pickup point creation flows.",
+    "Implementing suburb-level management or geolocation/maps.",
+    "Third-party authentication beyond Internet Identity."
   ],
   "imageRequirements": {
-    "required": [
-      "Square brand logo mark in a warm earth-tone Thuma Thina style (thuma-thina-logo.dim_512x512.png, 512x512)",
-      "Wide hero/banner illustration in a warm earth-tone Thuma Thina style (thuma-thina-hero.dim_1200x600.png, 1200x600)"
-    ],
+    "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

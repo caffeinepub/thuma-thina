@@ -13,6 +13,18 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
+export type Time = bigint;
+export interface Town {
+  'id' : TownId,
+  'status' : TownStatus,
+  'province' : string,
+  'name' : string,
+  'createdAt' : Time,
+  'updatedAt' : Time,
+}
+export type TownId = bigint;
+export type TownStatus = { 'active' : null } |
+  { 'removed' : null };
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
@@ -49,12 +61,17 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createTown' : ActorMethod<[string, string], Town>,
+  'getActiveTowns' : ActorMethod<[], Array<Town>>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
+  'listTowns' : ActorMethod<[], Array<Town>>,
+  'removeTown' : ActorMethod<[TownId], Town>,
   'requestApproval' : ActorMethod<[], undefined>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
+  'updateTown' : ActorMethod<[TownId, string, string], Town>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

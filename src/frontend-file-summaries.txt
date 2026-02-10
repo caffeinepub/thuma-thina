@@ -26,7 +26,7 @@
   "frontend/src/hooks/useBootstrapAdmin.ts": "React Query mutation hook that automatically attempts to bootstrap the first admin user once per session when an authenticated actor is available, handling errors silently and invalidating admin-related queries on success.",
   "frontend/src/components/auth/AdminBootstrapper.tsx": "Non-visual component that triggers admin bootstrap logic automatically when identity changes using the useBootstrapAdmin hook.",
   "frontend/src/components/auth/AdminOnly.tsx": "Placeholder component that displays a message indicating backend implementation is required instead of checking admin permissions.",
-  "frontend/src/pages/shop/AdminDashboardPage.tsx": "Admin dashboard with user approval management table, stats cards showing pending/approved counts, and placeholder cards for upcoming features (products, retailers, listings, applications).",
+  "frontend/src/pages/shop/AdminDashboardPage.tsx": "Admin dashboard with user approval management table, stats cards, and navigation to towns management page with updated status alert mentioning towns availability.",
   "frontend/src/components/errors/UnexpectedRuntimeErrorScreen.tsx": "Error screen component displaying a user-friendly error message with recovery actions (reload page and go home) using shadcn/ui Card and Alert components.",
   "frontend/src/components/errors/GlobalErrorBoundary.tsx": "React error boundary component that catches render-time exceptions and window-level runtime errors (unhandled promise rejections) and displays UnexpectedRuntimeErrorScreen instead of blank screens.",
   "frontend/src/components/auth/AuthInitializationOverlay.tsx": "Full-screen loading overlay during login and actor initialization without profile setup check (profile functionality disabled until backend is ready).",
@@ -46,7 +46,7 @@
   "frontend/src/pages/admin/AdminManageListingsPage.tsx": "Admin page for managing all listings grouped by retailer, displaying listing date/price/stock/status with create/edit/disable/delete actions using proper ListingStatus enum values and parseZAR utility.",
   "frontend/src/pages/admin/AdminPickupPointsPage.tsx": "Admin page for managing pickup points with create/edit/approve/block/archive actions, monitoring user assignment using corrected SearchableSelect component, and active/archived tabs.",
   "frontend/src/main.tsx": "Application bootstrap that wraps the app with QueryClientProvider and InternetIdentityProvider with proper query client configuration.",
-  "frontend/src/router/HashRouter.tsx": "Simplified hash-based router with only implemented routes (home, catalogue, cart, checkout, orders, admin, join-us) without unimplemented dashboard pages.",
+  "frontend/src/router/HashRouter.tsx": "Hash-based router with admin towns route (/admin/towns) protected by RequireAuth and RequireAdmin guards, rendered within ShopLayout.",
   "frontend/src/components/auth/LoginButton.tsx": "Login/logout button component that handles Internet Identity authentication and clears query cache on logout.",
   "frontend/src/components/auth/RequireAuth.tsx": "Authentication guard component that shows login prompt for unauthenticated users and renders children for authenticated users.",
   "frontend/src/components/auth/RequireApproved.tsx": "Approval guard component that checks user approval status, allows admins through, and shows approval request UI for non-approved users.",
@@ -61,11 +61,12 @@
   "frontend/src/components/shop/cart/CartProvider.tsx": "React context provider for cart state management with localStorage persistence using simplified CartItemData interface (no backend dependency) and cart operations with total calculations.",
   "frontend/src/utils/themeAssets.ts": "Centralized theme asset mapping that exports deployment-safe URLs for logo and hero images using the publicAssetUrl helper to prevent broken links.",
   "frontend/src/hooks/useCatalog.ts": "Placeholder React Query hook for global catalogue that returns empty array until backend implements getGlobalCatalogue method.",
-  "frontend/src/hooks/useTowns.ts": "Placeholder React Query hooks for town management that return empty arrays until backend methods are implemented.",
+  "frontend/src/hooks/useTowns.ts": "React Query hooks for town management (list, create, update, remove) with proper actor integration and cache invalidation using townKeys.",
   "frontend/src/hooks/useUserProfiles.ts": "Placeholder React Query hooks for user profile management that return null/empty data until backend methods are implemented.",
   "frontend/src/pages/shop/CataloguePage.tsx": "Customer-facing catalogue page with search and filtering UI that shows placeholder message until backend is implemented, with proper TypeScript typing for categories array.",
   "frontend/src/pages/shop/CartPage.tsx": "Shopping cart page with item management and checkout navigation using number-based price formatting instead of bigint.",
   "frontend/src/pages/shop/CheckoutPage.tsx": "Checkout page with delivery/payment selection and placeholder alert about backend implementation, using number-based price formatting.",
   "frontend/src/pages/shop/MyOrdersPage.tsx": "Customer order history page showing placeholder message until backend order methods are implemented.",
-  "frontend/src/pages/shop/OrderDetailPage.tsx": "Order detail page showing placeholder content until backend order retrieval is implemented."
+  "frontend/src/pages/shop/OrderDetailPage.tsx": "Order detail page showing placeholder content until backend order retrieval is implemented.",
+  "frontend/src/pages/admin/AdminTownsPage.tsx": "Admin-only towns management page with create/edit/remove functionality, active/removed filtering, stats cards, validation, confirmation dialogs, and clear English error messaging using shadcn-ui components."
 }

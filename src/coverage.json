@@ -1,234 +1,74 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T14:34:09.034Z",
+  "generatedAt": "2026-02-10T16:19:54.867Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 13,
-    "implemented": 12,
+    "total": 6,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Replace the current public landing page experience with a customer-facing global catalogue page that shows listed products ready to be ordered, including showing all available retailer price options for the same product and letting the customer choose which retailer/price to add to cart (i.e., cart items are specific to a listing/retailer-price option).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/pages/shop/ProductDetailPage.tsx",
-          "frontend/src/hooks/useCatalog.ts",
-          "frontend/src/components/shop/catalog/useCatalogControls.ts",
-          "frontend/src/components/shop/cart/CartProvider.tsx",
-          "frontend/src/pages/shop/CartPage.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/hooks/useCatalog.ts",
-          "frontend/src/pages/shop/CartPage.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
-        ]
-      },
-      {
-        "id": "REQ-10",
-        "summary": "Implement admin oversight dashboards and basic analytics views: admin can view all orders across statuses, and view per-role summaries/analytics for individual shoppers, drivers, and pickup points (at minimum counts of accepted/completed orders and current active assignments).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "frontend/src/pages/admin/AdminOrdersPage.tsx",
-          "frontend/src/pages/admin/AdminUserAnalyticsPage.tsx",
-          "frontend/src/pages/admin/AdminUserDetailPage.tsx",
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/hooks/useUserProfiles.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/hooks/useUserProfiles.ts"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Ensure all user-facing UI copy is in English (including catalogue, checkout, dashboards, and admin management screens).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/ProvinceListPage.tsx",
-          "frontend/src/pages/shop/ShopperDashboardPage.tsx",
-          "frontend/src/pages/shop/DriverDashboardPage.tsx",
-          "frontend/src/pages/shop/PickupPointDashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Create and add missing theme images as static assets and ensure the frontend references them via deployment-safe public asset URLs so theme images do not render as broken links.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
-          "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
-          "frontend/src/utils/themeAssets.ts",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
-        ]
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Apply a cohesive visual theme refresh across the new catalogue and dashboard pages that matches the existing warm earth-tone Thuma Thina style (avoid blue/purple-dominant palettes), with consistent spacing, typography, and component usage.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/admin/AdminManageProductsPage.tsx",
-          "frontend/src/pages/admin/AdminOrdersPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Implement an auth-gated checkout flow: users can browse the catalogue while logged out, but attempting to proceed to checkout (placing an order) prompts the user to register/log in via Internet Identity before the order can be submitted.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/components/auth/RequireAuth.tsx",
-          "frontend/src/utils/urlParams.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/shop/CheckoutPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Add backend support for an admin-managed global catalogue comprised of: (1) Products, (2) Retailers, and (3) Listings that link a product to a retailer with a specific price and stock/status; expose actor methods required for the frontend to list the global catalogue grouped by product with all retailer listing options.",
+        "summary": "Implement persistent Towns data model and storage in the Motoko main actor, including an admin-curated list of towns with fields sufficient for admin management (at minimum: unique identifier, town name, province, created/updated timestamps, and a removal state that supports “remove towns” without breaking referential integrity later).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-4",
-        "summary": "Implement the admin UI for product and listing management: admin can add a product, then create one or more retailer listings for that product (retailer + specific price + stock/status), and the global catalogue reflects these listings; admin can also edit/delete/list products and listings.",
+        "id": "REQ-2",
+        "summary": "Add backend methods for towns management with admin-only authorization: list towns, create town, update town, and remove town. These methods must trap with a clear error when called by a non-admin.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Update the existing React Query towns hooks (frontend/src/hooks/useTowns.ts) to call the new backend towns methods instead of placeholder implementations, including cache invalidation using the existing townKeys.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/admin/AdminManageProductsPage.tsx",
-          "frontend/src/pages/admin/AdminManageListingsPage.tsx",
-          "frontend/src/pages/admin/AdminRetailersPage.tsx",
-          "frontend/src/components/admin/ProductEditDialog.tsx",
-          "frontend/src/components/admin/RetailerEditDialog.tsx",
-          "frontend/src/hooks/useProducts.ts",
-          "frontend/src/hooks/useListings.ts",
-          "frontend/src/hooks/useRetailers.ts",
-          "frontend/src/hooks/useCatalog.ts"
+          "frontend/src/hooks/useTowns.ts"
         ],
         "matchedFiles": [
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/hooks/useProducts.ts",
-          "frontend/src/hooks/useListings.ts",
-          "frontend/src/hooks/useRetailers.ts",
-          "frontend/src/hooks/useCatalog.ts"
+          "frontend/src/hooks/useTowns.ts"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add an Admin Towns management page (new React page component) that allows admins to: view the current towns list, add a town, edit a town, and remove a town, with basic validation (required name and province) and a confirmation step for removal.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/admin/AdminTownsPage.tsx",
+          "frontend/src/components/admin/SearchableSelect.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/admin/AdminTownsPage.tsx"
         ]
       },
       {
         "id": "REQ-5",
-        "summary": "Implement admin-managed towns and require role-based users (shoppers, drivers, pickup points) to register/select a town from the admin-created list; use the town to filter which orders are visible/assignable to shoppers and drivers.",
+        "summary": "Expose navigation to the new Admin Towns page by adding an admin route in the hash router and linking to it from the admin area UI (e.g., from the existing Admin dashboard page).",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/router/HashRouter.tsx",
-          "frontend/src/pages/admin/AdminTownsPage.tsx",
-          "frontend/src/hooks/useTowns.ts",
-          "frontend/src/components/auth/ProfileSetupDialog.tsx",
-          "frontend/src/hooks/useUserProfiles.ts",
-          "frontend/src/pages/shop/ShopperDashboardPage.tsx",
-          "frontend/src/pages/shop/DriverDashboardPage.tsx"
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
         ],
         "matchedFiles": [
           "frontend/src/router/HashRouter.tsx",
-          "frontend/src/hooks/useTowns.ts",
-          "frontend/src/hooks/useUserProfiles.ts"
+          "frontend/src/pages/shop/AdminDashboardPage.tsx"
         ]
       },
       {
         "id": "REQ-6",
-        "summary": "Implement customer order creation in the backend and frontend: checkout submits an order containing selected listingIds and quantities, delivery method, payment method, total amount, and order status; persist and expose order retrieval required for customer tracking and for role dashboards.",
+        "summary": "Apply a coherent, non-blue/non-purple visual treatment specifically for the Admin Towns page (layout, typography, spacing, and component styling) consistent with the existing app design system (shadcn + Tailwind), keeping user-facing text in English.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/MyOrdersPage.tsx",
-          "frontend/src/pages/shop/OrderDetailPage.tsx",
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
+          "frontend/src/pages/admin/AdminTownsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/MyOrdersPage.tsx",
-          "frontend/src/pages/shop/OrderDetailPage.tsx",
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Implement the shopper workflow: a shopper dashboard shows nearby (town-filtered) customer orders that are ready for assignment; a shopper can accept an order, record shop progress, and mark the order as complete for handoff to drivers; shoppers can record retailer-specific out-of-stock notes per ordered item/listing.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/shop/ShopperDashboardPage.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/components/auth/RequireApproved.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Implement the driver workflow: a driver dashboard shows nearby (town-filtered) orders that have been completed by a shopper and are ready for delivery; a driver can accept an order, mark it as picked up, delivered, and completed.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/shop/DriverDashboardPage.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Implement pickup point ordering and tracking: pickup points can place orders using the same catalogue/checkout flow as customers but with additional required fields (beneficiary name and contact number); pickup points can track progress and mark orders as received and waiting for pick up after arrival.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/PickupPointDashboardPage.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/router/HashRouter.tsx"
+          "frontend/src/pages/admin/AdminTownsPage.tsx"
         ]
       }
     ]
@@ -240,22 +80,13 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png, 1200x600",
-    "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png, 512x512",
     "frontend/src/backend.d.ts",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/hooks/useCatalog.ts",
-    "frontend/src/hooks/useListings.ts",
-    "frontend/src/hooks/useOrders.ts",
-    "frontend/src/hooks/useProducts.ts",
-    "frontend/src/hooks/useRetailers.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useTowns.ts",
-    "frontend/src/hooks/useUserProfiles.ts",
-    "frontend/src/pages/shop/CartPage.tsx",
-    "frontend/src/pages/shop/CataloguePage.tsx",
-    "frontend/src/pages/shop/CheckoutPage.tsx",
-    "frontend/src/pages/shop/MyOrdersPage.tsx",
-    "frontend/src/pages/shop/OrderDetailPage.tsx",
+    "frontend/src/pages/admin/AdminTownsPage.tsx",
+    "frontend/src/pages/shop/AdminDashboardPage.tsx",
     "frontend/src/router/HashRouter.tsx",
     "project_state.json",
     "scratch/component-selection.json",
