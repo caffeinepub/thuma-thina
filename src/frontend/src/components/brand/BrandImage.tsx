@@ -7,6 +7,11 @@ interface BrandImageProps {
   fallbackType?: 'logo' | 'hero';
 }
 
+/**
+ * Reusable image component with graceful error handling.
+ * Displays styled fallback placeholders using theme tokens when image loading fails.
+ * Use with deployment-safe URLs from themeAssets utility.
+ */
 export function BrandImage({ src, alt, className = '', fallbackType = 'logo' }: BrandImageProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -23,7 +28,7 @@ export function BrandImage({ src, alt, className = '', fallbackType = 'logo' }: 
       );
     } else {
       return (
-        <div className={`flex items-center justify-center bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-2 border-dashed border-border ${className}`}>
+        <div className={`flex items-center justify-center bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border-2 border-dashed border-border rounded-2xl ${className}`}>
           <div className="text-center p-8">
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
               <span className="font-display font-bold text-muted-foreground text-xl">TT</span>

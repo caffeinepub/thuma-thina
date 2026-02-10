@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,7 +7,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
+  CommandList,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -16,20 +16,11 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
-export interface SearchableSelectOption {
-  value: string;
-  label: string;
-  searchText?: string;
-}
-
-interface SearchableSelectProps {
-  options: SearchableSelectOption[];
+export interface SearchableSelectProps {
+  options: Array<{ value: string; label: string }>;
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
-  emptyText?: string;
-  disabled?: boolean;
-  className?: string;
 }
 
 export function SearchableSelect({
@@ -37,16 +28,10 @@ export function SearchableSelect({
   value,
   onValueChange,
   placeholder = 'Select...',
-  emptyText = 'No results found.',
-  disabled = false,
-  className
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
 
-  const selectedOption = useMemo(
-    () => options.find((option) => option.value === value),
-    [options, value]
-  );
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -55,29 +40,24 @@ export function SearchableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled}
-          className={cn(
-            'w-full justify-between font-normal',
-            !value && 'text-muted-foreground',
-            className
-          )}
+          className="w-full justify-between"
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.searchText || option.label}
-                  onSelect={() => {
-                    onValueChange(option.value === value ? '' : option.value);
+                  value={option.value}
+                  onSelect={(currentValue) => {
+                    onValueChange(currentValue === value ? '' : currentValue);
                     setOpen(false);
                   }}
                 >

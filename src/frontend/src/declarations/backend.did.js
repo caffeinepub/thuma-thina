@@ -19,98 +19,10 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const ProductId = IDL.Nat;
-export const ExternalBlob = IDL.Vec(IDL.Nat8);
-export const RetailerId = IDL.Nat;
-export const ListingStatus = IDL.Variant({
-  'active' : IDL.Null,
-  'discontinued' : IDL.Null,
-  'outOfStock' : IDL.Null,
-});
-export const ListingId = IDL.Nat;
-export const Time = IDL.Int;
-export const HolidayOverride = IDL.Record({
-  'closeTime' : IDL.Opt(IDL.Nat),
-  'date' : Time,
-  'name' : IDL.Text,
-  'isOpen' : IDL.Bool,
-  'openTime' : IDL.Opt(IDL.Nat),
-});
-export const WeekdayTimeRange = IDL.Record({
-  'day' : IDL.Nat,
-  'closeTime' : IDL.Nat,
-  'openTime' : IDL.Nat,
-});
-export const OpeningHours = IDL.Record({
-  'holidayOverrides' : IDL.Vec(HolidayOverride),
-  'weeklySchedule' : IDL.Vec(WeekdayTimeRange),
-});
-export const RetailerInput = IDL.Record({
-  'province' : IDL.Text,
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'address' : IDL.Text,
-  'openingHours' : OpeningHours,
-  'phone' : IDL.Text,
-  'townSuburb' : IDL.Text,
-});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
-});
-export const Listing = IDL.Record({
-  'id' : ListingId,
-  'status' : ListingStatus,
-  'createdAt' : Time,
-  'productId' : ProductId,
-  'stock' : IDL.Nat,
-  'price' : IDL.Nat,
-  'retailerId' : RetailerId,
-});
-export const UserProfile = IDL.Record({
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'phone' : IDL.Text,
-});
-export const ProductRequest = IDL.Record({
-  'id' : IDL.Nat,
-  'province' : IDL.Text,
-  'productName' : IDL.Text,
-  'retailerName' : IDL.Text,
-  'townSuburb' : IDL.Text,
-});
-export const Retailer = IDL.Record({
-  'id' : RetailerId,
-  'province' : IDL.Text,
-  'name' : IDL.Text,
-  'createdAt' : Time,
-  'email' : IDL.Text,
-  'updatedAt' : Time,
-  'address' : IDL.Text,
-  'openingHours' : OpeningHours,
-  'phone' : IDL.Text,
-  'townSuburb' : IDL.Text,
-});
-export const Product = IDL.Record({
-  'id' : ProductId,
-  'imageRefs' : IDL.Vec(ExternalBlob),
-  'name' : IDL.Text,
-  'description' : IDL.Text,
-  'preferredImage' : IDL.Opt(ExternalBlob),
-  'category' : IDL.Text,
-});
-export const ProductWithRetailers = IDL.Record({
-  'listings' : IDL.Vec(IDL.Tuple(Retailer, Listing)),
-  'product' : Product,
-});
-export const Province = IDL.Record({
-  'towns' : IDL.Vec(IDL.Text),
-  'name' : IDL.Text,
-});
-export const RetailerWithListings = IDL.Record({
-  'listings' : IDL.Vec(Listing),
-  'retailer' : Retailer,
 });
 export const ApprovalStatus = IDL.Variant({
   'pending' : IDL.Null,
@@ -150,86 +62,13 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addImageRef' : IDL.Func([ProductId, ExternalBlob], [], []),
-  'addListing' : IDL.Func(
-      [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
-      [ListingId],
-      [],
-    ),
-  'addProduct' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
-      [ProductId],
-      [],
-    ),
-  'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-  'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
-  'adminDeleteListing' : IDL.Func([ListingId], [], []),
-  'adminUpdateListing' : IDL.Func(
-      [ListingId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(ListingStatus)],
-      [],
-      [],
-    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
-  'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
-  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getDashboardData' : IDL.Func(
-      [],
-      [
-        IDL.Record({
-          'listings' : IDL.Nat,
-          'requests' : IDL.Nat,
-          'products' : IDL.Nat,
-          'retailers' : IDL.Nat,
-        }),
-      ],
-      ['query'],
-    ),
-  'getProductCatalog' : IDL.Func([RetailerId], [IDL.Vec(Listing)], ['query']),
-  'getProductRequests' : IDL.Func([], [IDL.Vec(ProductRequest)], ['query']),
-  'getProductWithRetailers' : IDL.Func(
-      [ProductId],
-      [ProductWithRetailers],
-      ['query'],
-    ),
-  'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
-  'getRetailerById' : IDL.Func([RetailerId], [IDL.Opt(Retailer)], ['query']),
-  'getRetailersByTownSuburb' : IDL.Func(
-      [IDL.Text],
-      [IDL.Vec(RetailerWithListings)],
-      ['query'],
-    ),
-  'getUserProfile' : IDL.Func(
-      [IDL.Principal],
-      [IDL.Opt(UserProfile)],
-      ['query'],
-    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
-  'isRetailerOpen' : IDL.Func(
-      [RetailerId, IDL.Opt(Time)],
-      [IDL.Bool],
-      ['query'],
-    ),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
-  'listListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
-  'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
-  'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
-  'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
   'requestApproval' : IDL.Func([], [], []),
-  'requestNewProduct' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-      [IDL.Nat],
-      [],
-    ),
-  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
-  'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
-  'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
-  'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [], []),
-  'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
-  'wipeSystem' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -246,98 +85,10 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const ProductId = IDL.Nat;
-  const ExternalBlob = IDL.Vec(IDL.Nat8);
-  const RetailerId = IDL.Nat;
-  const ListingStatus = IDL.Variant({
-    'active' : IDL.Null,
-    'discontinued' : IDL.Null,
-    'outOfStock' : IDL.Null,
-  });
-  const ListingId = IDL.Nat;
-  const Time = IDL.Int;
-  const HolidayOverride = IDL.Record({
-    'closeTime' : IDL.Opt(IDL.Nat),
-    'date' : Time,
-    'name' : IDL.Text,
-    'isOpen' : IDL.Bool,
-    'openTime' : IDL.Opt(IDL.Nat),
-  });
-  const WeekdayTimeRange = IDL.Record({
-    'day' : IDL.Nat,
-    'closeTime' : IDL.Nat,
-    'openTime' : IDL.Nat,
-  });
-  const OpeningHours = IDL.Record({
-    'holidayOverrides' : IDL.Vec(HolidayOverride),
-    'weeklySchedule' : IDL.Vec(WeekdayTimeRange),
-  });
-  const RetailerInput = IDL.Record({
-    'province' : IDL.Text,
-    'name' : IDL.Text,
-    'email' : IDL.Text,
-    'address' : IDL.Text,
-    'openingHours' : OpeningHours,
-    'phone' : IDL.Text,
-    'townSuburb' : IDL.Text,
-  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
-  });
-  const Listing = IDL.Record({
-    'id' : ListingId,
-    'status' : ListingStatus,
-    'createdAt' : Time,
-    'productId' : ProductId,
-    'stock' : IDL.Nat,
-    'price' : IDL.Nat,
-    'retailerId' : RetailerId,
-  });
-  const UserProfile = IDL.Record({
-    'name' : IDL.Text,
-    'email' : IDL.Text,
-    'phone' : IDL.Text,
-  });
-  const ProductRequest = IDL.Record({
-    'id' : IDL.Nat,
-    'province' : IDL.Text,
-    'productName' : IDL.Text,
-    'retailerName' : IDL.Text,
-    'townSuburb' : IDL.Text,
-  });
-  const Retailer = IDL.Record({
-    'id' : RetailerId,
-    'province' : IDL.Text,
-    'name' : IDL.Text,
-    'createdAt' : Time,
-    'email' : IDL.Text,
-    'updatedAt' : Time,
-    'address' : IDL.Text,
-    'openingHours' : OpeningHours,
-    'phone' : IDL.Text,
-    'townSuburb' : IDL.Text,
-  });
-  const Product = IDL.Record({
-    'id' : ProductId,
-    'imageRefs' : IDL.Vec(ExternalBlob),
-    'name' : IDL.Text,
-    'description' : IDL.Text,
-    'preferredImage' : IDL.Opt(ExternalBlob),
-    'category' : IDL.Text,
-  });
-  const ProductWithRetailers = IDL.Record({
-    'listings' : IDL.Vec(IDL.Tuple(Retailer, Listing)),
-    'product' : Product,
-  });
-  const Province = IDL.Record({
-    'towns' : IDL.Vec(IDL.Text),
-    'name' : IDL.Text,
-  });
-  const RetailerWithListings = IDL.Record({
-    'listings' : IDL.Vec(Listing),
-    'retailer' : Retailer,
   });
   const ApprovalStatus = IDL.Variant({
     'pending' : IDL.Null,
@@ -377,86 +128,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addImageRef' : IDL.Func([ProductId, ExternalBlob], [], []),
-    'addListing' : IDL.Func(
-        [RetailerId, ProductId, IDL.Nat, IDL.Nat, ListingStatus],
-        [ListingId],
-        [],
-      ),
-    'addProduct' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob)],
-        [ProductId],
-        [],
-      ),
-    'addProvince' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
-    'addRetailer' : IDL.Func([RetailerInput], [RetailerId], []),
-    'adminDeleteListing' : IDL.Func([ListingId], [], []),
-    'adminUpdateListing' : IDL.Func(
-        [ListingId, IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(ListingStatus)],
-        [],
-        [],
-      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
-    'getAllActiveListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
-    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getDashboardData' : IDL.Func(
-        [],
-        [
-          IDL.Record({
-            'listings' : IDL.Nat,
-            'requests' : IDL.Nat,
-            'products' : IDL.Nat,
-            'retailers' : IDL.Nat,
-          }),
-        ],
-        ['query'],
-      ),
-    'getProductCatalog' : IDL.Func([RetailerId], [IDL.Vec(Listing)], ['query']),
-    'getProductRequests' : IDL.Func([], [IDL.Vec(ProductRequest)], ['query']),
-    'getProductWithRetailers' : IDL.Func(
-        [ProductId],
-        [ProductWithRetailers],
-        ['query'],
-      ),
-    'getProvinces' : IDL.Func([], [IDL.Vec(Province)], ['query']),
-    'getRetailerById' : IDL.Func([RetailerId], [IDL.Opt(Retailer)], ['query']),
-    'getRetailersByTownSuburb' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(RetailerWithListings)],
-        ['query'],
-      ),
-    'getUserProfile' : IDL.Func(
-        [IDL.Principal],
-        [IDL.Opt(UserProfile)],
-        ['query'],
-      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
-    'isRetailerOpen' : IDL.Func(
-        [RetailerId, IDL.Opt(Time)],
-        [IDL.Bool],
-        ['query'],
-      ),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
-    'listListings' : IDL.Func([], [IDL.Vec(Listing)], ['query']),
-    'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
-    'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
-    'removeImage' : IDL.Func([ProductId, IDL.Nat], [], []),
     'requestApproval' : IDL.Func([], [], []),
-    'requestNewProduct' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-        [IDL.Nat],
-        [],
-      ),
-    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
-    'setPreferredImage' : IDL.Func([ProductId, IDL.Opt(ExternalBlob)], [], []),
-    'updateListingStatus' : IDL.Func([ListingId, ListingStatus], [], []),
-    'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [], []),
-    'upgradeToAdmin' : IDL.Func([IDL.Principal], [], []),
-    'wipeSystem' : IDL.Func([], [], []),
   });
 };
 

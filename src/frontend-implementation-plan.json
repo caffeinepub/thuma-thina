@@ -1,61 +1,484 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin Manage Listings dashboard (grouped by retailer) with create/edit/disable/delete",
+  "title": "Multi-retailer catalogue, auth-gated checkout, and role-based workflow dashboards (frontend)",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Create an admin Manage Listings page (grouped by retailer) that displays listing date, ZAR price, inventory status, and supports create/edit/disable/delete with cache refresh.",
+      "id": "REQ-1",
+      "summary": "Replace the current public landing page with a customer-facing catalogue that groups products and supports selecting a specific retailer listing to add to cart.",
       "acceptanceCriteria": [
-        "A new route exists for the page (e.g., /admin/listings) and is wrapped with the existing <AdminOnly> protection.",
-        "The page lists retailers, and within each retailer section lists that retailer’s listings.",
-        "Each listing row shows: listing date (derived from createdAt), price formatted as ZAR, and inventory status (including stock quantity and the listing status).",
-        "Each listing row provides actions: Edit (price/stock/status), Disable (sets status to out-of-stock/discontinued as appropriate), and Delete (with confirmation).",
-        "The page provides a way to create a new listing (either an inline form or a clearly visible action that opens a form) using the existing retailer/product selectors and ZAR validation rules already used in admin listing creation.",
-        "All user-facing text on this page is in English.",
-        "After any mutation (create/update/status change/delete), the listings view refreshes via React Query cache invalidation so changes appear without a manual reload."
+        "The default route (\"/\") presents a browsable/searchable catalogue of products with per-product retailer price options.",
+        "Adding to cart requires selecting a specific retailer/price option when multiple are available.",
+        "Cart items clearly indicate product name, retailer name, unit price, and quantity."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
-          "operation": "create",
-          "description": "Implement the Admin “Manage Listings” page UI grouped by retailer: fetch retailers + admin listings, render a retailer section with a table of listings showing listing date (from createdAt), price formatted via existing money utils, and inventory status (stock + ListingStatus). Provide actions per listing: Edit (open a dialog/form to change price/stock/status), Disable (set status to outOfStock or discontinued), and Delete (confirmation dialog). Include a Create Listing form (inline or dialog) that reuses the existing retailer/product selectors (SearchableSelect) and the existing ZAR validation/parsing rules (money utils). Use existing shadcn-ui building blocks (Card, Table, Button, Dialog/AlertDialog, Inputs) from the project to compose the UI; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/router/HashRouter.tsx",
           "operation": "modify",
-          "description": "Add a new protected admin route for the Manage Listings page (e.g., /admin/listings) wrapped with the existing <AdminOnly> component, and wire it to render AdminManageListingsPage so it is reachable via navigation."
+          "description": "Update routing so the default route (\"/\") renders the new customer Catalogue page (replacing the current ProvinceListPage landing experience), and add routes needed for catalogue navigation (e.g., product details). Ensure new pages are wired and not orphaned."
         },
         {
-          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Add a clear navigation entry (e.g., a button) from the existing Admin Dashboard to the new Manage Listings page route so the page is discoverable and not orphaned. Use existing shadcn-ui Button styling; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/utils/time.ts",
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
           "operation": "create",
-          "description": "Add a small frontend time formatting utility to convert IC Time (bigint) into a human-readable English date string for the listing date column (derived from createdAt). Keep formatting consistent and locale-safe for English UI."
+          "description": "Create a customer-facing global catalogue page with search and product grouping; for each product, render all available retailer listing options (price, availability) and require the user to choose a specific listing when adding to cart. Use shadcn-ui components (e.g., Card, Button, Dialog/Popover, Table) to keep styling consistent. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "operation": "modify",
+          "description": "Implement the product detail view to show a product summary plus all retailer listing options for that product, including an add-to-cart action that targets a specific listingId."
+        },
+        {
+          "path": "frontend/src/hooks/useCatalog.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for fetching the global catalogue grouped by product (including retailer metadata and listing price/stock/status) from the backend actor, plus basic caching/refresh behavior."
+        },
+        {
+          "path": "frontend/src/components/shop/catalog/useCatalogControls.ts",
+          "operation": "modify",
+          "description": "Wire the existing catalogue controls hook into the new Catalogue page to support search/filter/sort over the backend-provided product+listing dataset."
+        },
+        {
+          "path": "frontend/src/components/shop/cart/CartProvider.tsx",
+          "operation": "modify",
+          "description": "Ensure cart items are listing-specific (listingId as the primary key) and include productName, retailerName, unit price, and quantity in the stored item model. Add defensive handling for listing availability/maxStock when adding or updating quantities."
+        },
+        {
+          "path": "frontend/src/pages/shop/CartPage.tsx",
+          "operation": "create",
+          "description": "Create a cart page that lists line items with product name, retailer name, unit price, quantity controls, and totals; provide a clear call-to-action to proceed to checkout."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopHeader.tsx",
+          "operation": "modify",
+          "description": "Enable the cart button navigation (currently disabled) and add navigation to the new catalogue experience. Keep header labels in English."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Implement an auth-gated checkout flow using Internet Identity: browsing and cart are allowed while logged out, but placing an order requires login and resumes after authentication.",
+      "acceptanceCriteria": [
+        "Unauthenticated users can browse catalogue and manage cart locally.",
+        "When an unauthenticated user attempts to place an order, the UI blocks submission and shows a clear login/register prompt (Internet Identity) and resumes checkout after successful login.",
+        "Authenticated users can complete checkout without being re-prompted."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add a checkout route (e.g., \"/checkout\") and wrap it with RequireAuth so unauthenticated users are prompted to log in before order submission. Ensure navigation resumes to checkout after successful login."
+        },
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "create",
+          "description": "Implement the checkout UI that reads cart contents, collects delivery method and payment method, shows an order summary/total, and submits the order only when authenticated. Use shadcn-ui form components to keep UX consistent. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/auth/RequireAuth.tsx",
+          "operation": "modify",
+          "description": "Enhance the login-required prompt to support a checkout-specific message and preserve/restore the intended route after login (e.g., via hash route + session storage). Keep copy in English."
+        },
+        {
+          "path": "frontend/src/utils/urlParams.ts",
+          "operation": "modify",
+          "description": "Add small helpers (if needed) to persist and restore a post-login return path for the checkout flow in a hash-router-safe way."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Add/extend React Query hooks for admin listing management: fetch all listings and perform update/delete mutations with proper cache invalidation.",
+      "summary": "Implement admin UI for product and listing management (create/edit/delete/list) so the global catalogue reflects admin-managed products and retailer listings.",
       "acceptanceCriteria": [
-        "A query hook exists to fetch all listings for admin usage (built on the existing backend listListings query).",
-        "Mutation hooks exist for updating a listing and deleting a listing, calling the new backend methods from REQ-2.",
-        "On success, hooks invalidate the relevant query keys so retailer/listing/product detail views remain consistent (at minimum: ['listings'], ['dashboardData'], and any listing-dependent keys already used in the app)."
+        "Admin can navigate to an admin management area and create a product with required fields.",
+        "Admin can link the product to one or more retailers by creating listings with a specific price and stock/status.",
+        "Admin can edit and delete products and listings from the admin UI.",
+        "After admin changes, the customer catalogue updates to reflect the new/edited/removed products/listings."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/router/HashRouter.tsx",
           "operation": "modify",
-          "description": "Add React Query hooks for admin listing management using the existing actor methods exposed in the frontend backend interface: (1) an admin listings query hook built on listListings, and (2) mutation hooks for adminUpdateListing and adminDeleteListing. Ensure onSuccess invalidates at minimum ['listings'] and ['dashboardData'], and also invalidates other listing-dependent keys already used (e.g., retailer/product detail keys such as ['retailers'], ['cataloguePreview'], and ['productWithRetailers'] where applicable) so UI refreshes without manual reload."
+          "description": "Add admin management routes for products and listings (and retailers if needed for listing creation) under auth + admin guard using RequireAuth and RequireAdmin."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminManageProductsPage.tsx",
+          "operation": "create",
+          "description": "Create an admin page to list/create/edit/delete products. Use shadcn-ui (Table, Dialog, Button, Input) for consistent UI. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
           "operation": "modify",
-          "description": "Wire the Manage Listings page to the new React Query hooks (admin listings query + update/delete mutations) and ensure user actions trigger the appropriate mutations and rely on cache invalidation for refresh. Use existing shadcn-ui components for dialogs and forms; verify the component's usage instructions before implementing."
+          "description": "Implement an admin page to create/edit/delete listings that link product + retailer + price + stock/status, and to list existing listings per product/retailer."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "operation": "modify",
+          "description": "Implement minimal retailer management needed for listings (admin-only list/create/edit/delete retailers) while keeping retailers inaccessible to non-admin users."
+        },
+        {
+          "path": "frontend/src/components/admin/ProductEditDialog.tsx",
+          "operation": "modify",
+          "description": "Implement the product create/edit dialog UI used by the products admin page. Use shadcn-ui Dialog and form controls. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "operation": "modify",
+          "description": "Implement the retailer create/edit dialog UI used by the retailers admin page. Use shadcn-ui Dialog and form controls. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useProducts.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for admin product list/create/update/delete and customer-facing product reads, calling the backend actor capabilities."
+        },
+        {
+          "path": "frontend/src/hooks/useListings.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for listing list/create/update/delete and customer-facing listing reads, including invalidation so the customer catalogue refreshes after admin changes."
+        },
+        {
+          "path": "frontend/src/hooks/useRetailers.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for admin retailer list/create/update/delete and retailer reads needed for listing creation."
+        },
+        {
+          "path": "frontend/src/hooks/useCatalog.ts",
+          "operation": "modify",
+          "description": "Ensure catalogue queries invalidate/refetch after successful admin mutations to products/listings/retailers so the customer catalogue reflects changes."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add town selection to user registration/profile flows and apply town-based filtering in role dashboards; add admin UI to manage towns.",
+      "acceptanceCriteria": [
+        "Admin can create and manage the list of towns.",
+        "Shopper/driver/pickup point profiles include a selected town from the admin list (not free-text).",
+        "Shopper and driver dashboards only show eligible orders for their registered town."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add an admin towns management route guarded by RequireAuth + RequireAdmin, and ensure role dashboards are accessible only after required profile/town setup."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminTownsPage.tsx",
+          "operation": "create",
+          "description": "Create an admin page to list/create/edit/delete towns. Use the existing SearchableSelect component for selecting/editing where appropriate and shadcn-ui for forms/tables. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useTowns.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for reading the towns list (for all users who must select a town) and admin town management operations."
+        },
+        {
+          "path": "frontend/src/components/auth/ProfileSetupDialog.tsx",
+          "operation": "modify",
+          "description": "Implement a first-login profile setup dialog that collects a display name and, for role-based users (shopper/driver/pickup point), requires selecting a town from the admin-managed towns list (not free-text). Use shadcn-ui Dialog and inputs/selects. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useUserProfiles.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for fetching/saving the caller profile and fetching other users' profiles for admin analytics screens; include town and role metadata required by dashboards."
+        },
+        {
+          "path": "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Apply town-based order filtering in the shopper dashboard by using the caller’s selected town from their profile when querying visible/assignable orders."
+        },
+        {
+          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Apply town-based order filtering in the driver dashboard by using the caller’s selected town from their profile when querying eligible delivery orders."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Implement customer order creation and tracking UI: checkout submits an order and customers can view order history/details needed for dashboards.",
+      "acceptanceCriteria": [
+        "Authenticated checkout submits an order and receives a persisted order id.",
+        "Orders are queryable by the customer who placed them (order history/details).",
+        "Orders are queryable by role dashboards according to the workflow and town-filtering rules."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for creating an order from cart contents and for listing/fetching order history/details for the authenticated caller, plus queries used by role dashboards."
+        },
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Wire checkout submission to the order creation hook, handle success/failure states, and clear the cart after successful order creation."
+        },
+        {
+          "path": "frontend/src/pages/shop/MyOrdersPage.tsx",
+          "operation": "create",
+          "description": "Create a customer order history page (auth-required) listing orders placed by the current user with status and totals, with navigation to an order detail view."
+        },
+        {
+          "path": "frontend/src/pages/shop/OrderDetailPage.tsx",
+          "operation": "create",
+          "description": "Create an order detail page showing items (by listing/retailer), statuses, delivery/payment details, and a simple status timeline appropriate for customer tracking."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add routes for \"/my-orders\" and order detail (e.g., \"/orders/:id\" pattern adapted for hash routing), guarded by RequireAuth."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopHeader.tsx",
+          "operation": "modify",
+          "description": "Add navigation entry points for authenticated customers to reach their order history (e.g., \"My Orders\"), while keeping the catalogue publicly accessible."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Implement the shopper workflow dashboard to accept town-filtered orders, update shopping progress, add per-item out-of-stock notes, and mark orders ready for delivery.",
+      "acceptanceCriteria": [
+        "Shopper dashboard lists only orders in the shopper’s town that are available for shopper acceptance.",
+        "A shopper can accept an order; the order state reflects the assigned shopper.",
+        "A shopper can add out-of-stock notes for specific items (and they apply only to the relevant retailer listing).",
+        "When an out-of-stock note is submitted, the associated listing is marked out-of-stock for that retailer until an admin resets it to in-stock.",
+        "A shopper can mark the order as completed/ready for delivery, making it eligible for drivers."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Implement the shopper dashboard UI: list available orders (town-filtered), allow accepting an order, show order details and item list, allow adding out-of-stock notes per ordered listing, and allow marking the order completed/ready for delivery. Use shadcn-ui Cards, Tables, and Dialogs for actions. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Add shopper-specific mutations/queries for accepting orders, recording progress, submitting per-item out-of-stock notes tied to listingId, and marking an order ready for delivery; ensure queries invalidate correctly so dashboards update."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add a shopper dashboard route (e.g., \"/shopper\") guarded by RequireAuth and additional profile/town readiness checks (and approval gating if required for role users)."
+        },
+        {
+          "path": "frontend/src/components/auth/RequireApproved.tsx",
+          "operation": "modify",
+          "description": "Scope approval gating to role dashboards (shopper/driver/pickup point) so that public catalogue browsing remains accessible while ensuring role operations are restricted to approved users. Keep UI copy in English."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Implement the driver workflow dashboard to accept town-filtered delivery-ready orders and update delivery milestones through completion.",
+      "acceptanceCriteria": [
+        "Driver dashboard lists only driver-eligible orders in the driver’s town.",
+        "A driver can accept a delivery; the order state reflects the assigned driver.",
+        "A driver can mark delivery milestones and finalize the order as delivered/completed.",
+        "Once delivered, the order no longer appears in available driver queues."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Implement the driver dashboard UI: list delivery-eligible orders (town-filtered), accept an order, show delivery detail, and allow marking picked up / delivered / completed milestones. Use shadcn-ui components for consistent interactions. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Add driver-specific mutations/queries for accepting deliveries and updating delivery milestone statuses; ensure queues update so delivered orders no longer appear as available."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add a driver dashboard route (e.g., \"/driver\") guarded by RequireAuth and role approval/profile town readiness checks."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Implement pickup point ordering and tracking: pickup points can place orders with extra required beneficiary fields and track/mark orders received and waiting for pickup.",
+      "acceptanceCriteria": [
+        "Pickup point checkout requires beneficiary name and contact number (in addition to the standard checkout fields).",
+        "Pickup point dashboard shows the status timeline of its placed orders (shopper stage vs driver stage).",
+        "Pickup point can mark an order as received/waiting for pickup when it arrives at the pickup point, and this status is reflected consistently across dashboards."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Extend checkout UI to support pickup point mode: require beneficiary name and contact number when the current user’s profile role is pickup point, and include these fields in the order submission payload."
+        },
+        {
+          "path": "frontend/src/pages/shop/PickupPointDashboardPage.tsx",
+          "operation": "create",
+          "description": "Create a pickup point dashboard that shows orders placed by the pickup point, displays a clear progress timeline (shopper stage vs driver stage), and provides an action to mark orders as received/waiting for pickup on arrival. Use shadcn-ui for timeline-like presentation via Cards/Badges/Alerts. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Add pickup point-specific order queries and the mutation for marking an order as received/waiting for pickup; ensure status changes propagate via query invalidation to other dashboards."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add a pickup point dashboard route (e.g., \"/pickup-point\") guarded by RequireAuth and role approval/profile town readiness checks."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Implement admin oversight dashboards: consolidated orders view with filters and per-role user analytics views (counts and active assignments), access-controlled to admins.",
+      "acceptanceCriteria": [
+        "Admin can view a consolidated orders view with filters by status/town/role assignment.",
+        "Admin can open a detail view for a specific shopper/driver/pickup point showing basic activity metrics (counts and current assignments).",
+        "Admin views are access-controlled and not accessible to non-admin users."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Refresh the admin dashboard to include navigation tiles/links to the new oversight views (orders, towns, catalogue management, role analytics) while retaining existing approval management."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminOrdersPage.tsx",
+          "operation": "create",
+          "description": "Create a consolidated admin orders page with filtering by status, town, and role assignments, and drill-down into order detail. Use shadcn-ui Table/Select/Badge components for filters and status rendering. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminUserAnalyticsPage.tsx",
+          "operation": "create",
+          "description": "Create an admin analytics page to view per-user summaries for shoppers, drivers, and pickup points (counts of accepted/completed orders and current active assignments), with ability to open a user detail view. Use shadcn-ui Cards/Tables. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminUserDetailPage.tsx",
+          "operation": "create",
+          "description": "Create an admin user detail view that displays basic activity metrics and current assignments for a selected shopper/driver/pickup point."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Add routes for the new admin oversight pages and ensure they are wrapped with RequireAuth + RequireAdmin."
+        },
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Add admin queries to list all orders with filter parameters and to fetch assignment/activity aggregates needed by analytics views."
+        },
+        {
+          "path": "frontend/src/hooks/useUserProfiles.ts",
+          "operation": "modify",
+          "description": "Add admin query helpers to list role-based users (shoppers/drivers/pickup points) and fetch their profiles for analytics screens."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Ensure all new user-facing UI copy related to catalogue, checkout, dashboards, and admin management is in English.",
+      "acceptanceCriteria": [
+        "New UI text introduced for the requested features is written in English.",
+        "Any replaced/updated sections directly related to the new flows present English primary text."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
+          "operation": "create",
+          "description": "Write all catalogue UI labels, empty states, and error messages in English."
+        },
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "create",
+          "description": "Ensure checkout field labels, validation messages, and success/failure messages are in English."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProvinceListPage.tsx",
+          "operation": "modify",
+          "description": "Since the public landing experience is being replaced by the catalogue, update any remaining visible copy related to landing/entry points that is still reachable through navigation to be English-only (remove non-English tagline text if it remains accessible)."
+        },
+        {
+          "path": "frontend/src/pages/shop/ShopperDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure all shopper dashboard copy (statuses, buttons, out-of-stock notes prompts) is in English."
+        },
+        {
+          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure all driver dashboard copy (milestones, actions, empty states) is in English."
+        },
+        {
+          "path": "frontend/src/pages/shop/PickupPointDashboardPage.tsx",
+          "operation": "create",
+          "description": "Ensure all pickup point dashboard copy (timeline, received/waiting status action) is in English."
+        }
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "summary": "Add required theme images as static assets and reference them using deployment-safe public asset URLs so images do not render as broken links.",
+      "acceptanceCriteria": [
+        "The required images exist in frontend/public/assets/generated and load successfully in local dev and when deployed under an IC canister base path.",
+        "Theme image references use the existing publicAssetUrl helper (directly or via the existing themeAssets utility) and do not produce broken links.",
+        "All pages that reference THEME_ASSETS render images without fallback due to missing files."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
+          "operation": "create",
+          "description": "Add the generated static asset at frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png so THEME_ASSETS.logo resolves correctly under deployment base paths."
+        },
+        {
+          "path": "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
+          "operation": "create",
+          "description": "Add the generated static asset at frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png so THEME_ASSETS.hero resolves correctly under deployment base paths."
+        },
+        {
+          "path": "frontend/src/utils/themeAssets.ts",
+          "operation": "modify",
+          "description": "Verify THEME_ASSETS points to the exact generated filenames via publicAssetUrl and that all keys used in UI map to existing files."
+        },
+        {
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
+          "operation": "create",
+          "description": "Reference THEME_ASSETS (via BrandImage) where appropriate in the new catalogue experience so theme imagery loads via deployment-safe URLs (no hard-coded absolute paths)."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopHeader.tsx",
+          "operation": "modify",
+          "description": "Ensure the header logo uses THEME_ASSETS.logo and renders without broken links in local dev and deployed IC base paths."
+        }
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "summary": "Apply a cohesive warm earth-tone visual theme refresh across new catalogue, checkout, dashboards, and admin management screens using existing styling and UI components.",
+      "acceptanceCriteria": [
+        "New pages (catalogue, checkout, dashboards, admin management) use a consistent warm earth-tone visual language aligned with the existing app styling.",
+        "Layouts are responsive and use existing UI components rather than custom one-offs where possible."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Adjust or extend existing theme tokens/utilities only as needed to support cohesive spacing/typography for the new pages while maintaining the warm earth-tone palette (avoid blue/purple-dominant shifts)."
+        },
+        {
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
+          "operation": "create",
+          "description": "Implement responsive layout, consistent spacing, and warm earth-tone styling using Tailwind theme tokens and shadcn-ui components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "create",
+          "description": "Use shadcn-ui form components and consistent layout patterns (cards, section headers) aligned with existing styling. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminManageProductsPage.tsx",
+          "operation": "create",
+          "description": "Use consistent admin visual language (tables, dialogs, badges) aligned with existing admin dashboard styling, leveraging shadcn-ui components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminOrdersPage.tsx",
+          "operation": "create",
+          "description": "Use warm theme tokens for statuses and filters and keep responsive tables usable on mobile via stacking/summary cards where necessary."
         }
       ]
     }

@@ -1,9 +1,10 @@
+import { ReactNode } from 'react';
 import { ShopHeader } from './ShopHeader';
 import { ShopFooter } from './ShopFooter';
-import { AuthInitializationOverlay } from '../auth/AuthInitializationOverlay';
+import { AuthInitializationOverlay } from '@/components/auth/AuthInitializationOverlay';
 
 interface ShopLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function ShopLayout({ children }: ShopLayoutProps) {

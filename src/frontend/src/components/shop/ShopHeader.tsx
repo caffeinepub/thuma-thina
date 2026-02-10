@@ -1,150 +1,131 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { ShoppingBag, Plus, Users, LogIn, LogOut, Shield, AlertCircle, Truck, ShoppingCart } from 'lucide-react';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
-import { useIsCallerAdmin, useGetCallerUserRole } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BrandImage } from '../brand/BrandImage';
-import { publicAssetUrl } from '../../utils/publicAssetUrl';
+import { Menu, X, ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+import { LoginButton } from '@/components/auth/LoginButton';
+import { useIsCallerAdmin } from '@/hooks/useQueries';
+import { useCart } from '@/components/shop/cart/CartProvider';
+import { navigate } from '@/router/HashRouter';
+import { THEME_ASSETS } from '@/utils/themeAssets';
+import { Badge } from '@/components/ui/badge';
+import { BrandImage } from '@/components/brand/BrandImage';
 
 export function ShopHeader() {
-  const navigate = useNavigate();
-  const { identity, login, clear, isLoggingIn, isLoginError, loginError } = useInternetIdentity();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: isAdmin } = useIsCallerAdmin();
-  const { data: userRole } = useGetCallerUserRole();
-
-  const isAuthenticated = !!identity;
-  // Check if user has shopper or driver role (when backend supports these roles)
-  const isShopper = (userRole && String(userRole) === 'shopper') || isAdmin;
-  const isDriver = (userRole && String(userRole) === 'driver') || isAdmin;
-
-  const handleAuthClick = async () => {
-    if (isAuthenticated) {
-      await clear();
-    } else {
-      login();
-    }
-  };
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/90 shadow-sm">
-      <div className="container-custom">
-        <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3 group">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container-custom flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             <BrandImage
-              src={publicAssetUrl('assets/generated/thuma-thina-logo.dim_512x512.png')}
+              src={THEME_ASSETS.logo}
               alt="Thuma Thina"
-              className="h-10 w-10 object-contain transition-transform group-hover:scale-105"
+              className="h-10 w-10 rounded-lg"
               fallbackType="logo"
             />
-            <div className="flex flex-col">
-              <span className="font-display text-xl font-bold text-foreground">
-                Thuma Thina
-              </span>
-              <span className="text-xs text-muted-foreground hidden sm:block">
-                Everything, everywhere, all the time
-              </span>
-            </div>
-          </Link>
+            <span className="font-bold text-xl hidden sm:inline">Thuma Thina</span>
+          </button>
 
-          <nav className="flex items-center space-x-2">
+          <nav className="hidden md:flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate('/')}>
+              Home
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/catalogue')}>
+              Shop
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/join-us')}>
+              Join Us
+            </Button>
+            {isAdmin && (
+              <Button variant="ghost" onClick={() => navigate('/admin')}>
+                Admin
+              </Button>
+            )}
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => navigate('/cart')}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartItemCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {cartItemCount}
+              </Badge>
+            )}
+          </Button>
+          <LoginButton />
+
+          <button
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+      </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t bg-background">
+          <nav className="container-custom py-4 flex flex-col gap-2">
             <Button
               variant="ghost"
-              size="sm"
-              onClick={handleAuthClick}
-              disabled={isLoggingIn}
-              className="hidden sm:inline-flex hover:bg-primary/10 hover:text-primary"
+              className="justify-start"
+              onClick={() => {
+                navigate('/');
+                setMobileMenuOpen(false);
+              }}
             >
-              {isLoggingIn ? (
-                'Logging in...'
-              ) : isAuthenticated ? (
-                <>
-                  <LogOut className="h-4 w-4 mr-1.5" />
-                  Logout
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-4 w-4 mr-1.5" />
-                  Login
-                </>
-              )}
+              Home
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/catalogue');
+                setMobileMenuOpen(false);
+              }}
+            >
+              Shop
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/join-us');
+                setMobileMenuOpen(false);
+              }}
+            >
+              Join Us
             </Button>
             {isAdmin && (
               <Button
                 variant="ghost"
-                size="sm"
-                onClick={() => navigate({ to: '/admin' })}
-                className="hover:bg-destructive/10 hover:text-destructive"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/admin');
+                  setMobileMenuOpen(false);
+                }}
               >
-                <Shield className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Admin</span>
+                Admin
               </Button>
             )}
-            {isShopper && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate({ to: '/shopper' })}
-                className="hover:bg-accent/10 hover:text-accent"
-              >
-                <ShoppingCart className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Shopper</span>
-              </Button>
-            )}
-            {isDriver && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate({ to: '/driver' })}
-                className="hover:bg-secondary/20 hover:text-secondary-foreground"
-              >
-                <Truck className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Driver</span>
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: '/join-us' })}
-              className="hover:bg-accent/10 hover:text-accent"
-            >
-              <Users className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Join Us</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: '/request-product' })}
-              className="hover:bg-secondary/20 hover:text-secondary-foreground"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Request Product</span>
-              <span className="sm:hidden">Request</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="hover:bg-primary/10 hover:text-primary"
-            >
-              <Link to="/">
-                <ShoppingBag className="h-4 w-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Shop</span>
-              </Link>
-            </Button>
           </nav>
         </div>
-        {isLoginError && loginError && (
-          <div className="pb-3">
-            <Alert variant="destructive" className="py-2">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                Login failed: {loginError.message}. Please try again or reload the page.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-      </div>
+      )}
     </header>
   );
 }

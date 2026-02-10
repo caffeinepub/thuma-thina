@@ -2,13 +2,14 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-a-new-admin-manage-listings-page-that-shows-all-listings-grouped-by-retailer-displaying-listing-date-price-zar-and-inventory-status-with-actions-to-edit-disable-delete-and-create-a-new-listing",
-      "featureTitle": "Create a new Admin “Manage Listings” page that shows all listings grouped by retailer, displaying listing date, price (ZAR), and inventory status, with actions to edit, disable, delete, and create a new listing.",
+      "featureId": "feature-replace-the-current-public-landing-page-experience-with-a-customer-facing-global-catalogue-page-that-shows-listed-products-ready-to-be-ordered-including-showing-all-available-retailer-price-options-for-the-same-product-and-letting-the-customer-choose-which-retailer-price-to-add-to-cart-i-e-cart-items-are-specific-to-a-listing-retailer-price-option",
+      "featureTitle": "Replace the current public landing page experience with a customer-facing global catalogue page that shows listed products ready to be ordered, including showing all available retailer price options for the same product and letting the customer choose which retailer/price to add to cart (i.e., cart items are specific to a listing/retailer-price option).",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/admin/AdminManageListingsPage.tsx",
-        "frontend/src/pages/shop/AdminDashboardPage.tsx",
-        "frontend/src/utils/time.ts"
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/hooks/useCatalog.ts",
+        "frontend/src/pages/shop/CartPage.tsx",
+        "frontend/src/pages/shop/CataloguePage.tsx",
+        "frontend/src/router/HashRouter.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -21,16 +22,41 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-extend-react-query-hooks-needed-for-listing-management-to-support-the-manage-listings-page-ui-fetch-all-listings-and-perform-update-delete-mutations",
-      "featureTitle": "Add/extend React Query hooks needed for listing management to support the Manage Listings page UI (fetch all listings and perform update/delete mutations).",
+      "featureId": "feature-implement-an-auth-gated-checkout-flow-users-can-browse-the-catalogue-while-logged-out-but-attempting-to-proceed-to-checkout-placing-an-order-prompts-the-user-to-register-log-in-via-internet-identity-before-the-order-can-be-submitted",
+      "featureTitle": "Implement an auth-gated checkout flow: users can browse the catalogue while logged out, but attempting to proceed to checkout (placing an order) prompts the user to register/log in via Internet Identity before the order can be submitted.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/admin/AdminManageListingsPage.tsx"
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-the-admin-ui-for-product-and-listing-management-admin-can-add-a-product-then-create-one-or-more-retailer-listings-for-that-product-retailer-specific-price-stock-status-and-the-global-catalogue-reflects-these-listings-admin-can-also-edit-delete-list-products-and-listings",
+      "featureTitle": "Implement the admin UI for product and listing management: admin can add a product, then create one or more retailer listings for that product (retailer + specific price + stock/status), and the global catalogue reflects these listings; admin can also edit/delete/list products and listings.",
+      "files": [
+        "frontend/src/hooks/useCatalog.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useRetailers.ts",
+        "frontend/src/router/HashRouter.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -44,6 +70,211 @@
       ],
       "testIds": [
         "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-admin-managed-towns-and-require-role-based-users-shoppers-drivers-pickup-points-to-register-select-a-town-from-the-admin-created-list-use-the-town-to-filter-which-orders-are-visible-assignable-to-shoppers-and-drivers",
+      "featureTitle": "Implement admin-managed towns and require role-based users (shoppers, drivers, pickup points) to register/select a town from the admin-created list; use the town to filter which orders are visible/assignable to shoppers and drivers.",
+      "files": [
+        "frontend/src/hooks/useTowns.ts",
+        "frontend/src/hooks/useUserProfiles.ts",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-customer-order-creation-in-the-backend-and-frontend-checkout-submits-an-order-containing-selected-listingids-and-quantities-delivery-method-payment-method-total-amount-and-order-status-persist-and-expose-order-retrieval-required-for-customer-tracking-and-for-role-dashboards",
+      "featureTitle": "Implement customer order creation in the backend and frontend: checkout submits an order containing selected listingIds and quantities, delivery method, payment method, total amount, and order status; persist and expose order retrieval required for customer tracking and for role dashboards.",
+      "files": [
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/pages/shop/MyOrdersPage.tsx",
+        "frontend/src/pages/shop/OrderDetailPage.tsx",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-the-shopper-workflow-a-shopper-dashboard-shows-nearby-town-filtered-customer-orders-that-are-ready-for-assignment-a-shopper-can-accept-an-order-record-shop-progress-and-mark-the-order-as-complete-for-handoff-to-drivers-shoppers-can-record-retailer-specific-out-of-stock-notes-per-ordered-item-listing",
+      "featureTitle": "Implement the shopper workflow: a shopper dashboard shows nearby (town-filtered) customer orders that are ready for assignment; a shopper can accept an order, record shop progress, and mark the order as complete for handoff to drivers; shoppers can record retailer-specific out-of-stock notes per ordered item/listing.",
+      "files": [
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-the-driver-workflow-a-driver-dashboard-shows-nearby-town-filtered-orders-that-have-been-completed-by-a-shopper-and-are-ready-for-delivery-a-driver-can-accept-an-order-mark-it-as-picked-up-delivered-and-completed",
+      "featureTitle": "Implement the driver workflow: a driver dashboard shows nearby (town-filtered) orders that have been completed by a shopper and are ready for delivery; a driver can accept an order, mark it as picked up, delivered, and completed.",
+      "files": [
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-pickup-point-ordering-and-tracking-pickup-points-can-place-orders-using-the-same-catalogue-checkout-flow-as-customers-but-with-additional-required-fields-beneficiary-name-and-contact-number-pickup-points-can-track-progress-and-mark-orders-as-received-and-waiting-for-pick-up-after-arrival",
+      "featureTitle": "Implement pickup point ordering and tracking: pickup points can place orders using the same catalogue/checkout flow as customers but with additional required fields (beneficiary name and contact number); pickup points can track progress and mark orders as received and waiting for pick up after arrival.",
+      "files": [
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-admin-oversight-dashboards-and-basic-analytics-views-admin-can-view-all-orders-across-statuses-and-view-per-role-summaries-analytics-for-individual-shoppers-drivers-and-pickup-points-at-minimum-counts-of-accepted-completed-orders-and-current-active-assignments",
+      "featureTitle": "Implement admin oversight dashboards and basic analytics views: admin can view all orders across statuses, and view per-role summaries/analytics for individual shoppers, drivers, and pickup points (at minimum counts of accepted/completed orders and current active assignments).",
+      "files": [
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/hooks/useUserProfiles.ts",
+        "frontend/src/router/HashRouter.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-all-user-facing-ui-copy-is-in-english-including-catalogue-checkout-dashboards-and-admin-management-screens",
+      "featureTitle": "Ensure all user-facing UI copy is in English (including catalogue, checkout, dashboards, and admin management screens).",
+      "files": [
+        "frontend/src/pages/shop/CataloguePage.tsx",
+        "frontend/src/pages/shop/CheckoutPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-and-add-missing-theme-images-as-static-assets-and-ensure-the-frontend-references-them-via-deployment-safe-public-asset-urls-so-theme-images-do-not-render-as-broken-links",
+      "featureTitle": "Create and add missing theme images as static assets and ensure the frontend references them via deployment-safe public asset URLs so theme images do not render as broken links.",
+      "files": [
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/pages/shop/CataloguePage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-12"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-cohesive-visual-theme-refresh-across-the-new-catalogue-and-dashboard-pages-that-matches-the-existing-warm-earth-tone-thuma-thina-style-avoid-blue-purple-dominant-palettes-with-consistent-spacing-typography-and-component-usage",
+      "featureTitle": "Apply a cohesive visual theme refresh across the new catalogue and dashboard pages that matches the existing warm earth-tone Thuma Thina style (avoid blue/purple-dominant palettes), with consistent spacing, typography, and component usage.",
+      "files": [
+        "frontend/src/pages/shop/CataloguePage.tsx",
+        "frontend/src/pages/shop/CheckoutPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-13"
       ],
       "confidence": "high"
     }

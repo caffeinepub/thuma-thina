@@ -13,96 +13,13 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
-export type ExternalBlob = Uint8Array;
-export interface HolidayOverride {
-  'closeTime' : [] | [bigint],
-  'date' : Time,
-  'name' : string,
-  'isOpen' : boolean,
-  'openTime' : [] | [bigint],
-}
-export interface Listing {
-  'id' : ListingId,
-  'status' : ListingStatus,
-  'createdAt' : Time,
-  'productId' : ProductId,
-  'stock' : bigint,
-  'price' : bigint,
-  'retailerId' : RetailerId,
-}
-export type ListingId = bigint;
-export type ListingStatus = { 'active' : null } |
-  { 'discontinued' : null } |
-  { 'outOfStock' : null };
-export interface OpeningHours {
-  'holidayOverrides' : Array<HolidayOverride>,
-  'weeklySchedule' : Array<WeekdayTimeRange>,
-}
-export interface Product {
-  'id' : ProductId,
-  'imageRefs' : Array<ExternalBlob>,
-  'name' : string,
-  'description' : string,
-  'preferredImage' : [] | [ExternalBlob],
-  'category' : string,
-}
-export type ProductId = bigint;
-export interface ProductRequest {
-  'id' : bigint,
-  'province' : string,
-  'productName' : string,
-  'retailerName' : string,
-  'townSuburb' : string,
-}
-export interface ProductWithRetailers {
-  'listings' : Array<[Retailer, Listing]>,
-  'product' : Product,
-}
-export interface Province { 'towns' : Array<string>, 'name' : string }
-export interface Retailer {
-  'id' : RetailerId,
-  'province' : string,
-  'name' : string,
-  'createdAt' : Time,
-  'email' : string,
-  'updatedAt' : Time,
-  'address' : string,
-  'openingHours' : OpeningHours,
-  'phone' : string,
-  'townSuburb' : string,
-}
-export type RetailerId = bigint;
-export interface RetailerInput {
-  'province' : string,
-  'name' : string,
-  'email' : string,
-  'address' : string,
-  'openingHours' : OpeningHours,
-  'phone' : string,
-  'townSuburb' : string,
-}
-export interface RetailerWithListings {
-  'listings' : Array<Listing>,
-  'retailer' : Retailer,
-}
-export type Time = bigint;
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
 }
-export interface UserProfile {
-  'name' : string,
-  'email' : string,
-  'phone' : string,
-}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface WeekdayTimeRange {
-  'day' : bigint,
-  'closeTime' : bigint,
-  'openTime' : bigint,
-}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -131,66 +48,13 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addImageRef' : ActorMethod<[ProductId, ExternalBlob], undefined>,
-  'addListing' : ActorMethod<
-    [RetailerId, ProductId, bigint, bigint, ListingStatus],
-    ListingId
-  >,
-  'addProduct' : ActorMethod<
-    [string, string, string, [] | [ExternalBlob]],
-    ProductId
-  >,
-  'addProvince' : ActorMethod<[string, Array<string>], undefined>,
-  'addRetailer' : ActorMethod<[RetailerInput], RetailerId>,
-  'adminDeleteListing' : ActorMethod<[ListingId], undefined>,
-  'adminUpdateListing' : ActorMethod<
-    [ListingId, [] | [bigint], [] | [bigint], [] | [ListingStatus]],
-    undefined
-  >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'bootstrapAdmin' : ActorMethod<[string, string], undefined>,
-  'getAllActiveListings' : ActorMethod<[], Array<Listing>>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getDashboardData' : ActorMethod<
-    [],
-    {
-      'listings' : bigint,
-      'requests' : bigint,
-      'products' : bigint,
-      'retailers' : bigint,
-    }
-  >,
-  'getProductCatalog' : ActorMethod<[RetailerId], Array<Listing>>,
-  'getProductRequests' : ActorMethod<[], Array<ProductRequest>>,
-  'getProductWithRetailers' : ActorMethod<[ProductId], ProductWithRetailers>,
-  'getProvinces' : ActorMethod<[], Array<Province>>,
-  'getRetailerById' : ActorMethod<[RetailerId], [] | [Retailer]>,
-  'getRetailersByTownSuburb' : ActorMethod<
-    [string],
-    Array<RetailerWithListings>
-  >,
-  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
-  'isRetailerOpen' : ActorMethod<[RetailerId, [] | [Time]], boolean>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
-  'listListings' : ActorMethod<[], Array<Listing>>,
-  'listProducts' : ActorMethod<[], Array<Product>>,
-  'listRetailers' : ActorMethod<[], Array<Retailer>>,
-  'removeImage' : ActorMethod<[ProductId, bigint], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
-  'requestNewProduct' : ActorMethod<[string, string, string, string], bigint>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
-  'setPreferredImage' : ActorMethod<
-    [ProductId, [] | [ExternalBlob]],
-    undefined
-  >,
-  'updateListingStatus' : ActorMethod<[ListingId, ListingStatus], undefined>,
-  'updateRetailer' : ActorMethod<[RetailerId, RetailerInput], undefined>,
-  'upgradeToAdmin' : ActorMethod<[Principal], undefined>,
-  'wipeSystem' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

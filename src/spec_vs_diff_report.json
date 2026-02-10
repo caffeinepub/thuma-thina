@@ -1,90 +1,138 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T16:35:55.129Z",
-  "summary": "Diff implements the new Listing.createdAt field with a migration module, adds an Admin Manage Listings page and route, and introduces a time formatting utility. However, the backend admin-only update/delete listing APIs are not evidenced in the provided backend diff, and addListing setting createdAt is not shown. The diff also includes multiple unrelated frontend/UI/role-application changes that were not requested.",
+  "generatedAt": "2026-02-10T14:34:09.029Z",
+  "summary": "Diff adds many new frontend pages/hooks and backend type definitions/migration scaffolding, but most requested catalogue/checkout/admin/town/order/workflow functionality is still placeholder-only or not wired as required (notably: default route not switched to global catalogue; backend actor methods and role workflows/town filtering not implemented). Theme images were added and referenced via THEME_ASSETS/BrandImage.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Existing listing creation (addListing) persists createdAt for newly created listings.",
-      "reason": "backend/main.mo shows the Listing type includes createdAt, but the diff snippet is truncated before showing the addListing implementation that sets createdAt at creation time.",
+      "requirement": "Default route (\"/\") is a browsable/searchable global catalogue showing per-product retailer price options; adding to cart requires selecting a specific retailer/listing; cart shows product/retailer/price/qty.",
+      "reason": "Router still renders ProvinceListPage on the default route, and the global catalogue hook returns an empty array with a placeholder message; no evidence of retailer price options being rendered/added-to-cart from the global catalogue.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/router/HashRouter.tsx",
+        "frontend/src/hooks/useCatalog.ts",
+        "frontend/src/pages/shop/CataloguePage.tsx"
       ]
     },
     {
       "id": "REQ-2",
-      "requirement": "Add shared admin-only backend methods to update a listing by id (price/stock/status) and delete a listing by id, with clear trap messages and persistence.",
-      "reason": "The provided backend/main.mo diff excerpt only shows type changes and actor setup; it does not show any new shared methods for update/delete listing, nor their admin-only authorization checks or trap messages.",
+      "requirement": "Auth-gated checkout that allows logged-out browsing/cart, but prompts login/register when attempting to place an order and resumes checkout after login.",
+      "reason": "Checkout is gated at the route level via <RequireAuth>, but the CheckoutPage and order hook are placeholder-only and there is no evidence of an in-flow login/register prompt on submission nor resume behavior after login.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/router/HashRouter.tsx",
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/hooks/useOrders.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Backend support for admin-managed Products/Retailers/Listings with admin-only CRUD and query methods for global catalogue grouped by product with retailer listing options; non-admin access blocked.",
+      "reason": "backend/main.mo shows type definitions and migration wiring, but the diff summary shows no implemented public actor methods for global catalogue queries or admin-only CRUD/access control enforcement for products/retailers/listings/towns.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useCatalog.ts",
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useRetailers.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/useTowns.ts"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Admin UI for managing products and listings (create/edit/delete) and reflecting changes in the customer catalogue.",
+      "reason": "Admin route exists, but all product/retailer/listing hooks are explicitly placeholders throwing \"Backend method not implemented\" or returning empty arrays; no evidence of implemented admin management screens for CRUD.",
+      "evidence": [
+        "frontend/src/router/HashRouter.tsx",
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/useRetailers.ts"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Admin-managed towns; role-based users register/select a town from the admin list; town filters which orders are visible/assignable to shoppers and drivers.",
+      "reason": "Town hooks are placeholders returning empty arrays/throwing unimplemented errors, and there is no evidence of profile town selection UI or town-based filtering implemented in dashboards.",
+      "evidence": [
+        "frontend/src/hooks/useTowns.ts",
+        "frontend/src/hooks/useUserProfiles.ts",
+        "frontend/src/hooks/useOrders.ts"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Order creation/persistence and retrieval for customer tracking and role dashboards, including listingIds+qty, delivery method, payment method, total, and status.",
+      "reason": "Order hooks are placeholders (create throws not implemented; getters return null/empty), and Checkout/MyOrders/OrderDetail pages contain explicit placeholder messaging indicating backend not implemented.",
+      "evidence": [
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/pages/shop/MyOrdersPage.tsx",
+        "frontend/src/pages/shop/OrderDetailPage.tsx"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Shopper dashboard workflow: town-filtered available orders, accept order, progress, complete for driver handoff; out-of-stock notes per listing that mark listing out-of-stock until admin reset.",
+      "reason": "No shopper dashboard pages or implemented order/listing mutation methods exist in the diff; shopper-related order mutations in useOrders are placeholders.",
+      "evidence": [
+        "frontend/src/hooks/useOrders.ts"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Driver dashboard workflow: town-filtered ready-for-delivery orders, accept delivery, mark pickup/delivered/completed.",
+      "reason": "No driver dashboard pages or implemented driver order mutation methods exist in the diff; driver-related order mutations in useOrders are placeholders.",
+      "evidence": [
+        "frontend/src/hooks/useOrders.ts"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Pickup point ordering/tracking: checkout requires beneficiary name/contact; pickup point dashboard timeline; mark received/waiting for pickup.",
+      "reason": "CheckoutPage has beneficiary fields, but order creation is unimplemented and there is no pickup point dashboard or status update methods shown.",
+      "evidence": [
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/hooks/useOrders.ts"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Admin oversight dashboards with consolidated orders view (filters by status/town/role assignment) and per-role analytics for shoppers/drivers/pickup points; access-controlled.",
+      "reason": "Admin route is access-controlled, but there is no evidence of consolidated orders view, filters, or per-role analytics implementations; list/all-orders hooks are placeholders returning empty arrays.",
+      "evidence": [
+        "frontend/src/router/HashRouter.tsx",
+        "frontend/src/hooks/useOrders.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Warm 'African-inspired' global theme and Tailwind config changes.",
-      "reason": "Not requested by any requirement; BuildRequest focuses on admin listing management UI and backend APIs, and explicitly includes constraints about composing existing UI components rather than broad UI redesign work.",
+      "description": "Added backend data migration module and applied migration wiring in the main actor.",
+      "reason": "BuildRequest allows adding migration.mo only if existing stable state requires migration, but the diff summary does not provide evidence that a stable-state migration was required (only that it was added and wired).",
       "evidence": [
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Role applications flow and related admin pages/hooks changes (Join Us, role application status, master admin role applications).",
-      "reason": "Not part of the Manage Listings dashboard request and not mentioned in requirements/non-goals.",
-      "evidence": [
-        "frontend/src/pages/shop/JoinUsPage.tsx",
-        "frontend/src/pages/shop/RoleApplicationsStatusPage.tsx",
-        "frontend/src/pages/shop/MasterAdminRoleApplicationsPage.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/App.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Catalogue preview section behavior changes including extra product fetching logic for preview listings.",
-      "reason": "Not requested; unrelated to admin manage listings feature.",
-      "evidence": [
-        "frontend/src/components/shop/CataloguePreviewSection.tsx"
-      ]
-    },
-    {
-      "description": "Retailer catalog page refactor adding local search/sort logic and ExtendedCatalogItem type changes.",
-      "reason": "Not requested; unrelated to admin listing management.",
-      "evidence": [
-        "frontend/src/pages/shop/RetailerCatalogPage.tsx",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "New generated public assets (logo and hero images).",
-      "reason": "Not requested by the BuildRequest.",
-      "evidence": [
-        "frontend/public/assets/generated/thuma-thina-logo.dim_512x512.png",
-        "frontend/public/assets/generated/thuma-thina-hero.dim_1200x600.png",
-        "frontend-file-summaries.txt"
+        "backend/migration.mo",
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.64,
+  "confidence": 0.74,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/shop/CataloguePreviewSection.tsx",
     "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/admin/AdminManageListingsPage.tsx",
-    "frontend/src/pages/shop/AdminDashboardPage.tsx",
-    "frontend/src/pages/shop/JoinUsPage.tsx",
-    "frontend/src/pages/shop/MasterAdminRoleApplicationsPage.tsx",
-    "frontend/src/pages/shop/ProvinceListPage.tsx",
-    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
-    "frontend/src/pages/shop/RoleApplicationsStatusPage.tsx",
-    "frontend/src/utils/time.ts",
+    "frontend/src/hooks/useCatalog.ts",
+    "frontend/src/hooks/useListings.ts",
+    "frontend/src/hooks/useOrders.ts",
+    "frontend/src/hooks/useProducts.ts",
+    "frontend/src/hooks/useRetailers.ts",
+    "frontend/src/hooks/useTowns.ts",
+    "frontend/src/hooks/useUserProfiles.ts",
+    "frontend/src/pages/shop/CartPage.tsx",
+    "frontend/src/pages/shop/CataloguePage.tsx",
+    "frontend/src/pages/shop/CheckoutPage.tsx",
+    "frontend/src/pages/shop/MyOrdersPage.tsx",
+    "frontend/src/pages/shop/OrderDetailPage.tsx",
+    "frontend/src/router/HashRouter.tsx",
     "project_state.json"
   ]
 }
