@@ -57,19 +57,17 @@ export function CartPage() {
                       value={item.quantity}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
-                        if (!isNaN(val) && val > 0 && val <= item.maxStock) {
+                        if (!isNaN(val) && val > 0) {
                           updateQuantity(item.listingId, val);
                         }
                       }}
                       className="w-16 text-center"
                       min={1}
-                      max={item.maxStock}
                     />
                     <Button
                       size="icon"
                       variant="outline"
                       onClick={() => updateQuantity(item.listingId, item.quantity + 1)}
-                      disabled={item.quantity >= item.maxStock}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

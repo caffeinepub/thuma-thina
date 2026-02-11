@@ -1,45 +1,47 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Marketplace app with in-app admin console. Admin will manage global product catalogue (name, description, up to 3 images), manage retailers (business name, town, phone, email, operating hours, image), manage shop catalogue listings (link retailer to product with price, stock quantity, availability), approve shoppers/drivers/pickup points with document images, and use soft-delete so records are hidden from active lists but retained. Towns are admin-curated and users will choose from available towns; current build scope is towns management only.",
+  "summary": "Build a listings module where an admin links registered retailers to products from a global admin-managed catalogue, sets retailer pricing (including promo pricing with savings display and start/end dates where end can be indefinite), and exposes only active, orderable listings to customers for checkout and pickup points.",
   "architectural_notes": [
-    "Implement soft-delete/archive for users/retailers/shoppers/drivers/pickup points so deleted records are retained but hidden from active lists.",
-    "Towns are a first-class entity managed by admin; other entities will reference a town for filtering/selection later."
+    "Global product catalogue is an admin-managed list of products.",
+    "Each retailer can have at most one normal price per product; optional promo price can override normal price when active.",
+    "Promo pricing supports start/end dates; end date may be indefinite requiring manual deactivation.",
+    "Customers should only see active listings; out-of-stock items must not be orderable."
   ],
   "known_issues": [
-    "Automated build attempts for admin console/towns module repeatedly failed to complete; may require simplifying build scope or splitting backend/UI changes into smaller steps."
+    "Automated build/deploy for the listings module failed when attempted; may need to split implementation into smaller steps to deploy cleanly."
   ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-existing-react-query-towns-hooks-frontend-src-hooks-usetowns-ts-to-call-the-new-backend-towns-methods-instead-of-placeholder-implementations-including-cache-invalidation-using-the-existing-townkeys",
-      "title": "Update the existing React Query towns hooks (frontend/src/hooks/useTowns.ts) to call the new backend towns methods instead of placeholder implementations, including cache invalidation using the existing townKeys.",
+      "id": "feature-wire-the-frontend-listings-hooks-to-real-backend-methods-replace-placeholders-and-update-the-admin-listings-ui-to-fully-function-listings-list-create-edit-and-validation-error-handling-for-duplicate-retailer-product-listings-and-promo-fields",
+      "title": "Wire the frontend listings hooks to real backend methods (replace placeholders) and update the admin listings UI to fully function: listings list, create, edit, and validation/error handling for duplicate retailer/product listings and promo fields.",
       "reqIds": [
-        "REQ-3"
+        "REQ-12"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-an-admin-towns-management-page-new-react-page-component-that-allows-admins-to-view-the-current-towns-list-add-a-town-edit-a-town-and-remove-a-town-with-basic-validation-required-name-and-province-and-a-confirmation-step-for-removal",
-      "title": "Add an Admin Towns management page (new React page component) that allows admins to: view the current towns list, add a town, edit a town, and remove a town, with basic validation (required name and province) and a confirmation step for removal.",
+      "id": "feature-update-the-admin-listing-editor-ui-to-support-promo-configuration-normal-price-optional-promo-price-promo-start-date-time-optional-indefinite-promo-end-date-time-and-display-of-calculated-savings-when-promo-price-is-set-normal-promo",
+      "title": "Update the admin listing editor UI to support promo configuration: normal price, optional promo price, promo start date/time, optional/indefinite promo end date/time, and display of calculated savings when promo price is set (normal - promo).",
       "reqIds": [
-        "REQ-4"
+        "REQ-13"
       ],
       "version": 1
     },
     {
-      "id": "feature-expose-navigation-to-the-new-admin-towns-page-by-adding-an-admin-route-in-the-hash-router-and-linking-to-it-from-the-admin-area-ui-e-g-from-the-existing-admin-dashboard-page",
-      "title": "Expose navigation to the new Admin Towns page by adding an admin route in the hash router and linking to it from the admin area UI (e.g., from the existing Admin dashboard page).",
+      "id": "feature-update-the-shopper-catalogue-page-to-use-the-real-backend-global-catalogue-products-orderable-listings-correctly-add-items-to-cart-using-listingid-not-retailerid-and-display-promo-pricing-with-savings-when-applicable-while-keeping-non-orderable-listings-disabled-hidden-per-backend-rules",
+      "title": "Update the shopper catalogue page to use the real backend global catalogue (products + orderable listings), correctly add items to cart using listingId (not retailerId), and display promo pricing with savings when applicable while keeping non-orderable listings disabled/hidden per backend rules.",
       "reqIds": [
-        "REQ-5"
+        "REQ-14"
       ],
       "version": 1
     },
     {
-      "id": "feature-apply-a-coherent-non-blue-non-purple-visual-treatment-specifically-for-the-admin-towns-page-layout-typography-spacing-and-component-styling-consistent-with-the-existing-app-design-system-shadcn-tailwind-keeping-user-facing-text-in-english",
-      "title": "Apply a coherent, non-blue/non-purple visual treatment specifically for the Admin Towns page (layout, typography, spacing, and component styling) consistent with the existing app design system (shadcn + Tailwind), keeping user-facing text in English.",
+      "id": "feature-wire-the-checkout-flow-to-real-backend-order-creation-and-ensure-the-order-payload-uses-cart-listingids-quantities-selected-delivery-method-including-pickup-point-option-and-payment-method-show-a-clear-user-facing-error-if-backend-validation-fails-e-g-item-became-out-of-stock",
+      "title": "Wire the checkout flow to real backend order creation and ensure the order payload uses cart listingIds, quantities, selected delivery method (including pickup point option), and payment method; show a clear user-facing error if backend validation fails (e.g., item became out-of-stock).",
       "reqIds": [
-        "REQ-6"
+        "REQ-15"
       ],
       "version": 1
     }
@@ -47,34 +49,52 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Admin towns management module (in-app): add/edit/remove towns; towns are an admin-curated list used elsewhere later",
+      "summary": "Listings module: admin links registered retailers to global catalogue products, sets one retailer price per product with optional promo pricing (normal visible but inactive; promo active) incl. savings display and promo start/end dates (end can be indefinite); only active, in-stock listings are visible/orderable by customers for checkout and pickup points.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Complete admin console in same app: manage global products, retailers, and retailer listings; approvals for shoppers/drivers/pickup points; view & soft-delete users/retailers/shoppers/drivers/pickup points",
-      "reqIds": [],
+      "summary": "Extend the backend listings domain model to support admin-managed retailer pricing with optional promo pricing, including: (a) one listing per (retailerId, productId), (b) normal price, (c) optional promo price, (d) promo start date, (e) promo end date that can be indefinite, and (f) logic to determine whether the promo price is currently active.",
+      "reqIds": [
+        "REQ-7"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Implement persistent Towns data model and storage in the Motoko main actor, including an admin-curated list of towns with fields sufficient for admin management (at minimum: unique identifier, town name, province, created/updated timestamps, and a removal state that supports “remove towns” without breaking referential integrity later).",
+      "summary": "Implement backend admin-only CRUD APIs for listings: create listing, update listing (including promo fields and status), delete listing, and list listings (all and by retailer/product filters as needed by the current frontend).",
       "reqIds": [
-        "REQ-1"
+        "REQ-8"
       ],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Add backend methods for towns management with admin-only authorization: list towns, create town, update town, and remove town. These methods must trap with a clear error when called by a non-admin.",
+      "summary": "Implement backend shopper-facing catalogue query API that returns the global catalogue augmented with retailer listings, exposing only listings that are orderable to customers (active and in-stock), and includes enough pricing data for the frontend to display the active price and the savings vs normal price when a promo is active.",
       "reqIds": [
-        "REQ-2"
+        "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Implement backend order creation to support checkout for customers using listing IDs and quantities, validating that each requested listing is currently orderable (active and in-stock), computing total amount using the active price (promo if active), decrementing stock atomically, and storing the order record with delivery method supporting pickup points.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add a conditional Motoko state migration for the listings schema change so existing canister state can upgrade safely after introducing promo-related fields and any new indices required for uniqueness (retailerId, productId).",
+      "reqIds": [
+        "REQ-11"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Admin towns management module (CRUD) for curated towns list",
+  "projectName": "Implement Listings Module with Promo Pricing, Active Catalogue, and Checkout Orderability",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

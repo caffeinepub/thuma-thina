@@ -1,194 +1,106 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { catalogKeys } from './useCatalog';
+import { PaymentMethod } from '@/backend';
+import type { OrderRecord, OrderId, CartItem, DeliveryMethod } from '@/backend';
 
 export const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
-  customer: () => [...orderKeys.lists(), 'customer'] as const,
-  byStatus: (status: string) => [...orderKeys.lists(), 'status', status] as const,
-  byTown: (town: string) => [...orderKeys.lists(), 'town', town] as const,
-  allOrders: () => [...orderKeys.lists(), 'all'] as const,
+  myOrders: () => [...orderKeys.lists(), 'my'] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
   detail: (id: number) => [...orderKeys.details(), id] as const,
 };
 
-// Placeholder hooks - backend methods not yet implemented
+export function useListOrdersByCustomer() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<OrderRecord[]>({
+    queryKey: orderKeys.myOrders(),
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getMyOrders();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useGetOrder(orderId: number) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<OrderRecord | null>({
+    queryKey: orderKeys.detail(orderId),
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getOrder(BigInt(orderId) as OrderId);
+    },
+    enabled: !!actor && !actorFetching && orderId > 0,
+  });
+}
+
 export function useCreateOrder() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (orderData: any) => {
+    mutationFn: async ({
+      items,
+      deliveryType,
+      deliveryAddress,
+      pickupPointId,
+      paymentType,
+    }: {
+      items: Array<{ listingId: string; quantity: number }>;
+      deliveryType: 'home' | 'pickupPoint';
+      deliveryAddress?: string;
+      pickupPointId?: string;
+      paymentType: 'zar' | 'icp' | 'nomayini';
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
+
+      // Convert cart items to backend format
+      const cartItems: CartItem[] = items.map((item) => ({
+        listingId: BigInt(item.listingId),
+        quantity: BigInt(item.quantity),
+      }));
+
+      // Build delivery method
+      let deliveryMethod: DeliveryMethod;
+      if (deliveryType === 'home') {
+        if (!deliveryAddress) throw new Error('Delivery address is required');
+        deliveryMethod = {
+          __kind__: 'home',
+          home: { address: deliveryAddress },
+        };
+      } else {
+        if (!pickupPointId) throw new Error('Pickup point ID is required');
+        deliveryMethod = {
+          __kind__: 'pickupPoint',
+          pickupPoint: { pointId: BigInt(pickupPointId) },
+        };
+      }
+
+      // Build payment method
+      let paymentMethod: PaymentMethod;
+      switch (paymentType) {
+        case 'zar':
+          paymentMethod = PaymentMethod.zar;
+          break;
+        case 'icp':
+          paymentMethod = PaymentMethod.icp;
+          break;
+        case 'nomayini':
+          paymentMethod = PaymentMethod.nomayini;
+          break;
+        default:
+          throw new Error('Invalid payment method');
+      }
+
+      return actor.createOrder(cartItems, deliveryMethod, paymentMethod);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useGetOrder(id: number) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: orderKeys.detail(id),
-    queryFn: async () => {
-      return null;
-    },
-    enabled: !!actor && !actorFetching && id > 0,
-  });
-}
-
-export function useListOrdersByCustomer() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: orderKeys.customer(),
-    queryFn: async () => {
-      return [];
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useListOrdersByStatus(status: string) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: orderKeys.byStatus(status),
-    queryFn: async () => {
-      return [];
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useListOrdersByTown(townSuburb: string) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: orderKeys.byTown(townSuburb),
-    queryFn: async () => {
-      return [];
-    },
-    enabled: !!actor && !actorFetching && !!townSuburb,
-  });
-}
-
-export function useListAllOrders() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: orderKeys.allOrders(),
-    queryFn: async () => {
-      return [];
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useAcceptOrderAsShopper() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useMarkOrderPurchased() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useMarkOrderReady() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useAcceptOrderAsDriver() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useMarkOrderDelivered() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useMarkOrderReceivedAtPickupPoint() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (orderId: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
-    },
-  });
-}
-
-export function useAddOutOfStockNote() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ orderId, listingId }: { orderId: number; listingId: number }) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+      queryClient.invalidateQueries({ queryKey: orderKeys.myOrders() });
+      queryClient.invalidateQueries({ queryKey: catalogKeys.all });
     },
   });
 }

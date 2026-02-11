@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-existing-react-query-towns-hooks-frontend-src-hooks-usetowns-ts-to-call-the-new-backend-towns-methods-instead-of-placeholder-implementations-including-cache-invalidation-using-the-existing-townkeys",
-      "featureTitle": "Update the existing React Query towns hooks (frontend/src/hooks/useTowns.ts) to call the new backend towns methods instead of placeholder implementations, including cache invalidation using the existing townKeys.",
+      "featureId": "feature-wire-the-frontend-listings-hooks-to-real-backend-methods-replace-placeholders-and-update-the-admin-listings-ui-to-fully-function-listings-list-create-edit-and-validation-error-handling-for-duplicate-retailer-product-listings-and-promo-fields",
+      "featureTitle": "Wire the frontend listings hooks to real backend methods (replace placeholders) and update the admin listings UI to fully function: listings list, create, edit, and validation/error handling for duplicate retailer/product listings and promo fields.",
       "files": [
-        "frontend/src/hooks/useTowns.ts"
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/pages/admin/AdminManageListingsPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -18,15 +19,16 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-12"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-an-admin-towns-management-page-new-react-page-component-that-allows-admins-to-view-the-current-towns-list-add-a-town-edit-a-town-and-remove-a-town-with-basic-validation-required-name-and-province-and-a-confirmation-step-for-removal",
-      "featureTitle": "Add an Admin Towns management page (new React page component) that allows admins to: view the current towns list, add a town, edit a town, and remove a town, with basic validation (required name and province) and a confirmation step for removal.",
+      "featureId": "feature-update-the-admin-listing-editor-ui-to-support-promo-configuration-normal-price-optional-promo-price-promo-start-date-time-optional-indefinite-promo-end-date-time-and-display-of-calculated-savings-when-promo-price-is-set-normal-promo",
+      "featureTitle": "Update the admin listing editor UI to support promo configuration: normal price, optional promo price, promo start date/time, optional/indefinite promo end date/time, and display of calculated savings when promo price is set (normal - promo).",
       "files": [
-        "frontend/src/pages/admin/AdminTownsPage.tsx"
+        "frontend/src/components/admin/ListingEditDialog.tsx",
+        "frontend/src/hooks/useListings.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -39,16 +41,17 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-13"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-expose-navigation-to-the-new-admin-towns-page-by-adding-an-admin-route-in-the-hash-router-and-linking-to-it-from-the-admin-area-ui-e-g-from-the-existing-admin-dashboard-page",
-      "featureTitle": "Expose navigation to the new Admin Towns page by adding an admin route in the hash router and linking to it from the admin area UI (e.g., from the existing Admin dashboard page).",
+      "featureId": "feature-update-the-shopper-catalogue-page-to-use-the-real-backend-global-catalogue-products-orderable-listings-correctly-add-items-to-cart-using-listingid-not-retailerid-and-display-promo-pricing-with-savings-when-applicable-while-keeping-non-orderable-listings-disabled-hidden-per-backend-rules",
+      "featureTitle": "Update the shopper catalogue page to use the real backend global catalogue (products + orderable listings), correctly add items to cart using listingId (not retailerId), and display promo pricing with savings when applicable while keeping non-orderable listings disabled/hidden per backend rules.",
       "files": [
-        "frontend/src/pages/shop/AdminDashboardPage.tsx",
-        "frontend/src/router/HashRouter.tsx"
+        "frontend/src/components/shop/cart/CartProvider.tsx",
+        "frontend/src/hooks/useCatalog.ts",
+        "frontend/src/pages/shop/CataloguePage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -61,15 +64,18 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-14"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-apply-a-coherent-non-blue-non-purple-visual-treatment-specifically-for-the-admin-towns-page-layout-typography-spacing-and-component-styling-consistent-with-the-existing-app-design-system-shadcn-tailwind-keeping-user-facing-text-in-english",
-      "featureTitle": "Apply a coherent, non-blue/non-purple visual treatment specifically for the Admin Towns page (layout, typography, spacing, and component styling) consistent with the existing app design system (shadcn + Tailwind), keeping user-facing text in English.",
+      "featureId": "feature-wire-the-checkout-flow-to-real-backend-order-creation-and-ensure-the-order-payload-uses-cart-listingids-quantities-selected-delivery-method-including-pickup-point-option-and-payment-method-show-a-clear-user-facing-error-if-backend-validation-fails-e-g-item-became-out-of-stock",
+      "featureTitle": "Wire the checkout flow to real backend order creation and ensure the order payload uses cart listingIds, quantities, selected delivery method (including pickup point option), and payment method; show a clear user-facing error if backend validation fails (e.g., item became out-of-stock).",
       "files": [
-        "frontend/src/pages/admin/AdminTownsPage.tsx"
+        "frontend/src/hooks/useOrders.ts",
+        "frontend/src/pages/shop/CheckoutPage.tsx",
+        "frontend/src/pages/shop/MyOrdersPage.tsx",
+        "frontend/src/pages/shop/OrderDetailPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -82,7 +88,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-6"
+        "REQ-15"
       ],
       "confidence": "high"
     }

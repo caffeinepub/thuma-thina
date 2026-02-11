@@ -1,54 +1,55 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export interface CartItemData {
+interface CartItemData {
   listingId: string;
+  productId: string;
   productName: string;
   retailerName: string;
   price: number;
   quantity: number;
-  maxStock: number;
 }
 
 interface CartContextType {
   items: CartItemData[];
-  addItem: (item: Omit<CartItemData, 'quantity'>, quantity?: number) => void;
+  addItem: (item: CartItemData) => void;
   removeItem: (listingId: string) => void;
   updateQuantity: (listingId: string, quantity: number) => void;
   clearCart: () => void;
-  getTotalItems: () => number;
   getTotalAmount: () => number;
+  getItemCount: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItemData[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem('cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [items, setItems] = useState<CartItemData[]>([]);
 
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        setItems(JSON.parse(savedCart));
+      } catch (error) {
+        console.error('Failed to parse cart from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: Omit<CartItemData, 'quantity'>, quantity = 1) => {
-    if (quantity > item.maxStock) {
-      throw new Error('Not enough stock available');
-    }
-
+  const addItem = (item: CartItemData) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.listingId === item.listingId);
-      if (existing) {
-        const newQuantity = existing.quantity + quantity;
-        if (newQuantity > item.maxStock) {
-          throw new Error('Not enough stock available');
-        }
-        return prev.map((i) =>
-          i.listingId === item.listingId ? { ...i, quantity: newQuantity } : i
-        );
+      const existingIndex = prev.findIndex((i) => i.listingId === item.listingId);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex].quantity += item.quantity;
+        return updated;
       }
-      return [...prev, { ...item, quantity }];
+      return [...prev, item];
     });
   };
 
@@ -61,17 +62,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(listingId);
       return;
     }
-
     setItems((prev) =>
-      prev.map((item) => {
-        if (item.listingId === listingId) {
-          if (quantity > item.maxStock) {
-            throw new Error('Not enough stock available');
-          }
-          return { ...item, quantity };
-        }
-        return item;
-      })
+      prev.map((item) => (item.listingId === listingId ? { ...item, quantity } : item))
     );
   };
 
@@ -79,12 +71,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   };
 
-  const getTotalItems = () => {
-    return items.reduce((sum, item) => sum + item.quantity, 0);
+  const getTotalAmount = () => {
+    return items.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
-  const getTotalAmount = () => {
-    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const getItemCount = () => {
+    return items.reduce((count, item) => count + item.quantity, 0);
   };
 
   return (
@@ -95,8 +87,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
-        getTotalItems,
         getTotalAmount,
+        getItemCount,
       }}
     >
       {children}

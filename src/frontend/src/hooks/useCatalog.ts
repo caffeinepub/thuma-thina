@@ -1,20 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import type { ShopProduct } from '@/backend';
 
 export const catalogKeys = {
   all: ['catalog'] as const,
   global: () => [...catalogKeys.all, 'global'] as const,
 };
 
-// Placeholder hook - backend method not yet implemented
 export function useGlobalCatalogue() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery({
+  return useQuery<ShopProduct[]>({
     queryKey: catalogKeys.global(),
     queryFn: async () => {
-      // Return empty array until backend implements getGlobalCatalogue
-      return [];
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCatalogue();
     },
     enabled: !!actor && !actorFetching,
   });

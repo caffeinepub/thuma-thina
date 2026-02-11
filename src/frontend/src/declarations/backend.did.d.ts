@@ -13,25 +13,129 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
-export type Time = bigint;
-export interface Town {
-  'id' : TownId,
-  'status' : TownStatus,
+export interface CartItem { 'listingId' : ListingId, 'quantity' : bigint }
+export type DeliveryMethod = { 'home' : { 'address' : string } } |
+  { 'pickupPoint' : { 'pointId' : bigint } };
+export type ExternalBlob = Uint8Array;
+export interface HolidayOverride {
+  'closeTime' : [] | [bigint],
+  'date' : Time,
+  'name' : string,
+  'isOpen' : boolean,
+  'openTime' : [] | [bigint],
+}
+export type ListingId = bigint;
+export type ListingStatus = { 'active' : null } |
+  { 'discontinued' : null } |
+  { 'outOfStock' : null };
+export interface NewListing {
+  'id' : ListingId,
+  'status' : ListingStatus,
+  'createdAt' : Time,
+  'productId' : ProductId,
+  'updatedAt' : Time,
+  'stock' : bigint,
+  'price' : bigint,
+  'promo' : [] | [PromoDetails],
+  'retailerId' : RetailerId,
+}
+export interface OpeningHours {
+  'holidayOverrides' : Array<HolidayOverride>,
+  'weeklySchedule' : Array<WeekdayTimeRange>,
+}
+export type OrderId = bigint;
+export interface OrderRecord {
+  'id' : OrderId,
+  'status' : OrderStatus,
+  'paymentMethod' : PaymentMethod,
+  'customer' : Principal,
+  'createdAt' : Time,
+  'deliveryMethod' : DeliveryMethod,
+  'updatedAt' : Time,
+  'totalAmount' : bigint,
+  'items' : Array<CartItem>,
+}
+export type OrderStatus = { 'inDelivery' : { 'driverId' : Principal } } |
+  { 'assigned' : { 'shopperId' : Principal } } |
+  { 'cancelled' : string } |
+  { 'pending' : null } |
+  { 'purchased' : null } |
+  { 'delivered' : null } |
+  { 'ready' : null };
+export type PaymentMethod = { 'icp' : null } |
+  { 'zar' : null } |
+  { 'nomayini' : null };
+export interface Product {
+  'id' : ProductId,
+  'imageRefs' : Array<ExternalBlob>,
+  'name' : string,
+  'description' : string,
+  'preferredImage' : [] | [ExternalBlob],
+  'category' : string,
+}
+export type ProductId = bigint;
+export interface PromoDetails {
+  'endDate' : [] | [Time],
+  'price' : bigint,
+  'startDate' : Time,
+}
+export interface Retailer {
+  'id' : RetailerId,
   'province' : string,
   'name' : string,
   'createdAt' : Time,
+  'email' : string,
   'updatedAt' : Time,
+  'address' : string,
+  'openingHours' : OpeningHours,
+  'phone' : string,
+  'townSuburb' : string,
 }
-export type TownId = bigint;
-export type TownStatus = { 'active' : null } |
-  { 'removed' : null };
+export type RetailerId = bigint;
+export interface RetailerInput {
+  'province' : string,
+  'name' : string,
+  'email' : string,
+  'address' : string,
+  'openingHours' : OpeningHours,
+  'phone' : string,
+  'townSuburb' : string,
+}
+export interface ShopListing {
+  'activePrice' : bigint,
+  'isPromoActive' : boolean,
+  'listingId' : ListingId,
+  'normalPrice' : bigint,
+  'retailerName' : string,
+  'stock' : bigint,
+  'savings' : [] | [bigint],
+  'retailerId' : RetailerId,
+}
+export interface ShopProduct {
+  'id' : ProductId,
+  'listings' : Array<ShopListing>,
+  'name' : string,
+  'description' : string,
+  'image' : [] | [ExternalBlob],
+}
+export type Time = bigint;
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
 }
+export interface UserProfile {
+  'name' : string,
+  'email' : string,
+  'phone' : string,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface WeekdayTimeRange {
+  'day' : bigint,
+  'closeTime' : bigint,
+  'openTime' : bigint,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -61,17 +165,60 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createTown' : ActorMethod<[string, string], Town>,
-  'getActiveTowns' : ActorMethod<[], Array<Town>>,
+  'associateRetailerPrincipal' : ActorMethod<
+    [Principal, RetailerId],
+    undefined
+  >,
+  'createCategory' : ActorMethod<[string], undefined>,
+  'createListing' : ActorMethod<
+    [RetailerId, ProductId, bigint, bigint],
+    NewListing
+  >,
+  'createOrder' : ActorMethod<
+    [Array<CartItem>, DeliveryMethod, PaymentMethod],
+    OrderRecord
+  >,
+  'createProduct' : ActorMethod<
+    [string, string, ExternalBlob, string],
+    Product
+  >,
+  'createRetailer' : ActorMethod<[RetailerInput], Retailer>,
+  'deleteListing' : ActorMethod<[ListingId], undefined>,
+  'deleteRetailer' : ActorMethod<[RetailerId], undefined>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCatalogue' : ActorMethod<[], Array<ShopProduct>>,
+  'getListing' : ActorMethod<[ListingId], [] | [NewListing]>,
+  'getMyOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'getMyRetailer' : ActorMethod<[], [] | [Retailer]>,
+  'getMyRetailerInventory' : ActorMethod<[], Array<NewListing>>,
+  'getMyRetailerOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'getOrder' : ActorMethod<[OrderId], [] | [OrderRecord]>,
+  'getRetailer' : ActorMethod<[RetailerId], [] | [Retailer]>,
+  'getRetailerListings' : ActorMethod<[RetailerId], Array<NewListing>>,
+  'getRetailerPrincipalMapping' : ActorMethod<[Principal], [] | [RetailerId]>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
+  'listAllListings' : ActorMethod<[], Array<NewListing>>,
+  'listAllOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
-  'listTowns' : ActorMethod<[], Array<Town>>,
-  'removeTown' : ActorMethod<[TownId], Town>,
+  'listCategories' : ActorMethod<[], Array<string>>,
+  'listProducts' : ActorMethod<[], Array<Product>>,
+  'listRetailers' : ActorMethod<[], Array<Retailer>>,
+  'removePromo' : ActorMethod<[ListingId], NewListing>,
+  'removeRetailerPrincipal' : ActorMethod<[Principal], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
-  'updateTown' : ActorMethod<[TownId, string, string], Town>,
+  'setPromo' : ActorMethod<[ListingId, bigint, Time, [] | [Time]], NewListing>,
+  'updateListing' : ActorMethod<
+    [ListingId, bigint, bigint, ListingStatus],
+    NewListing
+  >,
+  'updateOrderStatus' : ActorMethod<[OrderId, OrderStatus], OrderRecord>,
+  'updateProduct' : ActorMethod<[ProductId, string, string, string], Product>,
+  'updateRetailer' : ActorMethod<[RetailerId, RetailerInput], Retailer>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

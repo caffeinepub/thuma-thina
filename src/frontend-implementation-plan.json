@@ -1,81 +1,107 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin Towns management (frontend hooks + admin page + routing)",
+  "title": "Frontend wiring for Listings (promo) + Shopper Catalogue + Checkout order creation",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Update towns React Query hooks to call backend towns management functions and invalidate caches via existing townKeys.",
+      "id": "REQ-12",
+      "summary": "Wire listings hooks to backend capabilities and make the admin listings UI fully functional (list/create/edit/delete) with robust error handling.",
       "acceptanceCriteria": [
-        "useListTowns returns backend data (not an empty array) when the actor is available.",
-        "useCreateTown triggers backend create and invalidates towns queries on success.",
-        "A new update-town mutation hook exists (or equivalent) and invalidates towns queries on success.",
-        "useDeleteTown (or remove-town) triggers backend remove and invalidates towns queries on success."
+        "frontend/src/hooks/useListings.ts calls real actor methods for list/create/update/delete and no longer returns empty arrays or throws 'Backend method not yet implemented'.",
+        "AdminManageListingsPage no longer shows the ‘backend not yet implemented’ warning once the backend is available, and it renders live listing data.",
+        "Listing creation/edit flows succeed end-to-end and show toast errors for backend validation failures (e.g., duplicate retailer+product)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useTowns.ts",
+          "path": "frontend/src/hooks/useListings.ts",
           "operation": "modify",
-          "description": "Replace placeholder implementations with actor-backed calls to the backendInterface towns capabilities (listTowns/createTown/updateTown/removeTown), ensure hooks are gated by actor availability like other hooks, and add a dedicated update-town mutation hook. Keep cache invalidation using the existing townKeys (invalidate towns queries on mutation success)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Create an admin-only Towns management page to list, add, edit, and remove towns with validation, confirmation, and clear loading/error handling.",
-      "acceptanceCriteria": [
-        "The page is protected by the existing RequireAuth + RequireAdmin guards (non-admin cannot access).",
-        "Admins can add a town via a form/dialog and see it appear in the list without a full page refresh.",
-        "Admins can edit an existing town and see updated values reflected in the list.",
-        "Admins can remove a town with a confirmation prompt; removed towns are not shown in the default active list view (unless an explicit ‘show removed’ toggle is provided).",
-        "Errors from backend mutations are shown to the admin in clear English (toast or inline), and loading states are handled."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/admin/AdminTownsPage.tsx",
-          "operation": "create",
-          "description": "Create the Admin Towns management page UI using the selected shadcn-ui component set (e.g., Card/Table/Dialog/AlertDialog/Input/Button/Badge/Switch) and Tailwind for layout. Verify the component's usage instructions before implementing. Use useListTowns/useCreateTown/useUpdateTown/useDeleteTown from frontend/src/hooks/useTowns.ts to support list/add/edit/remove. Include basic validation (required name and province), a removal confirmation step, and clear English error messaging (toast/inline) plus loading/empty states. Default to hiding removed towns with an explicit 'Show removed' toggle."
+          "description": "Replace placeholder queries/mutations with real backend calls for listing management: listAllListings, getRetailerListings (for retailer filter), createListing, updateListing, deleteListing, and (when needed by UI) getListing. Ensure React Query keys remain stable and invalidate catalogue queries after mutations. Convert numeric filter inputs to bigint safely. Surface backend trap messages so admin UI can show a clear toast error (e.g., duplicate retailer+product). Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/admin/SearchableSelect.tsx",
+          "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
           "operation": "modify",
-          "description": "Extend the existing SearchableSelect to optionally support a simple, reusable value/label option list suitable for selecting a province from frontend/src/utils/saProvinces.ts (if current props are too restrictive). Keep it backward-compatible for any existing uses. Verify the component's usage instructions before implementing."
+          "description": "Remove/replace the 'backend not implemented' warning copy and render live listing data from useListListings. Add delete action wired to useDeleteListing with confirmation and toast feedback; keep edit/create flows using ListingEditDialog. Ensure this page continues to rely on the existing authorization component guard (RequireAdmin) already wired in the router; verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-5",
-      "summary": "Add /admin/towns route to the hash router and link to it from the Admin dashboard UI.",
+      "id": "REQ-13",
+      "summary": "Enhance the admin listing editor to configure promo pricing windows (including indefinite end) and show computed savings with validation.",
       "acceptanceCriteria": [
-        "A new route exists (e.g., /admin/towns) and renders the Towns admin page inside ShopLayout.",
-        "Admins can reach the Towns page from the existing /admin dashboard via a visible UI link/button.",
-        "Navigating directly to the new route respects auth/admin guards (prompt login if not authenticated; block if not admin)."
+        "ListingEditDialog includes inputs for normal price and optional promo price.",
+        "ListingEditDialog includes inputs for promo start and promo end, with a clear option to mark promo end as indefinite.",
+        "When promo price is entered, the dialog displays computed savings (normal - promo) and prevents promo price >= normal price.",
+        "Submitting the form sends promo fields to the backend update/create listing methods."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/router/HashRouter.tsx",
+          "path": "frontend/src/components/admin/ListingEditDialog.tsx",
           "operation": "modify",
-          "description": "Register a new admin route (e.g., /admin/towns) that renders the new AdminTownsPage and is wrapped with the existing RequireAuth + RequireAdmin guards. Ensure it is rendered within ShopLayout (router already wraps renderRoute)."
+          "description": "Add promo UI controls: optional promo price, promo start date/time, optional promo end date/time, and an 'indefinite end' toggle. Show computed savings (normal - promo) when promo price is set, validate promoPrice < normalPrice, and validate date window inputs. On submit: create/update the base listing first, then setPromo/removePromo based on promo fields (using the backend capabilities), and show toast errors from backend validation. Keep using existing shadcn-ui form controls and dialog primitives; verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/shop/AdminDashboardPage.tsx",
+          "path": "frontend/src/hooks/useListings.ts",
           "operation": "modify",
-          "description": "Add a visible navigation control (button/link card) that routes admins to /admin/towns using the existing navigate helper, positioned consistently with the dashboard layout and using English text."
+          "description": "Extend listing mutations to support promo configuration from the editor by calling setPromo/removePromo as part of the create/update flow (or by exposing dedicated promo mutations consumed by ListingEditDialog). Ensure cache invalidation covers listings and catalogue so shopper pricing refreshes. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Apply a coherent non-blue/non-purple visual treatment for the Admin Towns page consistent with shadcn + Tailwind, with all user-facing text in English.",
+      "id": "REQ-14",
+      "summary": "Wire the shopper catalogue page to the real backend global catalogue, add-to-cart using listingId, and display promo pricing + savings for promo-active listings.",
       "acceptanceCriteria": [
-        "All labels, buttons, helper text, empty states, and error messages on the Towns admin page are in English.",
-        "The page uses a consistent style (cards/tables/dialogs) aligned with existing UI components and does not introduce a conflicting color palette."
+        "frontend/src/hooks/useCatalog.ts calls the real backend catalogue method and returns live data.",
+        "CataloguePage ‘Add’ button adds the correct listingId to cart (so checkout references the listing, not the retailer).",
+        "If a promo is active, the UI shows the promo price as the main price, shows the normal price as non-active (e.g., struck-through), and shows ‘You save R…’ based on the backend-provided prices.",
+        "Listings that are not orderable are not shown, or (if present) are clearly disabled and cannot be added to cart."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/admin/AdminTownsPage.tsx",
+          "path": "frontend/src/hooks/useCatalog.ts",
           "operation": "modify",
-          "description": "Refine Admin Towns page styling to use a neutral/earthy palette (avoid blue/purple accents), consistent spacing/typography, and shadcn patterns (cards, table rows, dialogs). Ensure all visible strings are in English, including validation messages, confirmations, empty states, and error messages. Verify the component's usage instructions before implementing."
+          "description": "Replace placeholder global catalogue query with a real call to the backend getCatalogue capability. Align hook types with backend.d.ts ShopProduct/ShopListing (activePrice, normalPrice, isPromoActive, savings, listingId, stock). Remove the local placeholder ShopProduct type and export the backend-aligned type for consumers. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
+          "operation": "modify",
+          "description": "Render products from useGlobalCatalogue live data and show orderable listings using backend-provided listing fields (listingId, stock, activePrice, normalPrice, isPromoActive, savings). Update Add-to-cart to store listingId (not retailerId) and use activePrice for cart price. If promo is active, show promo price as main, normal price struck-through, and 'You save R…' using backend savings/derived value. Keep non-orderable listings hidden/disabled per backend rules (the backend should already exclude them; still defensively disable if stock==0). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/shop/cart/CartProvider.tsx",
+          "operation": "modify",
+          "description": "Ensure cart item shape supports listingId coming from bigint (stringified) and that add/update flows remain stable when listingId is no longer derived from retailerId. If needed, add minimal optional metadata fields for displaying promo/normal price without affecting persisted carts. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-15",
+      "summary": "Wire checkout to backend order creation using cart listingIds + quantities, support pickupPoint delivery option, and show friendly validation errors.",
+      "acceptanceCriteria": [
+        "frontend/src/hooks/useOrders.ts implements createOrder by calling the backend and removes the placeholder 'Backend method not implemented' error.",
+        "CheckoutPage submits an order request using listingIds from the cart and displays backend errors in a user-friendly way without crashing.",
+        "On success, the cart is cleared and the existing success UI is shown.",
+        "If an item is out of stock at submit time, the backend rejects the order and the frontend displays that error message."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useOrders.ts",
+          "operation": "modify",
+          "description": "Implement createOrder mutation via backend createOrder capability: map cart items to (listingId, quantity) bigints; map delivery selection to DeliveryMethod variant (#home with address or #pickupPoint with pointId); map UI payment selection to PaymentMethod enum. Implement order queries using backend getMyOrders and getOrder so existing pages can load real order history and detail. Ensure errors from backend traps are propagated for user-friendly display. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Update submit handler to build the backend-compatible order payload (listingIds + quantities from cart, delivery method including pickup point option, and payment method). Replace the 'backend not implemented' messaging with real pending/error UI: show backend validation errors (e.g., out-of-stock) in an alert/toast without crashing. Clear cart on successful order creation and keep existing success UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/MyOrdersPage.tsx",
+          "operation": "modify",
+          "description": "Replace placeholder messaging with a real orders list view backed by useListOrdersByCustomer (getMyOrders). Render basic fields (id, status, createdAt, totalAmount) and link to OrderDetailPage route. Keep RequireAuth protections as already wired via the router. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/shop/OrderDetailPage.tsx",
+          "operation": "modify",
+          "description": "Replace placeholder detail card with real order detail rendering backed by useGetOrder (getOrder): show status, delivery method (home vs pickupPoint), payment method, totals, and line items (listingId + quantity). Use existing formatting helpers for dates and money. Verify the component's usage instructions before implementing."
         }
       ]
     }

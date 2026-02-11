@@ -29,3 +29,10 @@ export function formatICDateTime(time: bigint): string {
     minute: '2-digit'
   });
 }
+
+/**
+ * Alias for formatICTime for backward compatibility
+ */
+export function formatTimeToDate(time: bigint): string {
+  return formatICTime(time);
+}

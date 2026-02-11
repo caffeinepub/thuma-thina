@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, Users, Package, Store, FileText, MapPin } from 'lucide-react';
+import { Info, Users, Package, Store, FileText, MapPin, UserCheck, List } from 'lucide-react';
 import { useListApprovals, useSetApproval } from '@/hooks/useQueries';
+import { useListProducts } from '@/hooks/useProducts';
+import { useGlobalCatalogue } from '@/hooks/useCatalog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -18,6 +20,8 @@ import { navigate } from '@/router/HashRouter';
 
 export function AdminDashboardPage() {
   const { data: approvals, isLoading } = useListApprovals();
+  const { data: products } = useListProducts();
+  const { data: catalogue } = useGlobalCatalogue();
   const setApproval = useSetApproval();
 
   const handleApprove = async (principal: string) => {
@@ -46,22 +50,24 @@ export function AdminDashboardPage() {
 
   const pendingCount = approvals?.filter((a) => a.status === ApprovalStatus.pending).length || 0;
   const approvedCount = approvals?.filter((a) => a.status === ApprovalStatus.approved).length || 0;
+  const productsCount = products?.length || 0;
+  const listingsCount = catalogue?.reduce((sum, p) => sum + p.listings.length, 0) || 0;
 
   return (
     <div className="container-custom py-8">
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage the Thuma Thina platform
-          </p>
+          <p className="text-muted-foreground">Manage the Thuma Thina platform</p>
         </div>
 
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>Platform Development Status</AlertTitle>
           <AlertDescription>
-            The full admin console is being implemented. Currently available: user approval management and towns management. Coming soon: product catalog, retailer management, listings, and application reviews.
+            The full admin console is being implemented. Currently available: user approval management, towns
+            management, town application reviews, product catalogue, listings management, and retailer
+            management.
           </AlertDescription>
         </Alert>
 
@@ -87,25 +93,23 @@ export function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="opacity-50">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Products</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              <div className="text-2xl font-bold">{productsCount}</div>
             </CardContent>
           </Card>
 
-          <Card className="opacity-50">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Retailers</CardTitle>
-              <Store className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Listings</CardTitle>
+              <List className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              <div className="text-2xl font-bold">{listingsCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -114,17 +118,13 @@ export function AdminDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>User Approvals</CardTitle>
-            <CardDescription>
-              Manage user access to the platform
-            </CardDescription>
+            <CardDescription>Manage user access to the platform</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : !approvals || approvals.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No approval requests yet
-              </div>
+              <div className="text-center py-8 text-muted-foreground">No approval requests yet</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -200,28 +200,62 @@ export function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="opacity-50">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/town-applications')}
+          >
             <CardHeader>
-              <Package className="h-8 w-8 text-muted-foreground mb-2" />
-              <CardTitle>Product Management</CardTitle>
-              <CardDescription>Coming soon</CardDescription>
+              <UserCheck className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Town Applications</CardTitle>
+              <CardDescription>Available now</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Create and manage the global product catalog
+                Review and approve additional town membership requests
               </p>
             </CardContent>
           </Card>
 
-          <Card className="opacity-50">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/products')}
+          >
             <CardHeader>
-              <Store className="h-8 w-8 text-muted-foreground mb-2" />
+              <Package className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Product Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Manage the universal product catalogue</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/listings')}
+          >
+            <CardHeader>
+              <List className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Listings Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Link products to retailers with prices</p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/retailers')}
+          >
+            <CardHeader>
+              <Store className="h-8 w-8 text-primary mb-2" />
               <CardTitle>Retailer Management</CardTitle>
-              <CardDescription>Coming soon</CardDescription>
+              <CardDescription>Available now</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Register and manage retailers across South Africa
+                Register and manage retailers across all towns
               </p>
             </CardContent>
           </Card>
@@ -229,25 +263,12 @@ export function AdminDashboardPage() {
           <Card className="opacity-50">
             <CardHeader>
               <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-              <CardTitle>Listings Management</CardTitle>
-              <CardDescription>Coming soon</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Create retailer-specific product listings with pricing
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="opacity-50">
-            <CardHeader>
-              <Users className="h-8 w-8 text-muted-foreground mb-2" />
               <CardTitle>Role Applications</CardTitle>
               <CardDescription>Coming soon</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Review and approve driver, shopper, and pickup point applications
+                Review driver, shopper, and pickup point applications
               </p>
             </CardContent>
           </Card>

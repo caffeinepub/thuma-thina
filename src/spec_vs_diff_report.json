@@ -1,77 +1,121 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T16:19:54.863Z",
-  "summary": "Frontend towns hooks, an Admin Towns page, and an /admin/towns route were added. However, the diff summary does not provide evidence that the backend Motoko actor actually implements the persistent Towns model and admin-only CRUD methods required. There are also multiple unrelated frontend theme/UI enhancements and an empty migration module added without clear need.",
+  "generatedAt": "2026-02-11T13:27:37.859Z",
+  "summary": "Diff adds a Motoko migration and substantial frontend wiring for listings, catalogue, cart, and checkout. However, the backend diff excerpt only clearly shows new/updated listing-related types and migration plumbing; the required backend behaviours (admin CRUD enforcement, promo-active pricing rule, shopper catalogue filtering, and order creation/stock decrement) are not evidenced in the provided backend diff summary. The diff also includes many unrelated UI/theme/landing-page changes not requested by the BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Implement persistent Towns data model and storage in the Motoko main actor (unique id, name, province, created/updated timestamps, removal/soft-delete state) that persists across upgrades.",
-      "reason": "The backend/main.mo diff is truncated and only shows addition of `type TownId = Nat;` but no evidence of a Town record type, stable storage variables (e.g., stable var), timestamp handling, or soft-delete/removal state implementation. The added migration is a no-op, which also does not evidence state preservation for towns.",
+      "id": "REQ-7",
+      "requirement": "Backend uniqueness enforcement for one listing per (retailerId, productId) with clear trap message, and deterministic promo-active pricing rule.",
+      "reason": "backend/main.mo excerpt shows new Listing/Promo types, but no evidence of uniqueness index/checks or promo-active evaluation logic in the provided diff summary.",
       "evidence": [
-        "backend/main.mo",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Backend admin-only CRUD APIs for listings (create/update/delete/list with filters) and non-admin rejection.",
+      "reason": "Frontend hooks call actor methods (e.g., listAllListings/createListing/updateListing/deleteListing), but the backend diff excerpt does not show these method implementations or any admin authorization checks for them.",
+      "evidence": [
+        "frontend/src/hooks/useListings.ts",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Backend shopper-facing catalogue query API returning products augmented with only orderable listings and promo pricing data (activePrice + savings).",
+      "reason": "Frontend calls actor.getCatalogue() and expects ShopProduct/ShopListing fields, but the backend diff excerpt does not show an implemented getCatalogue method nor the filtering logic (active + in-stock) described by the requirement.",
+      "evidence": [
+        "frontend/src/hooks/useCatalog.ts",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Backend order creation using listing IDs with orderability validation, active-price totals, atomic stock decrement, and customer order query APIs.",
+      "reason": "Frontend calls actor.createOrder(), actor.getMyOrders(), and actor.getOrder(), but the backend diff excerpt does not evidence these methods nor the required validation/stock decrement/total computation logic.",
+      "evidence": [
+        "frontend/src/hooks/useOrders.ts",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "requirement": "Reconstruct any newly introduced lookup/index structures for listings uniqueness (retailerId, productId) during migration.",
+      "reason": "backend/migration.mo maps old listings to new listings with promo=null and updatedAt set, but shows no reconstruction of any additional indices/lookup maps for enforcing (retailerId, productId) uniqueness.",
+      "evidence": [
         "backend/migration.mo"
       ]
     },
     {
-      "id": "REQ-2",
-      "requirement": "Add backend methods for towns management with admin-only authorization: list, create, update, remove; non-admin must trap/clear error; list includes removal state.",
-      "reason": "No backend method implementations for `listTowns`, `createTown`, `updateTown`, or `removeTown` are shown in the diff summary. While the frontend now calls these methods, there is no evidence in backend/main.mo (within provided truncated content) of these functions or admin-authorization checks/traps.",
+      "id": "REQ-12",
+      "requirement": "Frontend admin listings UI validation/error handling for duplicate retailer+product listings and promo field validation.",
+      "reason": "Admin page and dialog show toast usage, but the provided excerpts do not show handling of duplicate retailer+product backend trap messages specifically (mapping to user-friendly toast), and useListings.ts is truncated before promo/validation-related mutations complete.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useTowns.ts"
+        "frontend/src/pages/admin/AdminManageListingsPage.tsx (truncated)",
+        "frontend/src/components/admin/ListingEditDialog.tsx (truncated)",
+        "frontend/src/hooks/useListings.ts (truncated)"
       ]
     },
     {
-      "id": "REQ-5",
-      "requirement": "Expose navigation to the new Admin Towns page by adding an admin route and linking to it from the admin area UI (e.g., existing Admin dashboard).",
-      "reason": "A new route `/admin/towns` is present, but the provided AdminDashboardPage diff snippet does not show a visible link/button that navigates to `/admin/towns` (only an informational alert mentions towns management). Because the file is truncated, evidence of the required navigation link is not present.",
+      "id": "REQ-13",
+      "requirement": "Listing editor prevents promo price >= normal price and displays computed savings (normal - promo).",
+      "reason": "ListingEditDialog adds promo inputs and loads promo state, but the excerpt does not show the savings calculation UI nor the validation preventing promoPrice >= normalPrice.",
       "evidence": [
-        "frontend/src/router/HashRouter.tsx",
-        "frontend/src/pages/shop/AdminDashboardPage.tsx"
+        "frontend/src/components/admin/ListingEditDialog.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-15",
+      "requirement": "Checkout shows clear user-facing error if backend validation fails (e.g., item became out-of-stock) without crashing.",
+      "reason": "CheckoutPage catches errors and displays a generic toast; the excerpt does not show specific handling for out-of-stock errors or mapping backend trap messages into clearer customer-facing messages.",
+      "evidence": [
+        "frontend/src/pages/shop/CheckoutPage.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added backend migration module despite no demonstrated need; migration is a no-op.",
-      "reason": "BuildRequest constraint says to generate backend/migration.mo changes only if required to preserve existing state during upgrade. The diff adds `backend/migration.mo` but it contains an empty `OldActor` and returns `{}` without migrating anything, suggesting an unrequested/unnecessary addition.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Broad frontend theme/visual system changes described as a warm African-inspired OKLCH color system and additional Tailwind utilities.",
-      "reason": "The BuildRequest only requested a coherent non-blue/non-purple treatment specifically for the Admin Towns page. The diff summary indicates global styling/theme changes (index.css, tailwind.config.js) beyond the Admin Towns page scope.",
+      "description": "Broad UI/theme redesign and landing-page enhancements (African-inspired color system, shadows, typography, hero/landing changes) beyond wiring listings/catalogue/checkout.",
+      "reason": "Not requested in BuildRequest; appears as additional styling/marketing changes.",
       "evidence": [
         "frontend-file-summaries.txt"
       ]
     },
     {
-      "description": "Unrelated enhancements/changes to multiple shop pages and components (landing hero, retailer list/catalog pages, product detail, request-new-product page, layout/header/footer, etc.).",
-      "reason": "Non-goal/scope indicates this build is towns module only; these broader UI/page changes are not requested by REQ-1..REQ-6.",
+      "description": "Addition of generated logo/hero assets in frontend/public/assets/generated.",
+      "reason": "BuildRequest did not request new branding assets.",
       "evidence": [
         "frontend-file-summaries.txt"
       ]
     },
     {
-      "description": "Changes to React Query hooks unrelated to towns (useQueries.ts) including removal of user profile hooks referencing unimplemented backend methods.",
-      "reason": "Not part of requested towns CRUD module scope; BuildRequest does not ask to refactor other query hooks.",
+      "description": "New/expanded retailer portal hooks (getMyRetailer, getMyRetailerInventory, getMyRetailerOrders).",
+      "reason": "BuildRequest scope focuses on listings admin, shopper catalogue, and checkout orderability; retailer portal APIs/hooks were not requested.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/hooks/useRetailerPortal.ts"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useTowns.ts",
-    "frontend/src/pages/admin/AdminTownsPage.tsx",
-    "frontend/src/pages/shop/AdminDashboardPage.tsx",
-    "frontend/src/router/HashRouter.tsx",
+    "frontend/src/components/admin/ListingEditDialog.tsx",
+    "frontend/src/components/admin/SearchableSelect.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
+    "frontend/src/components/shop/cart/CartProvider.tsx",
+    "frontend/src/hooks/useCatalog.ts",
+    "frontend/src/hooks/useListings.ts",
+    "frontend/src/hooks/useOrders.ts",
+    "frontend/src/hooks/useRetailerPortal.ts",
+    "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+    "frontend/src/pages/shop/CartPage.tsx",
+    "frontend/src/pages/shop/CataloguePage.tsx",
+    "frontend/src/pages/shop/CheckoutPage.tsx",
+    "frontend/src/pages/shop/MyOrdersPage.tsx",
+    "frontend/src/pages/shop/OrderDetailPage.tsx",
     "project_state.json"
   ]
 }

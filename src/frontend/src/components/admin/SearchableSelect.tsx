@@ -21,6 +21,7 @@ export interface SearchableSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function SearchableSelect({
@@ -28,6 +29,7 @@ export function SearchableSelect({
   value,
   onValueChange,
   placeholder = 'Select...',
+  disabled = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
 
@@ -41,6 +43,7 @@ export function SearchableSelect({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={disabled}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

@@ -7,28 +7,171 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export class ExternalBlob {
+    getBytes(): Promise<Uint8Array<ArrayBuffer>>;
+    getDirectURL(): string;
+    static fromURL(url: string): ExternalBlob;
+    static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
+    withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
+}
+export type OrderId = bigint;
+export interface ShopListing {
+    activePrice: bigint;
+    isPromoActive: boolean;
+    listingId: ListingId;
+    normalPrice: bigint;
+    retailerName: string;
+    stock: bigint;
+    savings?: bigint;
+    retailerId: RetailerId;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+}
+export type Time = bigint;
+export interface Retailer {
+    id: RetailerId;
+    province: string;
+    name: string;
+    createdAt: Time;
+    email: string;
+    updatedAt: Time;
+    address: string;
+    openingHours: OpeningHours;
+    phone: string;
+    townSuburb: string;
+}
+export interface WeekdayTimeRange {
+    day: bigint;
+    closeTime: bigint;
+    openTime: bigint;
+}
+export interface OpeningHours {
+    holidayOverrides: Array<HolidayOverride>;
+    weeklySchedule: Array<WeekdayTimeRange>;
+}
+export type OrderStatus = {
+    __kind__: "inDelivery";
+    inDelivery: {
+        driverId: Principal;
+    };
+} | {
+    __kind__: "assigned";
+    assigned: {
+        shopperId: Principal;
+    };
+} | {
+    __kind__: "cancelled";
+    cancelled: string;
+} | {
+    __kind__: "pending";
+    pending: null;
+} | {
+    __kind__: "purchased";
+    purchased: null;
+} | {
+    __kind__: "delivered";
+    delivered: null;
+} | {
+    __kind__: "ready";
+    ready: null;
+};
+export type ListingId = bigint;
+export interface PromoDetails {
+    endDate?: Time;
+    price: bigint;
+    startDate: Time;
+}
+export interface HolidayOverride {
+    closeTime?: bigint;
+    date: Time;
+    name: string;
+    isOpen: boolean;
+    openTime?: bigint;
+}
+export type RetailerId = bigint;
+export interface NewListing {
+    id: ListingId;
+    status: ListingStatus;
+    createdAt: Time;
+    productId: ProductId;
+    updatedAt: Time;
+    stock: bigint;
+    price: bigint;
+    promo?: PromoDetails;
+    retailerId: RetailerId;
+}
+export interface OrderRecord {
+    id: OrderId;
+    status: OrderStatus;
+    paymentMethod: PaymentMethod;
+    customer: Principal;
+    createdAt: Time;
+    deliveryMethod: DeliveryMethod;
+    updatedAt: Time;
+    totalAmount: bigint;
+    items: Array<CartItem>;
+}
+export type DeliveryMethod = {
+    __kind__: "home";
+    home: {
+        address: string;
+    };
+} | {
+    __kind__: "pickupPoint";
+    pickupPoint: {
+        pointId: bigint;
+    };
+};
+export interface RetailerInput {
+    province: string;
+    name: string;
+    email: string;
+    address: string;
+    openingHours: OpeningHours;
+    phone: string;
+    townSuburb: string;
+}
 export interface UserApprovalInfo {
     status: ApprovalStatus;
     principal: Principal;
 }
-export type Time = bigint;
-export type TownId = bigint;
-export interface Town {
-    id: TownId;
-    status: TownStatus;
-    province: string;
+export interface ShopProduct {
+    id: ProductId;
+    listings: Array<ShopListing>;
     name: string;
-    createdAt: Time;
-    updatedAt: Time;
+    description: string;
+    image?: ExternalBlob;
+}
+export type ProductId = bigint;
+export interface CartItem {
+    listingId: ListingId;
+    quantity: bigint;
+}
+export interface Product {
+    id: ProductId;
+    imageRefs: Array<ExternalBlob>;
+    name: string;
+    description: string;
+    preferredImage?: ExternalBlob;
+    category: string;
 }
 export enum ApprovalStatus {
     pending = "pending",
     approved = "approved",
     rejected = "rejected"
 }
-export enum TownStatus {
+export enum ListingStatus {
     active = "active",
-    removed = "removed"
+    discontinued = "discontinued",
+    outOfStock = "outOfStock"
+}
+export enum PaymentMethod {
+    icp = "icp",
+    zar = "zar",
+    nomayini = "nomayini"
 }
 export enum UserRole {
     admin = "admin",
@@ -37,15 +180,43 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createTown(name: string, province: string): Promise<Town>;
-    getActiveTowns(): Promise<Array<Town>>;
+    associateRetailerPrincipal(principal: Principal, retailerId: RetailerId): Promise<void>;
+    createCategory(category: string): Promise<void>;
+    createListing(retailerId: RetailerId, productId: ProductId, price: bigint, stock: bigint): Promise<NewListing>;
+    createOrder(items: Array<CartItem>, deliveryMethod: DeliveryMethod, paymentMethod: PaymentMethod): Promise<OrderRecord>;
+    createProduct(name: string, description: string, image: ExternalBlob, category: string): Promise<Product>;
+    createRetailer(input: RetailerInput): Promise<Retailer>;
+    deleteListing(id: ListingId): Promise<void>;
+    deleteRetailer(id: RetailerId): Promise<void>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCatalogue(): Promise<Array<ShopProduct>>;
+    getListing(id: ListingId): Promise<NewListing | null>;
+    getMyOrders(): Promise<Array<OrderRecord>>;
+    getMyRetailer(): Promise<Retailer | null>;
+    getMyRetailerInventory(): Promise<Array<NewListing>>;
+    getMyRetailerOrders(): Promise<Array<OrderRecord>>;
+    getOrder(orderId: OrderId): Promise<OrderRecord | null>;
+    getRetailer(id: RetailerId): Promise<Retailer | null>;
+    getRetailerListings(retailerId: RetailerId): Promise<Array<NewListing>>;
+    getRetailerPrincipalMapping(principal: Principal): Promise<RetailerId | null>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
+    listAllListings(): Promise<Array<NewListing>>;
+    listAllOrders(): Promise<Array<OrderRecord>>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
-    listTowns(): Promise<Array<Town>>;
-    removeTown(id: TownId): Promise<Town>;
+    listCategories(): Promise<Array<string>>;
+    listProducts(): Promise<Array<Product>>;
+    listRetailers(): Promise<Array<Retailer>>;
+    removePromo(id: ListingId): Promise<NewListing>;
+    removeRetailerPrincipal(principal: Principal): Promise<void>;
     requestApproval(): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
-    updateTown(id: TownId, name: string, province: string): Promise<Town>;
+    setPromo(id: ListingId, price: bigint, startDate: Time, endDate: Time | null): Promise<NewListing>;
+    updateListing(id: ListingId, price: bigint, stock: bigint, status: ListingStatus): Promise<NewListing>;
+    updateOrderStatus(orderId: OrderId, status: OrderStatus): Promise<OrderRecord>;
+    updateProduct(id: ProductId, name: string, description: string, category: string): Promise<Product>;
+    updateRetailer(id: RetailerId, input: RetailerInput): Promise<Retailer>;
 }

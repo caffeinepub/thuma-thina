@@ -10,8 +10,15 @@ import { RequireAuth } from '@/components/auth/RequireAuth';
 import { RequireAdmin } from '@/components/auth/RequireAdmin';
 import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
 import { AdminTownsPage } from '@/pages/admin/AdminTownsPage';
+import { AdminTownApplicationsPage } from '@/pages/admin/AdminTownApplicationsPage';
+import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
+import { AdminManageListingsPage } from '@/pages/admin/AdminManageListingsPage';
+import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
 import { JoinUsPage } from '@/pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from '@/pages/shop/RoleApplicationsStatusPage';
+import { MyTownsPage } from '@/pages/shop/MyTownsPage';
+import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
+import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
 
 export function HashRouter() {
   const [currentPath, setCurrentPath] = useState(window.location.hash.slice(1) || '/');
@@ -47,6 +54,63 @@ export function HashRouter() {
       );
     }
 
+    if (currentPath === '/admin/town-applications') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminTownApplicationsPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/products') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminProductsPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/listings') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminManageListingsPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/retailers') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminRetailersPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    // Retailer routes
+    if (currentPath === '/retailer') {
+      return (
+        <RequireAuth>
+          <RetailerDashboardPage />
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/retailer/orders') {
+      return (
+        <RequireAuth>
+          <RetailerOrderTrackingPage />
+        </RequireAuth>
+      );
+    }
+
     // Application routes
     if (currentPath === '/join-us') {
       return (
@@ -60,6 +124,15 @@ export function HashRouter() {
       return (
         <RequireAuth>
           <RoleApplicationsStatusPage />
+        </RequireAuth>
+      );
+    }
+
+    // User town management
+    if (currentPath === '/my-towns') {
+      return (
+        <RequireAuth>
+          <MyTownsPage />
         </RequireAuth>
       );
     }

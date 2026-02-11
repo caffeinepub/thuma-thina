@@ -1,27 +1,24 @@
 import { useState } from 'react';
 import { useCart } from '@/components/shop/cart/CartProvider';
 import { useCreateOrder } from '@/hooks/useOrders';
-import { useGetCallerUserProfile } from '@/hooks/useUserProfiles';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle2, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { navigate } from '@/router/HashRouter';
+import { toast } from 'sonner';
 
 export function CheckoutPage() {
   const { items, getTotalAmount, clearCart } = useCart();
-  const { data: userProfile } = useGetCallerUserProfile();
   const createOrder = useCreateOrder();
 
   const [deliveryType, setDeliveryType] = useState<'home' | 'pickupPoint'>('home');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [pickupPointId, setPickupPointId] = useState('');
   const [paymentType, setPaymentType] = useState<'zar' | 'icp' | 'nomayini'>('zar');
-  const [beneficiaryName, setBeneficiaryName] = useState('');
-  const [beneficiaryContact, setBeneficiaryContact] = useState('');
 
   const formatPrice = (price: number) => `R ${price.toFixed(2)}`;
 
@@ -29,22 +26,36 @@ export function CheckoutPage() {
     e.preventDefault();
 
     if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (deliveryType === 'home' && !deliveryAddress.trim()) {
+      toast.error('Please enter a delivery address');
+      return;
+    }
+
+    if (deliveryType === 'pickupPoint' && !pickupPointId.trim()) {
+      toast.error('Please enter a pickup point ID');
       return;
     }
 
     try {
       await createOrder.mutateAsync({
-        items,
+        items: items.map((item) => ({
+          listingId: item.listingId,
+          quantity: item.quantity,
+        })),
         deliveryType,
         deliveryAddress,
         pickupPointId,
         paymentType,
-        beneficiaryName,
-        beneficiaryContact,
       });
       clearCart();
-    } catch (error) {
+      toast.success('Order placed successfully!');
+    } catch (error: any) {
       console.error('Order creation failed:', error);
+      toast.error(error.message || 'Failed to place order. Please try again.');
     }
   };
 
@@ -86,13 +97,6 @@ export function CheckoutPage() {
   return (
     <div className="container-custom py-8">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-
-      <Alert className="mb-6">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Checkout functionality will be fully available once the backend is implemented.
-        </AlertDescription>
-      </Alert>
 
       <form onSubmit={handleSubmit}>
         <div className="grid lg:grid-cols-3 gap-8">
@@ -191,12 +195,7 @@ export function CheckoutPage() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={createOrder.isPending}
-                >
+                <Button type="submit" className="w-full" size="lg" disabled={createOrder.isPending}>
                   {createOrder.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -209,8 +208,9 @@ export function CheckoutPage() {
 
                 {createOrder.isError && (
                   <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Order placement will be available once the backend is implemented.
+                      {createOrder.error?.message || 'Failed to place order. Please try again.'}
                     </AlertDescription>
                   </Alert>
                 )}

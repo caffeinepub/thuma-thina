@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { catalogKeys } from './useCatalog';
+import { categoryKeys } from './useCategories';
+import type { Product, ProductId, ExternalBlob } from '@/backend';
 
 export const productKeys = {
   all: ['products'] as const,
@@ -9,14 +12,14 @@ export const productKeys = {
   detail: (id: number) => [...productKeys.details(), id] as const,
 };
 
-// Placeholder hooks - backend methods not yet implemented
 export function useListProducts() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery({
+  return useQuery<Product[]>({
     queryKey: productKeys.lists(),
     queryFn: async () => {
-      return [];
+      if (!actor) throw new Error('Actor not available');
+      return actor.listProducts();
     },
     enabled: !!actor && !actorFetching,
   });
@@ -24,13 +27,15 @@ export function useListProducts() {
 
 export function useGetProduct(id: number) {
   const { actor, isFetching: actorFetching } = useActor();
+  const { data: products } = useListProducts();
 
-  return useQuery({
+  return useQuery<Product | null>({
     queryKey: productKeys.detail(id),
     queryFn: async () => {
-      return null;
+      if (!products) return null;
+      return products.find((p) => Number(p.id) === id) || null;
     },
-    enabled: !!actor && !actorFetching && id > 0,
+    enabled: !!actor && !actorFetching && id > 0 && !!products,
   });
 }
 
@@ -41,18 +46,22 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: async ({
       name,
-      category,
       description,
+      image,
+      category,
     }: {
       name: string;
-      category: string;
       description: string;
+      image: ExternalBlob;
+      category: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
+      return actor.createProduct(name, description, image, category);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
+      queryClient.invalidateQueries({ queryKey: catalogKeys.all });
+      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
     },
   });
 }
@@ -65,35 +74,22 @@ export function useUpdateProduct() {
     mutationFn: async ({
       id,
       name,
-      category,
       description,
+      category,
     }: {
-      id: number;
+      id: ProductId;
       name: string;
-      category: string;
       description: string;
+      category: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
+      return actor.updateProduct(id, name, description, category);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(Number(variables.id)) });
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-    },
-  });
-}
-
-export function useDeleteProduct() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: number) => {
-      if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      queryClient.invalidateQueries({ queryKey: catalogKeys.all });
+      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
     },
   });
 }

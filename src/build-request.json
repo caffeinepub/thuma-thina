@@ -1,144 +1,215 @@
 {
   "kind": "build_request",
-  "title": "Admin towns management module (CRUD) for curated towns list",
+  "title": "Implement Listings Module with Promo Pricing, Active Catalogue, and Checkout Orderability",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Implement persistent Towns data model and storage in the Motoko main actor, including an admin-curated list of towns with fields sufficient for admin management (at minimum: unique identifier, town name, province, created/updated timestamps, and a removal state that supports “remove towns” without breaking referential integrity later).",
+      "id": "REQ-7",
+      "text": "Extend the backend listings domain model to support admin-managed retailer pricing with optional promo pricing, including: (a) one listing per (retailerId, productId), (b) normal price, (c) optional promo price, (d) promo start date, (e) promo end date that can be indefinite, and (f) logic to determine whether the promo price is currently active.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "recent-6",
+          "recent-7",
+          "recent-9"
         ],
         "quotes": [
-          "add only towns management now",
-          "the admin will populate a list of towns where we are acting and users choose from these towns"
+          "each retailer can have one price for a product, but they can run promos at which point the normal price is visible but not active and promo price is active if you can display how much is saved",
+          "lets do both , by default it should have start/end dates but it end date can be indefinate so admin has to come and turn off",
+          "Admin lists items by linking registered retailers with products from the global catalogue, then inputs retailer price for that product then product becomes available to order and check out"
         ]
       },
       "acceptanceCriteria": [
-        "Towns are stored in canister state and persist across canister upgrades (no data loss on redeploy/upgrade).",
-        "Each town has a stable unique identifier (not derived solely from name/province).",
-        "Removing a town is supported in a way that allows it to be excluded from active lists while still being retained in state for future linking/audit use.",
-        "Timestamps are set server-side."
+        "Backend compiles with updated Listing-related types.",
+        "A listing can represent one normal price and an optional promo price with start/end time windows; end can be absent/indefinite.",
+        "The backend enforces uniqueness so a retailer cannot create multiple listings for the same product (attempts fail with a clear trap message).",
+        "There is a single, deterministic backend rule for which price is active (promo active only when promo price exists and current time is within the configured window, or manually toggled off by clearing promo/marking inactive)."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Add backend methods for towns management with admin-only authorization: list towns, create town, update town, and remove town. These methods must trap with a clear error when called by a non-admin.",
+      "id": "REQ-8",
+      "text": "Implement backend admin-only CRUD APIs for listings: create listing, update listing (including promo fields and status), delete listing, and list listings (all and by retailer/product filters as needed by the current frontend).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "recent-9"
         ],
         "quotes": [
-          "only the towns module for now, where admins can add, edit, and remove towns",
-          "the admin will populate a list of towns"
+          "now lets build the listings module. Admin lists items by linking registered retailers with products from the global catalogue, then inputs retailer price for that product"
         ]
       },
       "acceptanceCriteria": [
-        "Non-admin callers cannot create/update/remove towns (calls trap/return error).",
-        "Admin callers can create a town, see it in list results, update it, and remove it.",
-        "List method returns a consistent shape used by the frontend (including removal state so UI can hide removed towns by default)."
+        "Admin can create a listing by selecting an existing retailerId and productId and setting prices/stock/status.",
+        "Admin can update listing fields including promo pricing fields and status.",
+        "Admin can delete a listing.",
+        "Admin can query/list listings for the AdminManageListingsPage without placeholder returns.",
+        "Non-admin callers are rejected for listing admin operations."
       ]
     },
     {
-      "id": "REQ-3",
-      "text": "Update the existing React Query towns hooks (frontend/src/hooks/useTowns.ts) to call the new backend towns methods instead of placeholder implementations, including cache invalidation using the existing townKeys.",
-      "target": "frontend",
+      "id": "REQ-9",
+      "text": "Implement backend shopper-facing catalogue query API that returns the global catalogue augmented with retailer listings, exposing only listings that are orderable to customers (active and in-stock), and includes enough pricing data for the frontend to display the active price and the savings vs normal price when a promo is active.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "recent-7",
+          "recent-8"
         ],
         "quotes": [
-          "add only towns management now",
-          "build"
+          "customers only see active listings",
+          "if item is out of stock it cannot be ordered"
         ]
       },
       "acceptanceCriteria": [
-        "useListTowns returns backend data (not an empty array) when the actor is available.",
-        "useCreateTown triggers backend create and invalidates towns queries on success.",
-        "A new update-town mutation hook exists (or equivalent) and invalidates towns queries on success.",
-        "useDeleteTown (or remove-town) triggers backend remove and invalidates towns queries on success."
+        "A shopper/guest can call a backend catalogue method that returns products with a list of orderable listings.",
+        "Listings returned to shoppers exclude out-of-stock items (stock == 0) and exclude non-active listings.",
+        "For promo-active listings, the response includes normal price and promo price such that the frontend can display a ‘you save’ amount (normal - promo).",
+        "For non-promo listings, the response yields the normal price as the active price."
       ]
     },
     {
-      "id": "REQ-4",
-      "text": "Add an Admin Towns management page (new React page component) that allows admins to: view the current towns list, add a town, edit a town, and remove a town, with basic validation (required name and province) and a confirmation step for removal.",
-      "target": "frontend",
+      "id": "REQ-10",
+      "text": "Implement backend order creation to support checkout for customers using listing IDs and quantities, validating that each requested listing is currently orderable (active and in-stock), computing total amount using the active price (promo if active), decrementing stock atomically, and storing the order record with delivery method supporting pickup points.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "recent-9",
+          "recent-7"
         ],
         "quotes": [
-          "only the towns module for now, where admins can add, edit, and remove towns",
-          "the admin will populate a list of towns"
+          "then product becomes available to order and check out for random customers and pick up points.",
+          "if item is out of stock it cannot be ordered"
         ]
       },
       "acceptanceCriteria": [
-        "The page is protected by the existing RequireAuth + RequireAdmin guards (non-admin cannot access).",
-        "Admins can add a town via a form/dialog and see it appear in the list without a full page refresh.",
-        "Admins can edit an existing town and see updated values reflected in the list.",
-        "Admins can remove a town with a confirmation prompt; removed towns are not shown in the default active list view (unless an explicit ‘show removed’ toggle is provided).",
-        "Errors from backend mutations are shown to the admin in clear English (toast or inline), and loading states are handled."
+        "Backend exposes an authenticated customer method to create an order with items (listingId, quantity), deliveryMethod (#home or #pickupPoint), and paymentMethod.",
+        "Order creation traps with a clear error if any item references a missing listing, a non-orderable listing, or insufficient stock.",
+        "On successful order creation, listing stock is decremented accordingly and the stored order total equals the sum of (activePrice * quantity).",
+        "Created orders are queryable by the customer (e.g., list my orders / get order detail) using backend methods that the existing frontend hooks can call."
       ]
     },
     {
-      "id": "REQ-5",
-      "text": "Expose navigation to the new Admin Towns page by adding an admin route in the hash router and linking to it from the admin area UI (e.g., from the existing Admin dashboard page).",
-      "target": "frontend",
+      "id": "REQ-11",
+      "text": "Add a conditional Motoko state migration for the listings schema change so existing canister state can upgrade safely after introducing promo-related fields and any new indices required for uniqueness (retailerId, productId).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "recent-9"
         ],
         "quotes": [
-          "build towns management workflow for admins",
-          "only the towns module for now"
+          "lets build the listings module"
         ]
       },
       "acceptanceCriteria": [
-        "A new route exists (e.g., /admin/towns) and renders the Towns admin page inside ShopLayout.",
-        "Admins can reach the Towns page from the existing /admin dashboard via a visible UI link/button.",
-        "Navigating directly to the new route respects auth/admin guards (prompt login if not authenticated; block if not admin)."
+        "backend/migration.mo is added/updated only as needed under the project’s conditional migration policy.",
+        "Upgrading from the previous deployed state does not trap due to type mismatch; existing listings (if any) are mapped to the new structure with promo fields initialized to null/disabled defaults.",
+        "Any newly introduced lookup/index structures for listings are reconstructed from existing listing records during migration."
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Apply a coherent, non-blue/non-purple visual treatment specifically for the Admin Towns page (layout, typography, spacing, and component styling) consistent with the existing app design system (shadcn + Tailwind), keeping user-facing text in English.",
+      "id": "REQ-12",
+      "text": "Wire the frontend listings hooks to real backend methods (replace placeholders) and update the admin listings UI to fully function: listings list, create, edit, and validation/error handling for duplicate retailer/product listings and promo fields.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-9"
         ],
         "quotes": [
-          "Use English for any user-facing text in the build request."
+          "build the listing module"
         ]
       },
       "acceptanceCriteria": [
-        "All labels, buttons, helper text, empty states, and error messages on the Towns admin page are in English.",
-        "The page uses a consistent style (cards/tables/dialogs) aligned with existing UI components and does not introduce a conflicting color palette."
+        "frontend/src/hooks/useListings.ts calls real actor methods for list/create/update/delete and no longer returns empty arrays or throws 'Backend method not yet implemented'.",
+        "AdminManageListingsPage no longer shows the ‘backend not yet implemented’ warning once the backend is available, and it renders live listing data.",
+        "Listing creation/edit flows succeed end-to-end and show toast errors for backend validation failures (e.g., duplicate retailer+product)."
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Update the admin listing editor UI to support promo configuration: normal price, optional promo price, promo start date/time, optional/indefinite promo end date/time, and display of calculated savings when promo price is set (normal - promo).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-6",
+          "recent-7"
+        ],
+        "quotes": [
+          "promo price is active if you can display how much is saved (difference between normal price and promo price)",
+          "by default it should have start/end dates but it end date can be indefinate so admin has to come and turn off"
+        ]
+      },
+      "acceptanceCriteria": [
+        "ListingEditDialog includes inputs for normal price and optional promo price.",
+        "ListingEditDialog includes inputs for promo start and promo end, with a clear option to mark promo end as indefinite.",
+        "When promo price is entered, the dialog displays computed savings (normal - promo) and prevents promo price >= normal price.",
+        "Submitting the form sends promo fields to the backend update/create listing methods."
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "text": "Update the shopper catalogue page to use the real backend global catalogue (products + orderable listings), correctly add items to cart using listingId (not retailerId), and display promo pricing with savings when applicable while keeping non-orderable listings disabled/hidden per backend rules.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-7",
+          "recent-9"
+        ],
+        "quotes": [
+          "customers only see active listings",
+          "then product becomes available to order and check out"
+        ]
+      },
+      "acceptanceCriteria": [
+        "frontend/src/hooks/useCatalog.ts calls the real backend catalogue method and returns live data.",
+        "CataloguePage ‘Add’ button adds the correct listingId to cart (so checkout references the listing, not the retailer).",
+        "If a promo is active, the UI shows the promo price as the main price, shows the normal price as non-active (e.g., struck-through), and shows ‘You save R…’ based on the backend-provided prices.",
+        "Listings that are not orderable are not shown, or (if present) are clearly disabled and cannot be added to cart."
+      ]
+    },
+    {
+      "id": "REQ-15",
+      "text": "Wire the checkout flow to real backend order creation and ensure the order payload uses cart listingIds, quantities, selected delivery method (including pickup point option), and payment method; show a clear user-facing error if backend validation fails (e.g., item became out-of-stock).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-9"
+        ],
+        "quotes": [
+          "then product becomes available to order and check out for random customers and pick up points."
+        ]
+      },
+      "acceptanceCriteria": [
+        "frontend/src/hooks/useOrders.ts implements createOrder by calling the backend and removes the placeholder 'Backend method not implemented' error.",
+        "CheckoutPage submits an order request using listingIds from the cart and displays backend errors in a user-friendly way without crashing.",
+        "On success, the cart is cleared and the existing success UI is shown.",
+        "If an item is out of stock at submit time, the backend rejects the order and the frontend displays that error message."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
-    "Only generate backend/migration.mo changes if required for preserving existing state during upgrade; follow the conditional migration policy.",
-    "Do not edit files in frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and anything under frontend/src/components/ui.",
-    "Do not implement linking towns to retailers/shoppers/drivers/pickup points in this build; towns module only."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional canisters/services.",
+    "Only generate backend/migration.mo if required for safe upgrade (conditional migration policy).",
+    "Do not edit frontend files under frontend/src/components/ui, frontend/src/hooks/useInternetIdentity.ts/tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or other paths listed as immutable in SYSTEM_CONTEXT.",
+    "Use English for all user-facing UI text."
   ],
   "nonGoals": [
-    "Building management modules for retailers, shoppers, drivers, or pickup points.",
-    "Adding town selection to shopper/driver/retailer/pickup point creation flows.",
-    "Implementing suburb-level management or geolocation/maps.",
-    "Third-party authentication beyond Internet Identity."
+    "Implementing third-party authentication providers (only Internet Identity is supported).",
+    "Real-time updates (no WebSockets/Socket.io).",
+    "Implementing a full pickup-point management module/UI beyond supporting pickupPoint as an order delivery method input.",
+    "Adding external databases or non-Motoko backend services."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }
