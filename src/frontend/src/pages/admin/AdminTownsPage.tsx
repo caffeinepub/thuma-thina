@@ -23,8 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Edit, Trash2, MapPin, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import { useListTowns, useCreateTown, useUpdateTown, useRemoveTown } from '@/hooks/useTowns';
 import { SearchableSelect } from '@/components/admin/SearchableSelect';
 import { SA_PROVINCES } from '@/utils/saProvinces';
@@ -132,14 +131,6 @@ export function AdminTownsPage() {
           <Button onClick={() => navigate('/admin')}>Back to Dashboard</Button>
         </div>
 
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            Towns functionality is not yet implemented in the backend. This page will be functional once the
-            backend is updated.
-          </AlertDescription>
-        </Alert>
-
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
@@ -178,19 +169,19 @@ export function AdminTownsPage() {
           <CardHeader>
             <CardTitle>{editingTown ? 'Edit Town' : 'Add New Town'}</CardTitle>
             <CardDescription>
-              {editingTown ? 'Update town information' : 'Add a new town to the platform'}
+              {editingTown ? 'Update town information' : 'Add a new town to the system'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Town Name *</Label>
                   <Input
                     id="name"
+                    placeholder="e.g., Osizweni"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter town name"
                     disabled={createTown.isPending || updateTown.isPending}
                   />
                 </div>
@@ -202,6 +193,7 @@ export function AdminTownsPage() {
                     value={province}
                     onValueChange={setProvince}
                     placeholder="Select province"
+                    disabled={createTown.isPending || updateTown.isPending}
                   />
                 </div>
               </div>
@@ -209,12 +201,28 @@ export function AdminTownsPage() {
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  disabled={createTown.isPending || updateTown.isPending || !name.trim() || !province}
+                  disabled={createTown.isPending || updateTown.isPending}
                 >
-                  {editingTown ? 'Update Town' : 'Add Town'}
+                  {editingTown ? (
+                    <>
+                      <Edit className="mr-2 h-4 w-4" />
+                      {updateTown.isPending ? 'Updating...' : 'Update Town'}
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      {createTown.isPending ? 'Creating...' : 'Create Town'}
+                    </>
+                  )}
                 </Button>
+
                 {editingTown && (
-                  <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={createTown.isPending || updateTown.isPending}
+                  >
                     Cancel
                   </Button>
                 )}
@@ -226,31 +234,28 @@ export function AdminTownsPage() {
         {/* Towns List */}
         <Card>
           <CardHeader>
-            <CardTitle>Towns</CardTitle>
+            <CardTitle>Towns List</CardTitle>
             <CardDescription>View and manage all towns</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'active' | 'removed')}>
-              <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsList>
                 <TabsTrigger value="active">Active ({activeTowns.length})</TabsTrigger>
                 <TabsTrigger value="removed">Removed ({removedTowns.length})</TabsTrigger>
               </TabsList>
 
-              <TabsContent value={activeTab}>
+              <TabsContent value={activeTab} className="mt-4">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading towns...</div>
                 ) : displayTowns.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      {activeTab === 'active' ? 'No active towns yet' : 'No removed towns'}
-                    </p>
+                  <div className="text-center py-8 text-muted-foreground">
+                    No {activeTab} towns found
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Town</TableHead>
+                        <TableHead>Name</TableHead>
                         <TableHead>Province</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -268,17 +273,23 @@ export function AdminTownsPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleEdit(town)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
                               {town.status === 'active' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteClick(town.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEdit(town)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteClick(town.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </TableCell>
@@ -291,24 +302,24 @@ export function AdminTownsPage() {
             </Tabs>
           </CardContent>
         </Card>
-
-        <AlertDialog open={!!deleteTownId} onOpenChange={() => setDeleteTownId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove Town</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to remove this town? This action can be reversed later.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm} disabled={removeTown.isPending}>
-                {removeTown.isPending ? 'Removing...' : 'Remove'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTownId} onOpenChange={() => setDeleteTownId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Town</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this town? This action will soft-delete the town and it will no
+              longer be available for new memberships.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Remove</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

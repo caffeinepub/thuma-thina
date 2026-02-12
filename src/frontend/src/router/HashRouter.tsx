@@ -14,8 +14,13 @@ import { AdminTownApplicationsPage } from '@/pages/admin/AdminTownApplicationsPa
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
 import { AdminManageListingsPage } from '@/pages/admin/AdminManageListingsPage';
 import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
+import { AdminDriversPage } from '@/pages/admin/AdminDriversPage';
+import { AdminShoppersPage } from '@/pages/admin/AdminShoppersPage';
+import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
+import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
 import { JoinUsPage } from '@/pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from '@/pages/shop/RoleApplicationsStatusPage';
+import { ShopperApplicationPage } from '@/pages/shop/ShopperApplicationPage';
 import { MyTownsPage } from '@/pages/shop/MyTownsPage';
 import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
 import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
@@ -94,6 +99,46 @@ export function HashRouter() {
       );
     }
 
+    if (currentPath === '/admin/drivers') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminDriversPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/shoppers') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminShoppersPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/orders') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminOrdersPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/admin/settings') {
+      return (
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminSettingsPage />
+          </RequireAdmin>
+        </RequireAuth>
+      );
+    }
+
     // Retailer routes
     if (currentPath === '/retailer') {
       return (
@@ -116,6 +161,14 @@ export function HashRouter() {
       return (
         <RequireAuth>
           <JoinUsPage />
+        </RequireAuth>
+      );
+    }
+
+    if (currentPath === '/join-us/shopper-application') {
+      return (
+        <RequireAuth>
+          <ShopperApplicationPage />
         </RequireAuth>
       );
     }

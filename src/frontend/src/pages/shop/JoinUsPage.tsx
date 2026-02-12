@@ -18,7 +18,7 @@ export function JoinUsPage() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Application system is being implemented. You'll be able to apply as a driver, personal shopper, or pickup point operator soon.
+            Personal Shopper applications are now available! Driver and Pickup Point applications coming soon.
           </AlertDescription>
         </Alert>
 
@@ -57,8 +57,8 @@ export function JoinUsPage() {
                 <li>• Earn NomaYini rewards</li>
                 <li>• Help your neighbors</li>
               </ul>
-              <Button className="w-full" disabled>
-                Apply as Shopper (Coming Soon)
+              <Button className="w-full" onClick={() => navigate('/join-us/shopper-application')}>
+                Apply as Shopper
               </Button>
             </CardContent>
           </Card>

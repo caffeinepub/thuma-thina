@@ -1,23 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserRole } from '../backend';
+import type { UserProfile } from '../backend';
 import { Principal } from '@icp-sdk/core/principal';
 
 export const userProfileKeys = {
   all: ['userProfiles'] as const,
   caller: () => [...userProfileKeys.all, 'caller'] as const,
   detail: (user: Principal) => [...userProfileKeys.all, 'detail', user.toString()] as const,
-  byRole: (role: UserRole) => [...userProfileKeys.all, 'byRole', role] as const,
 };
 
-// Placeholder hooks - backend methods not yet implemented
+// Get caller's user profile
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  const query = useQuery({
+  const query = useQuery<UserProfile | null>({
     queryKey: userProfileKeys.caller(),
     queryFn: async () => {
-      return null;
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
     retry: false,
@@ -30,14 +30,15 @@ export function useGetCallerUserProfile() {
   };
 }
 
+// Save caller's user profile
 export function useSaveUserProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (profile: any) => {
+    mutationFn: async (profile: UserProfile) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not implemented');
+      await actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userProfileKeys.caller() });
@@ -45,25 +46,15 @@ export function useSaveUserProfile() {
   });
 }
 
+// Get specific user's profile (admin or self only)
 export function useGetUserProfile(user: Principal) {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery({
+  return useQuery<UserProfile | null>({
     queryKey: userProfileKeys.detail(user),
     queryFn: async () => {
-      return null;
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useListUsersByRole(role: UserRole) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery({
-    queryKey: userProfileKeys.byRole(role),
-    queryFn: async () => {
-      return [];
+      if (!actor) throw new Error('Actor not available');
+      return actor.getUserProfile(user);
     },
     enabled: !!actor && !actorFetching,
   });

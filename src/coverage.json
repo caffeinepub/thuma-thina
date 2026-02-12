@@ -1,104 +1,32 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T13:27:37.863Z",
+  "generatedAt": "2026-02-12T11:29:50.979Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 4,
+    "total": 3,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "Implement backend order creation to support checkout for customers using listing IDs and quantities, validating that each requested listing is currently orderable (active and in-stock), computing total amount using the active price (promo if active), decrementing stock atomically, and storing the order record with delivery method supporting pickup points.",
+        "id": "REQ-20",
+        "summary": "Add backend canister methods in `backend/main.mo` to allow authenticated users to submit a Pickup Point application and persist it in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-11",
-        "summary": "Add a conditional Motoko state migration for the listings schema change so existing canister state can upgrade safely after introducing promo-related fields and any new indices required for uniqueness (retailerId, productId).",
+        "id": "REQ-21",
+        "summary": "Add backend admin query methods in `backend/main.mo` to list pending Pickup Point applications for review.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-12",
-        "summary": "Wire the frontend listings hooks to real backend methods (replace placeholders) and update the admin listings UI to fully function: listings list, create, edit, and validation/error handling for duplicate retailer/product listings and promo fields.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useListings.ts",
-          "frontend/src/pages/admin/AdminManageListingsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useListings.ts",
-          "frontend/src/pages/admin/AdminManageListingsPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Update the admin listing editor UI to support promo configuration: normal price, optional promo price, promo start date/time, optional/indefinite promo end date/time, and display of calculated savings when promo price is set (normal - promo).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/ListingEditDialog.tsx",
-          "frontend/src/hooks/useListings.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/ListingEditDialog.tsx",
-          "frontend/src/hooks/useListings.ts"
-        ]
-      },
-      {
-        "id": "REQ-14",
-        "summary": "Update the shopper catalogue page to use the real backend global catalogue (products + orderable listings), correctly add items to cart using listingId (not retailerId), and display promo pricing with savings when applicable while keeping non-orderable listings disabled/hidden per backend rules.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useCatalog.ts",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/components/shop/cart/CartProvider.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useCatalog.ts",
-          "frontend/src/pages/shop/CataloguePage.tsx",
-          "frontend/src/components/shop/cart/CartProvider.tsx"
-        ]
-      },
-      {
-        "id": "REQ-15",
-        "summary": "Wire the checkout flow to real backend order creation and ensure the order payload uses cart listingIds, quantities, selected delivery method (including pickup point option), and payment method; show a clear user-facing error if backend validation fails (e.g., item became out-of-stock).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/MyOrdersPage.tsx",
-          "frontend/src/pages/shop/OrderDetailPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useOrders.ts",
-          "frontend/src/pages/shop/CheckoutPage.tsx",
-          "frontend/src/pages/shop/MyOrdersPage.tsx",
-          "frontend/src/pages/shop/OrderDetailPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Extend the backend listings domain model to support admin-managed retailer pricing with optional promo pricing, including: (a) one listing per (retailerId, productId), (b) normal price, (c) optional promo price, (d) promo start date, (e) promo end date that can be indefinite, and (f) logic to determine whether the promo price is currently active.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Implement backend admin-only CRUD APIs for listings: create listing, update listing (including promo fields and status), delete listing, and list listings (all and by retailer/product filters as needed by the current frontend).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Implement backend shopper-facing catalogue query API that returns the global catalogue augmented with retailer listings, exposing only listings that are orderable to customers (active and in-stock), and includes enough pricing data for the frontend to display the active price and the savings vs normal price when a promo is active.",
+        "id": "REQ-22",
+        "summary": "Add backend admin mutation methods in `backend/main.mo` to approve or reject a specific Pickup Point application by applicant principal, updating application status and related pickup point approval state.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
@@ -107,29 +35,17 @@
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/admin/ListingEditDialog.tsx",
-    "frontend/src/components/admin/SearchableSelect.tsx",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/components/shop/cart/CartProvider.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useCatalog.ts",
-    "frontend/src/hooks/useListings.ts",
-    "frontend/src/hooks/useOrders.ts",
-    "frontend/src/hooks/useRetailerPortal.ts",
-    "frontend/src/pages/admin/AdminManageListingsPage.tsx",
-    "frontend/src/pages/shop/CartPage.tsx",
-    "frontend/src/pages/shop/CataloguePage.tsx",
-    "frontend/src/pages/shop/CheckoutPage.tsx",
-    "frontend/src/pages/shop/MyOrdersPage.tsx",
-    "frontend/src/pages/shop/OrderDetailPage.tsx",
+    "frontend/src/hooks/useEnsureDefaultTownOsizweni.ts",
+    "frontend/src/hooks/useTownMembership.ts",
+    "frontend/src/hooks/useTowns.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

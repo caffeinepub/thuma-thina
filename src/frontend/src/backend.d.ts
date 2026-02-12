@@ -52,6 +52,16 @@ export interface OpeningHours {
     holidayOverrides: Array<HolidayOverride>;
     weeklySchedule: Array<WeekdayTimeRange>;
 }
+export type PersonalShopperStatus = {
+    __kind__: "pending";
+    pending: null;
+} | {
+    __kind__: "approved";
+    approved: null;
+} | {
+    __kind__: "rejected";
+    rejected: string;
+};
 export type OrderStatus = {
     __kind__: "inDelivery";
     inDelivery: {
@@ -125,6 +135,18 @@ export type DeliveryMethod = {
         pointId: bigint;
     };
 };
+export interface PersonalShopperApplication {
+    status: PersonalShopperStatus;
+    applicant: Principal;
+    name: string;
+    selfieImage: ExternalBlob;
+    rejectionReason?: string;
+    submittedAt: Time;
+    reviewedAt?: Time;
+    reviewedBy?: Principal;
+    email: string;
+    phone: string;
+}
 export interface RetailerInput {
     province: string;
     name: string;
@@ -133,6 +155,28 @@ export interface RetailerInput {
     openingHours: OpeningHours;
     phone: string;
     townSuburb: string;
+}
+export interface PickupPointApplication {
+    status: {
+        __kind__: "pending";
+        pending: null;
+    } | {
+        __kind__: "approved";
+        approved: null;
+    } | {
+        __kind__: "rejected";
+        rejected: string;
+    };
+    applicant: Principal;
+    province: string;
+    name: string;
+    submittedAt: Time;
+    reviewedBy?: Principal;
+    email: string;
+    address: string;
+    phone: string;
+    townSuburb: string;
+    kycDocs: Array<ExternalBlob>;
 }
 export interface UserApprovalInfo {
     status: ApprovalStatus;
@@ -179,11 +223,15 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    approvePersonalShopper(user: Principal): Promise<void>;
+    approvePickupPoint(user: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     associateRetailerPrincipal(principal: Principal, retailerId: RetailerId): Promise<void>;
     createCategory(category: string): Promise<void>;
     createListing(retailerId: RetailerId, productId: ProductId, price: bigint, stock: bigint): Promise<NewListing>;
     createOrder(items: Array<CartItem>, deliveryMethod: DeliveryMethod, paymentMethod: PaymentMethod): Promise<OrderRecord>;
+    createPersonalShopperApplication(name: string, email: string, phone: string, selfieImage: ExternalBlob): Promise<PersonalShopperApplication>;
+    createPickupPointApplication(name: string, email: string, phone: string, address: string, townSuburb: string, province: string, kycDocs: Array<ExternalBlob>): Promise<PickupPointApplication>;
     createProduct(name: string, description: string, image: ExternalBlob, category: string): Promise<Product>;
     createRetailer(input: RetailerInput): Promise<Retailer>;
     deleteListing(id: ListingId): Promise<void>;
@@ -197,6 +245,19 @@ export interface backendInterface {
     getMyRetailerInventory(): Promise<Array<NewListing>>;
     getMyRetailerOrders(): Promise<Array<OrderRecord>>;
     getOrder(orderId: OrderId): Promise<OrderRecord | null>;
+    getPersonalShopperApplication(): Promise<PersonalShopperApplication | null>;
+    getPersonalShopperStatus(): Promise<PersonalShopperStatus | null>;
+    getPickupPointApplication(): Promise<PickupPointApplication | null>;
+    getPickupPointStatus(): Promise<{
+        __kind__: "pending";
+        pending: null;
+    } | {
+        __kind__: "approved";
+        approved: null;
+    } | {
+        __kind__: "rejected";
+        rejected: string;
+    } | null>;
     getRetailer(id: RetailerId): Promise<Retailer | null>;
     getRetailerListings(retailerId: RetailerId): Promise<Array<NewListing>>;
     getRetailerPrincipalMapping(principal: Principal): Promise<RetailerId | null>;
@@ -207,8 +268,12 @@ export interface backendInterface {
     listAllOrders(): Promise<Array<OrderRecord>>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     listCategories(): Promise<Array<string>>;
+    listPendingPersonalShopperApplications(): Promise<Array<PersonalShopperApplication>>;
+    listPendingPickupPointApplications(): Promise<Array<PickupPointApplication>>;
     listProducts(): Promise<Array<Product>>;
     listRetailers(): Promise<Array<Retailer>>;
+    rejectPersonalShopper(user: Principal, reason: string): Promise<void>;
+    rejectPickupPoint(user: Principal, reason: string): Promise<void>;
     removePromo(id: ListingId): Promise<NewListing>;
     removeRetailerPrincipal(principal: Principal): Promise<void>;
     requestApproval(): Promise<void>;

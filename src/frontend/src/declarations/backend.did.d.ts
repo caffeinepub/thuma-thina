@@ -65,6 +65,36 @@ export type OrderStatus = { 'inDelivery' : { 'driverId' : Principal } } |
 export type PaymentMethod = { 'icp' : null } |
   { 'zar' : null } |
   { 'nomayini' : null };
+export interface PersonalShopperApplication {
+  'status' : PersonalShopperStatus,
+  'applicant' : Principal,
+  'name' : string,
+  'selfieImage' : ExternalBlob,
+  'rejectionReason' : [] | [string],
+  'submittedAt' : Time,
+  'reviewedAt' : [] | [Time],
+  'reviewedBy' : [] | [Principal],
+  'email' : string,
+  'phone' : string,
+}
+export type PersonalShopperStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : string };
+export interface PickupPointApplication {
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : string },
+  'applicant' : Principal,
+  'province' : string,
+  'name' : string,
+  'submittedAt' : Time,
+  'reviewedBy' : [] | [Principal],
+  'email' : string,
+  'address' : string,
+  'phone' : string,
+  'townSuburb' : string,
+  'kycDocs' : Array<ExternalBlob>,
+}
 export interface Product {
   'id' : ProductId,
   'imageRefs' : Array<ExternalBlob>,
@@ -164,6 +194,8 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'approvePersonalShopper' : ActorMethod<[Principal], undefined>,
+  'approvePickupPoint' : ActorMethod<[Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'associateRetailerPrincipal' : ActorMethod<
     [Principal, RetailerId],
@@ -177,6 +209,14 @@ export interface _SERVICE {
   'createOrder' : ActorMethod<
     [Array<CartItem>, DeliveryMethod, PaymentMethod],
     OrderRecord
+  >,
+  'createPersonalShopperApplication' : ActorMethod<
+    [string, string, string, ExternalBlob],
+    PersonalShopperApplication
+  >,
+  'createPickupPointApplication' : ActorMethod<
+    [string, string, string, string, string, string, Array<ExternalBlob>],
+    PickupPointApplication
   >,
   'createProduct' : ActorMethod<
     [string, string, ExternalBlob, string],
@@ -194,6 +234,20 @@ export interface _SERVICE {
   'getMyRetailerInventory' : ActorMethod<[], Array<NewListing>>,
   'getMyRetailerOrders' : ActorMethod<[], Array<OrderRecord>>,
   'getOrder' : ActorMethod<[OrderId], [] | [OrderRecord]>,
+  'getPersonalShopperApplication' : ActorMethod<
+    [],
+    [] | [PersonalShopperApplication]
+  >,
+  'getPersonalShopperStatus' : ActorMethod<[], [] | [PersonalShopperStatus]>,
+  'getPickupPointApplication' : ActorMethod<[], [] | [PickupPointApplication]>,
+  'getPickupPointStatus' : ActorMethod<
+    [],
+    [] | [
+      { 'pending' : null } |
+        { 'approved' : null } |
+        { 'rejected' : string }
+    ]
+  >,
   'getRetailer' : ActorMethod<[RetailerId], [] | [Retailer]>,
   'getRetailerListings' : ActorMethod<[RetailerId], Array<NewListing>>,
   'getRetailerPrincipalMapping' : ActorMethod<[Principal], [] | [RetailerId]>,
@@ -204,8 +258,18 @@ export interface _SERVICE {
   'listAllOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'listCategories' : ActorMethod<[], Array<string>>,
+  'listPendingPersonalShopperApplications' : ActorMethod<
+    [],
+    Array<PersonalShopperApplication>
+  >,
+  'listPendingPickupPointApplications' : ActorMethod<
+    [],
+    Array<PickupPointApplication>
+  >,
   'listProducts' : ActorMethod<[], Array<Product>>,
   'listRetailers' : ActorMethod<[], Array<Retailer>>,
+  'rejectPersonalShopper' : ActorMethod<[Principal, string], undefined>,
+  'rejectPickupPoint' : ActorMethod<[Principal, string], undefined>,
   'removePromo' : ActorMethod<[ListingId], NewListing>,
   'removeRetailerPrincipal' : ActorMethod<[Principal], undefined>,
   'requestApproval' : ActorMethod<[], undefined>,

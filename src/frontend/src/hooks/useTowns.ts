@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 
-// Local type definitions for Town functionality (backend not yet implemented)
+// Temporary type definitions until backend exports these
 export type TownId = bigint;
 export type TownStatus = 'active' | 'removed';
 export interface Town {
@@ -25,10 +25,11 @@ export function useListTowns() {
   return useQuery<Town[]>({
     queryKey: townKeys.lists(),
     queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
       // Backend method not yet implemented
-      return [];
+      throw new Error('Town management backend methods not yet implemented');
     },
-    enabled: !!actor && !actorFetching,
+    enabled: false, // Disabled until backend is ready
   });
 }
 
@@ -38,10 +39,11 @@ export function useActiveTowns() {
   return useQuery<Town[]>({
     queryKey: townKeys.active(),
     queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
       // Backend method not yet implemented
-      return [];
+      throw new Error('Town management backend methods not yet implemented');
     },
-    enabled: !!actor && !actorFetching,
+    enabled: false, // Disabled until backend is ready
   });
 }
 
@@ -52,7 +54,8 @@ export function useCreateTown() {
   return useMutation({
     mutationFn: async ({ name, province }: { name: string; province: string }) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not yet implemented');
+      // Backend method not yet implemented
+      throw new Error('Town management backend methods not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: townKeys.all });
@@ -67,7 +70,8 @@ export function useUpdateTown() {
   return useMutation({
     mutationFn: async ({ id, name, province }: { id: TownId; name: string; province: string }) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not yet implemented');
+      // Backend method not yet implemented
+      throw new Error('Town management backend methods not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: townKeys.all });
@@ -82,7 +86,8 @@ export function useRemoveTown() {
   return useMutation({
     mutationFn: async (id: TownId) => {
       if (!actor) throw new Error('Actor not available');
-      throw new Error('Backend method not yet implemented');
+      // Backend method not yet implemented
+      throw new Error('Town management backend methods not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: townKeys.all });

@@ -1,6 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, Users, Package, Store, FileText, MapPin, UserCheck, List } from 'lucide-react';
+import {
+  Info,
+  Users,
+  Package,
+  Store,
+  MapPin,
+  UserCheck,
+  List,
+  Truck,
+  ShoppingBag,
+  ShoppingCart,
+  Settings,
+} from 'lucide-react';
 import { useListApprovals, useSetApproval } from '@/hooks/useQueries';
 import { useListProducts } from '@/hooks/useProducts';
 import { useGlobalCatalogue } from '@/hooks/useCatalog';
@@ -65,9 +77,8 @@ export function AdminDashboardPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>Platform Development Status</AlertTitle>
           <AlertDescription>
-            The full admin console is being implemented. Currently available: user approval management, towns
-            management, town application reviews, product catalogue, listings management, and retailer
-            management.
+            Full admin console now available. Manage users, towns, products, listings, retailers, drivers,
+            shoppers, orders, and system settings.
           </AlertDescription>
         </Alert>
 
@@ -260,15 +271,66 @@ export function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="opacity-50">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/drivers')}
+          >
             <CardHeader>
-              <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-              <CardTitle>Role Applications</CardTitle>
-              <CardDescription>Coming soon</CardDescription>
+              <Truck className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Driver Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Review driver, shopper, and pickup point applications
+                Review driver applications and manage approved drivers
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/shoppers')}
+          >
+            <CardHeader>
+              <ShoppingBag className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Shopper Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Review shopper applications and manage approved shoppers
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/orders')}
+          >
+            <CardHeader>
+              <ShoppingCart className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Order Management</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                View and manage all orders, update status and assignments
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/settings')}
+          >
+            <CardHeader>
+              <Settings className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>System Settings</CardTitle>
+              <CardDescription>Available now</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Configure system settings and perform administrative actions
               </p>
             </CardContent>
           </Card>

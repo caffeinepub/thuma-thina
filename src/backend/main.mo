@@ -3,17 +3,16 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import UserApproval "user-approval/approval";
-import List "mo:core/List";
 import Map "mo:core/Map";
+import List "mo:core/List";
 import Array "mo:core/Array";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Text "mo:core/Text";
 import Iter "mo:core/Iter";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   type TownId = Nat;
   type RetailerId = Nat;
@@ -282,7 +281,7 @@ actor {
 
   public type TownMembership = {
     default : TownId;
-    additional : List.List<TownId>;
+    additional : [TownId];
   };
 
   public type TownMembershipApplication = {
@@ -298,7 +297,33 @@ actor {
     reviewedAt : ?Time.Time;
   };
 
-  var towns = Map.empty<Nat, Town>();
+  // NEW: Personal Shopper Application types
+  public type PersonalShopperStatus = {
+    #pending;
+    #approved;
+    #rejected : Text;
+  };
+
+  public type PersonalShopperApplication = {
+    applicant : Principal;
+    name : Text;
+    email : Text;
+    phone : Text;
+    selfieImage : Storage.ExternalBlob;
+    status : PersonalShopperStatus;
+    submittedAt : Time.Time;
+    reviewedBy : ?Principal;
+    reviewedAt : ?Time.Time;
+    rejectionReason : ?Text;
+  };
+
+  public type PersonalShopperApproval = {
+    principal : Principal;
+    approvedBy : Principal;
+    approvedAt : Time.Time;
+  };
+
+  var towns = Map.empty<TownId, Town>();
   var provinces = List.empty<Province>();
   var retailers = Map.empty<Nat, Retailer>();
   var products = Map.empty<Nat, Product>();
@@ -320,6 +345,11 @@ actor {
   var productCategories = List.empty<Text>();
   var retailerPrincipals = Map.empty<Principal, RetailerId>();
 
+  // NEW: Personal Shopper applications state variables
+  var personalShopperApplications = Map.empty<Principal, PersonalShopperApplication>();
+  var personalShopperApprovals = Map.empty<Principal, PersonalShopperApproval>();
+  var personalShopperStatus = Map.empty<Principal, PersonalShopperStatus>();
+
   var nextTownId = 0;
   var nextRetailerId = 0;
   var nextProductId = 0;
@@ -333,17 +363,256 @@ actor {
   var accessControlState = AccessControl.initState();
   var approvalState = UserApproval.initState(accessControlState);
 
+  // Apply authorization mixin before storage
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // Helper function to check if caller is a retailer
-  private func isRetailer(caller : Principal) : Bool {
-    retailerPrincipals.get(caller).isSome();
+  // PERSONAL SHOPPER APPLICATION METHODS
+  public query ({ caller }) func getPersonalShopperStatus() : async ?PersonalShopperStatus {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can check status");
+    };
+    personalShopperStatus.get(caller);
   };
 
-  // Helper function to get retailer ID for caller
-  private func getRetailerId(caller : Principal) : ?RetailerId {
-    retailerPrincipals.get(caller);
+  public query ({ caller }) func getPersonalShopperApplication() : async ?PersonalShopperApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view applications");
+    };
+    personalShopperApplications.get(caller);
+  };
+
+  public query ({ caller }) func listPendingPersonalShopperApplications() : async [PersonalShopperApplication] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can list applications");
+    };
+    let all = personalShopperApplications.values().toArray();
+    all.filter<PersonalShopperApplication>(func(a) { a.status == #pending });
+  };
+
+  public shared ({ caller }) func createPersonalShopperApplication(
+    name : Text,
+    email : Text,
+    phone : Text,
+    selfieImage : Storage.ExternalBlob,
+  ) : async PersonalShopperApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can create applications");
+    };
+
+    // Prevent duplicate applications
+    if (personalShopperApplications.containsKey(caller)) {
+      Runtime.trap("Application already exists for this user");
+    };
+
+    let app : PersonalShopperApplication = {
+      applicant = caller;
+      name;
+      email;
+      phone;
+      selfieImage;
+      status = #pending;
+      submittedAt = Time.now();
+      reviewedBy = null;
+      reviewedAt = null;
+      rejectionReason = null;
+    };
+
+    // Save application
+    personalShopperApplications.add(caller, app);
+    // Track status
+    personalShopperStatus.add(caller, #pending);
+
+    app;
+  };
+
+  public shared ({ caller }) func approvePersonalShopper(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can approve applications");
+    };
+
+    switch (personalShopperApplications.get(user)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?app) {
+        // Validate current status
+        switch (app.status) {
+          case (#approved) { Runtime.trap("Application already approved") };
+          case (#rejected(_)) { Runtime.trap("Rejected applications cannot be re-approved") };
+          case (#pending) {};
+        };
+
+        // Update application
+        let updatedApp = {
+          app with
+          status = #approved;
+          reviewedBy = ?caller;
+          reviewedAt = ?Time.now();
+        };
+        personalShopperApplications.add(user, updatedApp);
+
+        // Track approval
+        let approval = {
+          principal = user;
+          approvedBy = caller;
+          approvedAt = Time.now();
+        };
+        personalShopperApprovals.add(user, approval);
+
+        // Update status mapping - make shopper active
+        personalShopperStatus.add(user, #approved);
+        approvedShoppers.add(user, true);
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectPersonalShopper(user : Principal, reason : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reject applications");
+    };
+
+    switch (personalShopperApplications.get(user)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?app) {
+        // Validate current status
+        switch (app.status) {
+          case (#approved) { Runtime.trap("Approved applications cannot be rejected") };
+          case (#pending) {};
+          case (#rejected(_)) { Runtime.trap("Application already rejected") };
+        };
+
+        // Update application
+        let updatedApp = {
+          app with
+          status = #rejected(reason);
+          reviewedBy = ?caller;
+          reviewedAt = ?Time.now();
+          rejectionReason = ?reason;
+        };
+        personalShopperApplications.add(user, updatedApp);
+
+        // Update status mapping
+        personalShopperStatus.add(user, #rejected(reason));
+      };
+    };
+  };
+
+  // PICKUP POINT APPLICATION METHODS
+  public query ({ caller }) func getPickupPointStatus() : async ?{ #pending; #approved; #rejected : Text } {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can check status");
+    };
+    switch (pickupPointApplications.get(caller)) {
+      case (null) { null };
+      case (?app) { ?app.status };
+    };
+  };
+
+  public query ({ caller }) func getPickupPointApplication() : async ?PickupPointApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view applications");
+    };
+    pickupPointApplications.get(caller);
+  };
+
+  public query ({ caller }) func listPendingPickupPointApplications() : async [PickupPointApplication] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can list applications");
+    };
+    let all = pickupPointApplications.values().toArray();
+    all.filter<PickupPointApplication>(func(a) { a.status == #pending });
+  };
+
+  public shared ({ caller }) func createPickupPointApplication(
+    name : Text,
+    email : Text,
+    phone : Text,
+    address : Text,
+    townSuburb : Text,
+    province : Text,
+    kycDocs : [Storage.ExternalBlob],
+  ) : async PickupPointApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can create applications");
+    };
+
+    // Prevent duplicate applications
+    if (pickupPointApplications.containsKey(caller)) {
+      Runtime.trap("Application already exists for this user");
+    };
+
+    let app : PickupPointApplication = {
+      applicant = caller;
+      name;
+      email;
+      phone;
+      address;
+      townSuburb;
+      province;
+      kycDocs;
+      status = #pending;
+      submittedAt = Time.now();
+      reviewedBy = null;
+    };
+
+    pickupPointApplications.add(caller, app);
+    app;
+  };
+
+  public shared ({ caller }) func approvePickupPoint(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can approve applications");
+    };
+
+    switch (pickupPointApplications.get(user)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?existing) {
+        // Validate current status
+        switch (existing.status) {
+          case (#approved) { Runtime.trap("Application already approved") };
+          case (#rejected(_)) { Runtime.trap("Rejected applications cannot be re-approved") };
+          case (#pending) {};
+        };
+
+        // Update application status
+        let updated = {
+          existing with
+          status = #approved;
+          reviewedBy = ?caller;
+        };
+        pickupPointApplications.add(user, updated);
+
+        // Assign pickup point ID and register in approved pickup points
+        let pickupPointId = nextPickupPointId;
+        approvedPickupPoints.add(pickupPointId, user);
+        nextPickupPointId += 1;
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectPickupPoint(user : Principal, reason : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reject applications");
+    };
+
+    switch (pickupPointApplications.get(user)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?existing) {
+        // Validate current status
+        switch (existing.status) {
+          case (#approved) { Runtime.trap("Approved applications cannot be rejected") };
+          case (#pending) {};
+          case (#rejected(_)) { Runtime.trap("Application already rejected") };
+        };
+
+        // Update application status with rejection reason
+        let updated = {
+          existing with
+          status = #rejected(reason);
+          reviewedBy = ?caller;
+        };
+        pickupPointApplications.add(user, updated);
+      };
+    };
   };
 
   // Helper function to check if promo is currently active
@@ -377,6 +646,16 @@ actor {
   // Helper function to check if listing is orderable
   private func isListingOrderable(listing : NewListing) : Bool {
     listing.status == #active and listing.stock > 0;
+  };
+
+  // Helper function to check if caller is a retailer
+  private func isRetailer(caller : Principal) : Bool {
+    retailerPrincipals.get(caller).isSome();
+  };
+
+  // Helper function to get retailer ID for caller
+  private func getRetailerId(caller : Principal) : ?RetailerId {
+    retailerPrincipals.get(caller);
   };
 
   // User profile management

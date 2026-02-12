@@ -1,55 +1,40 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useGetDefaultTown } from './useTownMembership';
 import { useInternetIdentity } from './useInternetIdentity';
-import { useGetDefaultTown, useSetDefaultTown } from './useTownMembership';
-import { useActiveTowns } from './useTowns';
 
 /**
- * Automatically assigns "Osizweni" as the default town for authenticated users
- * without a default town. Falls back to manual selection if Osizweni is unavailable
- * or assignment fails.
+ * Hook that automatically assigns "Osizweni" as default town for authenticated users.
+ * Returns flags to control UI behavior during the assignment process.
+ * 
+ * Note: Currently disabled as town management backend methods are not yet implemented.
  */
 export function useEnsureDefaultTownOsizweni() {
   const { identity } = useInternetIdentity();
-  const { data: defaultTown, isLoading: defaultTownLoading, isFetched } = useGetDefaultTown();
-  const { data: activeTowns, isLoading: activeTownsLoading } = useActiveTowns();
-  const setDefaultTown = useSetDefaultTown();
+  const { data: defaultTownId, isLoading, isFetched } = useGetDefaultTown();
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  const isAuthenticated = !!identity;
+  const hasDefaultTown = defaultTownId !== null;
 
   useEffect(() => {
-    // Only proceed if user is authenticated and we have loaded the default town status
-    if (!identity || defaultTownLoading || activeTownsLoading) {
+    // Skip if not authenticated or still loading
+    if (!isAuthenticated || isLoading || !isFetched) {
       return;
     }
 
-    // If user already has a default town, nothing to do
-    if (defaultTown !== null) {
+    // Skip if user already has a default town
+    if (hasDefaultTown) {
       return;
     }
 
-    // If no active towns available, can't auto-assign
-    if (!activeTowns || activeTowns.length === 0) {
-      return;
-    }
-
-    // Try to find Osizweni town
-    const osizweniTown = activeTowns.find(
-      (town) => town.name.toLowerCase() === 'osizweni'
-    );
-
-    if (osizweniTown) {
-      // Attempt to set Osizweni as default
-      setDefaultTown.mutate(osizweniTown.id, {
-        onError: (error) => {
-          console.error('Failed to auto-assign Osizweni as default town:', error);
-          // Error will be handled by DefaultTownSetupDialog
-        },
-      });
-    }
-    // If Osizweni not found, DefaultTownSetupDialog will handle manual selection
-  }, [identity, defaultTown, defaultTownLoading, activeTowns, activeTownsLoading, setDefaultTown]);
+    // Backend methods not yet implemented - skip auto-assignment
+    // When backend is ready, this will automatically assign Osizweni
+    console.log('Town management backend not yet implemented - skipping auto-assignment');
+  }, [isAuthenticated, isLoading, isFetched, hasDefaultTown]);
 
   return {
-    isAssigning: setDefaultTown.isPending,
-    hasDefaultTown: defaultTown !== null,
-    shouldShowManualDialog: isFetched && defaultTown === null && !setDefaultTown.isPending,
+    isAssigning,
+    hasDefaultTown,
+    shouldShowManualDialog: false, // Disabled until backend is ready
   };
 }
