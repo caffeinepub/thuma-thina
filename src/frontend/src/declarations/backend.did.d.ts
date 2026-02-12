@@ -16,6 +16,19 @@ export type ApprovalStatus = { 'pending' : null } |
 export interface CartItem { 'listingId' : ListingId, 'quantity' : bigint }
 export type DeliveryMethod = { 'home' : { 'address' : string } } |
   { 'pickupPoint' : { 'pointId' : bigint } };
+export interface DriverApplication {
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : string },
+  'applicant' : Principal,
+  'vehicleDetails' : string,
+  'name' : string,
+  'submittedAt' : Time,
+  'reviewedBy' : [] | [Principal],
+  'email' : string,
+  'phone' : string,
+  'kycDocs' : Array<ExternalBlob>,
+}
 export type ExternalBlob = Uint8Array;
 export interface HolidayOverride {
   'closeTime' : [] | [bigint],
@@ -85,15 +98,12 @@ export interface PickupPointApplication {
     { 'approved' : null } |
     { 'rejected' : string },
   'applicant' : Principal,
-  'province' : string,
   'name' : string,
   'submittedAt' : Time,
   'reviewedBy' : [] | [Principal],
-  'email' : string,
   'address' : string,
-  'phone' : string,
-  'townSuburb' : string,
-  'kycDocs' : Array<ExternalBlob>,
+  'businessImage' : ExternalBlob,
+  'contactNumber' : string,
 }
 export interface Product {
   'id' : ProductId,
@@ -194,6 +204,7 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'approveDriver' : ActorMethod<[Principal], undefined>,
   'approvePersonalShopper' : ActorMethod<[Principal], undefined>,
   'approvePickupPoint' : ActorMethod<[Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -202,6 +213,10 @@ export interface _SERVICE {
     undefined
   >,
   'createCategory' : ActorMethod<[string], undefined>,
+  'createDriverApplication' : ActorMethod<
+    [string, string, string, string, Array<ExternalBlob>],
+    DriverApplication
+  >,
   'createListing' : ActorMethod<
     [RetailerId, ProductId, bigint, bigint],
     NewListing
@@ -215,7 +230,7 @@ export interface _SERVICE {
     PersonalShopperApplication
   >,
   'createPickupPointApplication' : ActorMethod<
-    [string, string, string, string, string, string, Array<ExternalBlob>],
+    [string, string, string, ExternalBlob],
     PickupPointApplication
   >,
   'createProduct' : ActorMethod<
@@ -228,6 +243,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCatalogue' : ActorMethod<[], Array<ShopProduct>>,
+  'getDriverApplication' : ActorMethod<[], [] | [DriverApplication]>,
   'getListing' : ActorMethod<[ListingId], [] | [NewListing]>,
   'getMyOrders' : ActorMethod<[], Array<OrderRecord>>,
   'getMyRetailer' : ActorMethod<[], [] | [Retailer]>,
@@ -258,6 +274,7 @@ export interface _SERVICE {
   'listAllOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'listCategories' : ActorMethod<[], Array<string>>,
+  'listPendingDriverApplications' : ActorMethod<[], Array<DriverApplication>>,
   'listPendingPersonalShopperApplications' : ActorMethod<
     [],
     Array<PersonalShopperApplication>
@@ -268,6 +285,7 @@ export interface _SERVICE {
   >,
   'listProducts' : ActorMethod<[], Array<Product>>,
   'listRetailers' : ActorMethod<[], Array<Retailer>>,
+  'rejectDriver' : ActorMethod<[Principal, string], undefined>,
   'rejectPersonalShopper' : ActorMethod<[Principal, string], undefined>,
   'rejectPickupPoint' : ActorMethod<[Principal, string], undefined>,
   'removePromo' : ActorMethod<[ListingId], NewListing>,

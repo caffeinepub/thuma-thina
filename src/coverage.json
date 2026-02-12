@@ -1,35 +1,35 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T11:29:50.979Z",
+  "generatedAt": "2026-02-12T13:26:04.492Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 0,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-20",
-        "summary": "Add backend canister methods in `backend/main.mo` to allow authenticated users to submit a Pickup Point application and persist it in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-21",
-        "summary": "Add backend admin query methods in `backend/main.mo` to list pending Pickup Point applications for review.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-22",
-        "summary": "Add backend admin mutation methods in `backend/main.mo` to approve or reject a specific Pickup Point application by applicant principal, updating application status and related pickup point approval state.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-39",
+        "summary": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/main.tsx",
+          "frontend/src/router/HashRouter.tsx",
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/auth/RequireAdmin.tsx",
+          "frontend/src/components/shop/ShopLayout.tsx",
+          "frontend/src/components/shop/ShopHeader.tsx",
+          "frontend/src/index.css"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/auth/RequireAdmin.tsx",
+          "frontend/src/components/shop/ShopLayout.tsx",
+          "frontend/src/components/shop/ShopHeader.tsx"
+        ]
       }
     ]
   },
@@ -39,13 +39,9 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useEnsureDefaultTownOsizweni.ts",
-    "frontend/src/hooks/useTownMembership.ts",
-    "frontend/src/hooks/useTowns.ts",
+    "frontend/src/components/auth/RequireAdmin.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
+    "frontend/src/components/shop/ShopLayout.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

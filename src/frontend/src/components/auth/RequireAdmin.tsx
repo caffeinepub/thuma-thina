@@ -14,7 +14,14 @@ export function RequireAdmin({ children }: RequireAdminProps) {
   const { data: isAdmin, isLoading } = useIsCallerAdmin();
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Verifying admin access...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!isAdmin) {

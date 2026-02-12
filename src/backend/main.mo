@@ -10,7 +10,6 @@ import Nat "mo:core/Nat";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
-import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 
 actor {
@@ -189,12 +188,9 @@ actor {
   public type PickupPointApplication = {
     applicant : Principal;
     name : Text;
-    email : Text;
-    phone : Text;
     address : Text;
-    townSuburb : Text;
-    province : Text;
-    kycDocs : [Storage.ExternalBlob];
+    contactNumber : Text;
+    businessImage : Storage.ExternalBlob;
     status : {
       #pending;
       #approved;
@@ -297,7 +293,6 @@ actor {
     reviewedAt : ?Time.Time;
   };
 
-  // NEW: Personal Shopper Application types
   public type PersonalShopperStatus = {
     #pending;
     #approved;
@@ -345,7 +340,6 @@ actor {
   var productCategories = List.empty<Text>();
   var retailerPrincipals = Map.empty<Principal, RetailerId>();
 
-  // NEW: Personal Shopper applications state variables
   var personalShopperApplications = Map.empty<Principal, PersonalShopperApplication>();
   var personalShopperApprovals = Map.empty<Principal, PersonalShopperApproval>();
   var personalShopperStatus = Map.empty<Principal, PersonalShopperStatus>();
@@ -363,11 +357,9 @@ actor {
   var accessControlState = AccessControl.initState();
   var approvalState = UserApproval.initState(accessControlState);
 
-  // Apply authorization mixin before storage
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // PERSONAL SHOPPER APPLICATION METHODS
   public query ({ caller }) func getPersonalShopperStatus() : async ?PersonalShopperStatus {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can check status");
@@ -400,7 +392,6 @@ actor {
       Runtime.trap("Unauthorized: Only authenticated users can create applications");
     };
 
-    // Prevent duplicate applications
     if (personalShopperApplications.containsKey(caller)) {
       Runtime.trap("Application already exists for this user");
     };
@@ -418,9 +409,7 @@ actor {
       rejectionReason = null;
     };
 
-    // Save application
     personalShopperApplications.add(caller, app);
-    // Track status
     personalShopperStatus.add(caller, #pending);
 
     app;
@@ -434,14 +423,12 @@ actor {
     switch (personalShopperApplications.get(user)) {
       case (null) { Runtime.trap("Application not found") };
       case (?app) {
-        // Validate current status
         switch (app.status) {
           case (#approved) { Runtime.trap("Application already approved") };
           case (#rejected(_)) { Runtime.trap("Rejected applications cannot be re-approved") };
           case (#pending) {};
         };
 
-        // Update application
         let updatedApp = {
           app with
           status = #approved;
@@ -450,7 +437,6 @@ actor {
         };
         personalShopperApplications.add(user, updatedApp);
 
-        // Track approval
         let approval = {
           principal = user;
           approvedBy = caller;
@@ -458,7 +444,6 @@ actor {
         };
         personalShopperApprovals.add(user, approval);
 
-        // Update status mapping - make shopper active
         personalShopperStatus.add(user, #approved);
         approvedShoppers.add(user, true);
       };
@@ -473,14 +458,12 @@ actor {
     switch (personalShopperApplications.get(user)) {
       case (null) { Runtime.trap("Application not found") };
       case (?app) {
-        // Validate current status
         switch (app.status) {
           case (#approved) { Runtime.trap("Approved applications cannot be rejected") };
           case (#pending) {};
           case (#rejected(_)) { Runtime.trap("Application already rejected") };
         };
 
-        // Update application
         let updatedApp = {
           app with
           status = #rejected(reason);
@@ -490,13 +473,11 @@ actor {
         };
         personalShopperApplications.add(user, updatedApp);
 
-        // Update status mapping
         personalShopperStatus.add(user, #rejected(reason));
       };
     };
   };
 
-  // PICKUP POINT APPLICATION METHODS
   public query ({ caller }) func getPickupPointStatus() : async ?{ #pending; #approved; #rejected : Text } {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can check status");
@@ -518,37 +499,39 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can list applications");
     };
-    let all = pickupPointApplications.values().toArray();
-    all.filter<PickupPointApplication>(func(a) { a.status == #pending });
+    pickupPointApplications.values().toArray().filter<PickupPointApplication>(func(a) { a.status == #pending });
   };
 
   public shared ({ caller }) func createPickupPointApplication(
     name : Text,
-    email : Text,
-    phone : Text,
     address : Text,
-    townSuburb : Text,
-    province : Text,
-    kycDocs : [Storage.ExternalBlob],
+    contactNumber : Text,
+    businessImage : Storage.ExternalBlob,
   ) : async PickupPointApplication {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create applications");
     };
 
-    // Prevent duplicate applications
     if (pickupPointApplications.containsKey(caller)) {
       Runtime.trap("Application already exists for this user");
+    };
+
+    if (name == "") {
+      Runtime.trap("Business name is required");
+    };
+    if (address == "") {
+      Runtime.trap("Address is required");
+    };
+    if (contactNumber == "") {
+      Runtime.trap("Contact number is required");
     };
 
     let app : PickupPointApplication = {
       applicant = caller;
       name;
-      email;
-      phone;
       address;
-      townSuburb;
-      province;
-      kycDocs;
+      contactNumber;
+      businessImage;
       status = #pending;
       submittedAt = Time.now();
       reviewedBy = null;
@@ -566,22 +549,18 @@ actor {
     switch (pickupPointApplications.get(user)) {
       case (null) { Runtime.trap("Application not found") };
       case (?existing) {
-        // Validate current status
         switch (existing.status) {
           case (#approved) { Runtime.trap("Application already approved") };
           case (#rejected(_)) { Runtime.trap("Rejected applications cannot be re-approved") };
           case (#pending) {};
         };
 
-        // Update application status
-        let updated = {
-          existing with
+        let updated = { existing with
           status = #approved;
           reviewedBy = ?caller;
         };
         pickupPointApplications.add(user, updated);
 
-        // Assign pickup point ID and register in approved pickup points
         let pickupPointId = nextPickupPointId;
         approvedPickupPoints.add(pickupPointId, user);
         nextPickupPointId += 1;
@@ -597,14 +576,12 @@ actor {
     switch (pickupPointApplications.get(user)) {
       case (null) { Runtime.trap("Application not found") };
       case (?existing) {
-        // Validate current status
         switch (existing.status) {
           case (#approved) { Runtime.trap("Approved applications cannot be rejected") };
           case (#pending) {};
           case (#rejected(_)) { Runtime.trap("Application already rejected") };
         };
 
-        // Update application status with rejection reason
         let updated = {
           existing with
           status = #rejected(reason);
@@ -615,7 +592,6 @@ actor {
     };
   };
 
-  // Helper function to check if promo is currently active
   private func isPromoActive(promo : ?PromoDetails) : Bool {
     switch (promo) {
       case (null) { false };
@@ -631,7 +607,6 @@ actor {
     };
   };
 
-  // Helper function to get active price for a listing
   private func getActivePrice(listing : NewListing) : Nat {
     if (isPromoActive(listing.promo)) {
       switch (listing.promo) {
@@ -643,22 +618,18 @@ actor {
     };
   };
 
-  // Helper function to check if listing is orderable
   private func isListingOrderable(listing : NewListing) : Bool {
     listing.status == #active and listing.stock > 0;
   };
 
-  // Helper function to check if caller is a retailer
   private func isRetailer(caller : Principal) : Bool {
     retailerPrincipals.get(caller).isSome();
   };
 
-  // Helper function to get retailer ID for caller
   private func getRetailerId(caller : Principal) : ?RetailerId {
     retailerPrincipals.get(caller);
   };
 
-  // User profile management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can access profiles");
@@ -680,7 +651,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // User approval methods
   public query ({ caller }) func isCallerApproved() : async Bool {
     AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
   };
@@ -703,7 +673,6 @@ actor {
     UserApproval.listApprovals(approvalState);
   };
 
-  // Product management (admin only)
   public shared ({ caller }) func createProduct(name : Text, description : Text, image : Storage.ExternalBlob, category : Text) : async Product {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create products");
@@ -756,9 +725,7 @@ actor {
     };
   };
 
-  // Category management for products
-  public query ({ caller }) func listCategories() : async [Text] {
-    // Public access - no authorization check needed
+  public query func listCategories() : async [Text] {
     productCategories.toArray();
   };
 
@@ -774,7 +741,6 @@ actor {
     productCategories.add(category);
   };
 
-  // Retailer management (admin only)
   public shared ({ caller }) func createRetailer(input : RetailerInput) : async Retailer {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create retailers");
@@ -856,7 +822,6 @@ actor {
     retailers.get(id);
   };
 
-  // Retailer-Principal association (admin only)
   public shared ({ caller }) func associateRetailerPrincipal(principal : Principal, retailerId : RetailerId) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can associate retailer principals");
@@ -887,8 +852,11 @@ actor {
     retailerPrincipals.get(principal);
   };
 
-  // Retailer dashboard - inventory view (retailer only)
   public query ({ caller }) func getMyRetailerInventory() : async [NewListing] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access retailer inventory");
+    };
+
     switch (getRetailerId(caller)) {
       case (null) {
         Runtime.trap("Unauthorized: Caller is not associated with any retailer");
@@ -900,8 +868,11 @@ actor {
     };
   };
 
-  // Retailer dashboard - order tracking (retailer only)
   public query ({ caller }) func getMyRetailerOrders() : async [OrderRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access retailer orders");
+    };
+
     switch (getRetailerId(caller)) {
       case (null) {
         Runtime.trap("Unauthorized: Caller is not associated with any retailer");
@@ -924,8 +895,11 @@ actor {
     };
   };
 
-  // Get current retailer info (retailer only)
   public query ({ caller }) func getMyRetailer() : async ?Retailer {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access retailer information");
+    };
+
     switch (getRetailerId(caller)) {
       case (null) {
         Runtime.trap("Unauthorized: Caller is not associated with any retailer");
@@ -936,7 +910,6 @@ actor {
     };
   };
 
-  // Listings CRUD (admin only)
   public shared ({ caller }) func createListing(retailerId : RetailerId, productId : ProductId, price : Nat, stock : Nat) : async NewListing {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create listings");
@@ -946,7 +919,6 @@ actor {
       case (null, _) { Runtime.trap("Retailer not found") };
       case (_, null) { Runtime.trap("Product not found") };
       case (?_, ?_) {
-        // Check for existing listing with same retailerId and productId
         let existingListing = listings.values().toArray().find(
           func(l) { l.retailerId == retailerId and l.productId == productId }
         );
@@ -1029,7 +1001,6 @@ actor {
     listings.values().toArray();
   };
 
-  // Promo pricing management (admin only)
   public shared ({ caller }) func setPromo(id : ListingId, price : Nat, startDate : Time.Time, endDate : ?Time.Time) : async NewListing {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can set promo pricing");
@@ -1073,10 +1044,7 @@ actor {
     };
   };
 
-  // Shopper-facing catalogue query (public access for browsing)
-  public query ({ caller }) func getCatalogue() : async [ShopProduct] {
-    // Public access - any user including guests can browse the catalogue
-
+  public query func getCatalogue() : async [ShopProduct] {
     let allProducts = products.values().toArray();
     let allListings = listings.values().toArray();
 
@@ -1135,23 +1103,19 @@ actor {
     );
   };
 
-  // Order creation for customers (authenticated users only)
   public shared ({ caller }) func createOrder(
     items : [CartItem],
     deliveryMethod : DeliveryMethod,
     paymentMethod : PaymentMethod
   ) : async OrderRecord {
-    // Require authenticated user (not guest)
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create orders");
     };
 
-    // Validate items array is not empty
     if (items.size() == 0) {
       Runtime.trap("Order must contain at least one item");
     };
 
-    // Validate each listing and calculate total
     var totalAmount : Nat = 0;
 
     for (item in items.vals()) {
@@ -1164,21 +1128,17 @@ actor {
           Runtime.trap("Listing not found: " # item.listingId.toText());
         };
         case (?listing) {
-          // Validate listing is orderable
           if (not isListingOrderable(listing)) {
             Runtime.trap("Listing is not orderable: " # item.listingId.toText());
           };
 
-          // Validate sufficient stock
           if (listing.stock < item.quantity) {
             Runtime.trap("Insufficient stock for listing: " # item.listingId.toText());
           };
 
-          // Calculate item total using active price
           let activePrice = getActivePrice(listing);
           totalAmount += activePrice * item.quantity;
 
-          // Decrement stock atomically
           let updatedListing : NewListing = {
             listing with
             stock = listing.stock - item.quantity;
@@ -1189,7 +1149,6 @@ actor {
       };
     };
 
-    // Validate delivery method
     switch (deliveryMethod) {
       case (#pickupPoint { pointId }) {
         switch (approvedPickupPoints.get(pointId)) {
@@ -1206,7 +1165,6 @@ actor {
       };
     };
 
-    // Create order record
     let now = Time.now();
     let order : OrderRecord = {
       id = nextOrderId;
@@ -1225,7 +1183,6 @@ actor {
     order;
   };
 
-  // Get customer's own orders (authenticated users only)
   public query ({ caller }) func getMyOrders() : async [OrderRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view orders");
@@ -1235,12 +1192,10 @@ actor {
     allOrders.filter<OrderRecord>(func(order) { order.customer == caller });
   };
 
-  // Get specific order (owner or admin only)
   public query ({ caller }) func getOrder(orderId : OrderId) : async ?OrderRecord {
     switch (orders.get(orderId)) {
       case (null) { null };
       case (?order) {
-        // Allow access if caller is the customer or an admin
         if (order.customer == caller or AccessControl.isAdmin(accessControlState, caller)) {
           ?order;
         } else {
@@ -1250,7 +1205,6 @@ actor {
     };
   };
 
-  // Admin: List all orders
   public query ({ caller }) func listAllOrders() : async [OrderRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can list all orders");
@@ -1258,7 +1212,6 @@ actor {
     orders.values().toArray();
   };
 
-  // Admin: Update order status
   public shared ({ caller }) func updateOrderStatus(orderId : OrderId, status : OrderStatus) : async OrderRecord {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update order status");
@@ -1277,5 +1230,94 @@ actor {
       };
     };
   };
-};
 
+  public shared ({ caller }) func createDriverApplication(
+    name : Text,
+    email : Text,
+    phone : Text,
+    vehicleDetails : Text,
+    kycDocs : [Storage.ExternalBlob],
+  ) : async DriverApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can apply as drivers");
+    };
+
+    if (driverApplications.containsKey(caller)) {
+      Runtime.trap("Application already exists for this user");
+    };
+
+    let app : DriverApplication = {
+      applicant = caller;
+      name;
+      email;
+      phone;
+      vehicleDetails;
+      kycDocs;
+      status = #pending;
+      submittedAt = Time.now();
+      reviewedBy = null;
+    };
+
+    driverApplications.add(caller, app);
+    app;
+  };
+
+  public query ({ caller }) func getDriverApplication() : async ?DriverApplication {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch their own driver application");
+    };
+    driverApplications.get(caller);
+  };
+
+  public query ({ caller }) func listPendingDriverApplications() : async [DriverApplication] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can list pending driver applications");
+    };
+    driverApplications.values().toArray().filter<DriverApplication>(func(app) { app.status == #pending });
+  };
+
+  public shared ({ caller }) func approveDriver(principal : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can approve applications");
+    };
+
+    switch (driverApplications.get(principal)) {
+      case (null) { Runtime.trap("Application not found") };
+      case (?existing) {
+        if (existing.status == #approved) {
+          Runtime.trap("Application already approved");
+        };
+        let updated = { existing with
+          status = #approved;
+          reviewedBy = ?caller;
+        };
+        driverApplications.add(principal, updated);
+        approvedDrivers.add(principal, true);
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectDriver(principal : Principal, reason : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reject applications");
+    };
+
+    switch (driverApplications.get(principal)) {
+      case (null) { };
+      case (?existing) {
+        switch (existing.status) {
+          case (#approved) { Runtime.trap("Approved applications cannot be rejected") };
+          case (#pending) {};
+          case (#rejected(_)) { Runtime.trap("Application already rejected") };
+        };
+
+        let updated = {
+          existing with
+          status = #rejected(reason);
+          reviewedBy = ?caller;
+        };
+        driverApplications.add(principal, updated);
+      };
+    };
+  };
+};

@@ -1,236 +1,334 @@
-import { useEffect, useState } from 'react';
-import { ShopLayout } from '@/components/shop/ShopLayout';
+import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router';
 import { ProvinceListPage } from '@/pages/shop/ProvinceListPage';
 import { CataloguePage } from '@/pages/shop/CataloguePage';
 import { CartPage } from '@/pages/shop/CartPage';
 import { CheckoutPage } from '@/pages/shop/CheckoutPage';
 import { MyOrdersPage } from '@/pages/shop/MyOrdersPage';
 import { OrderDetailPage } from '@/pages/shop/OrderDetailPage';
-import { RequireAuth } from '@/components/auth/RequireAuth';
-import { RequireAdmin } from '@/components/auth/RequireAdmin';
-import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
-import { AdminTownsPage } from '@/pages/admin/AdminTownsPage';
-import { AdminTownApplicationsPage } from '@/pages/admin/AdminTownApplicationsPage';
-import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
-import { AdminManageListingsPage } from '@/pages/admin/AdminManageListingsPage';
-import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
-import { AdminDriversPage } from '@/pages/admin/AdminDriversPage';
-import { AdminShoppersPage } from '@/pages/admin/AdminShoppersPage';
-import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
-import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
+import { MyTownsPage } from '@/pages/shop/MyTownsPage';
 import { JoinUsPage } from '@/pages/shop/JoinUsPage';
 import { RoleApplicationsStatusPage } from '@/pages/shop/RoleApplicationsStatusPage';
 import { ShopperApplicationPage } from '@/pages/shop/ShopperApplicationPage';
-import { MyTownsPage } from '@/pages/shop/MyTownsPage';
+import { PickupPointApplicationPage } from '@/pages/shop/PickupPointApplicationPage';
+import { DriverApplicationPage } from '@/pages/shop/DriverApplicationPage';
 import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
 import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
+import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
+import { AdminRetailersPage } from '@/pages/admin/AdminRetailersPage';
+import { AdminProductsPage } from '@/pages/admin/AdminProductsPage';
+import { AdminManageListingsPage } from '@/pages/admin/AdminManageListingsPage';
+import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage';
+import { AdminTownsPage } from '@/pages/admin/AdminTownsPage';
+import { AdminTownApplicationsPage } from '@/pages/admin/AdminTownApplicationsPage';
+import { AdminShoppersPage } from '@/pages/admin/AdminShoppersPage';
+import { AdminDriversPage } from '@/pages/admin/AdminDriversPage';
+import { AdminPickupPointsPage } from '@/pages/admin/AdminPickupPointsPage';
+import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
+import { RequireAuth } from '@/components/auth/RequireAuth';
+import { RequireAdmin } from '@/components/auth/RequireAdmin';
+import { ShopLayout } from '@/components/shop/ShopLayout';
+
+const rootRoute = createRootRoute({
+  component: () => (
+    <ShopLayout>
+      <Outlet />
+    </ShopLayout>
+  ),
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: ProvinceListPage,
+});
+
+const catalogueRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/catalogue',
+  component: CataloguePage,
+});
+
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cart',
+  component: CartPage,
+});
+
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/checkout',
+  component: () => (
+    <RequireAuth>
+      <CheckoutPage />
+    </RequireAuth>
+  ),
+});
+
+const myOrdersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/my-orders',
+  component: () => (
+    <RequireAuth>
+      <MyOrdersPage />
+    </RequireAuth>
+  ),
+});
+
+const orderDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/order/$orderId',
+  component: function OrderDetailRouteComponent() {
+    const { orderId } = orderDetailRoute.useParams();
+    return (
+      <RequireAuth>
+        <OrderDetailPage orderId={Number(orderId)} />
+      </RequireAuth>
+    );
+  },
+});
+
+const myTownsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/my-towns',
+  component: () => (
+    <RequireAuth>
+      <MyTownsPage />
+    </RequireAuth>
+  ),
+});
+
+const joinUsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join-us',
+  component: JoinUsPage,
+});
+
+const myApplicationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/my-applications',
+  component: () => (
+    <RequireAuth>
+      <RoleApplicationsStatusPage />
+    </RequireAuth>
+  ),
+});
+
+const shopperApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join-us/shopper-application',
+  component: () => (
+    <RequireAuth>
+      <ShopperApplicationPage />
+    </RequireAuth>
+  ),
+});
+
+const pickupPointApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join-us/pickup-point-application',
+  component: () => (
+    <RequireAuth>
+      <PickupPointApplicationPage />
+    </RequireAuth>
+  ),
+});
+
+const driverApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join-us/driver-application',
+  component: () => (
+    <RequireAuth>
+      <DriverApplicationPage />
+    </RequireAuth>
+  ),
+});
+
+const retailerDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/retailer-dashboard',
+  component: () => (
+    <RequireAuth>
+      <RetailerDashboardPage />
+    </RequireAuth>
+  ),
+});
+
+const retailerOrdersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/retailer-orders',
+  component: () => (
+    <RequireAuth>
+      <RetailerOrderTrackingPage />
+    </RequireAuth>
+  ),
+});
+
+const adminDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminDashboardPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminRetailersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/retailers',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminRetailersPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminProductsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/products',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminProductsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminListingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/listings',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminManageListingsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminOrdersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/orders',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminOrdersPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminTownsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/towns',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminTownsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminTownApplicationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/town-applications',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminTownApplicationsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminShoppersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/shoppers',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminShoppersPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminDriversRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/drivers',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminDriversPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminPickupPointsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/pickup-points',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminPickupPointsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const adminSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/settings',
+  component: () => (
+    <RequireAuth>
+      <RequireAdmin>
+        <AdminSettingsPage />
+      </RequireAdmin>
+    </RequireAuth>
+  ),
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  catalogueRoute,
+  cartRoute,
+  checkoutRoute,
+  myOrdersRoute,
+  orderDetailRoute,
+  myTownsRoute,
+  joinUsRoute,
+  myApplicationsRoute,
+  shopperApplicationRoute,
+  pickupPointApplicationRoute,
+  driverApplicationRoute,
+  retailerDashboardRoute,
+  retailerOrdersRoute,
+  adminDashboardRoute,
+  adminRetailersRoute,
+  adminProductsRoute,
+  adminListingsRoute,
+  adminOrdersRoute,
+  adminTownsRoute,
+  adminTownApplicationsRoute,
+  adminShoppersRoute,
+  adminDriversRoute,
+  adminPickupPointsRoute,
+  adminSettingsRoute,
+]);
+
+const router = createRouter({ routeTree });
 
 export function HashRouter() {
-  const [currentPath, setCurrentPath] = useState(window.location.hash.slice(1) || '/');
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      setCurrentPath(window.location.hash.slice(1) || '/');
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  const renderRoute = () => {
-    // Admin routes
-    if (currentPath === '/admin') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminDashboardPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/towns') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminTownsPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/town-applications') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminTownApplicationsPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/products') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminProductsPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/listings') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminManageListingsPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/retailers') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminRetailersPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/drivers') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminDriversPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/shoppers') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminShoppersPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/orders') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminOrdersPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/admin/settings') {
-      return (
-        <RequireAuth>
-          <RequireAdmin>
-            <AdminSettingsPage />
-          </RequireAdmin>
-        </RequireAuth>
-      );
-    }
-
-    // Retailer routes
-    if (currentPath === '/retailer') {
-      return (
-        <RequireAuth>
-          <RetailerDashboardPage />
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/retailer/orders') {
-      return (
-        <RequireAuth>
-          <RetailerOrderTrackingPage />
-        </RequireAuth>
-      );
-    }
-
-    // Application routes
-    if (currentPath === '/join-us') {
-      return (
-        <RequireAuth>
-          <JoinUsPage />
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/join-us/shopper-application') {
-      return (
-        <RequireAuth>
-          <ShopperApplicationPage />
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/my-applications') {
-      return (
-        <RequireAuth>
-          <RoleApplicationsStatusPage />
-        </RequireAuth>
-      );
-    }
-
-    // User town management
-    if (currentPath === '/my-towns') {
-      return (
-        <RequireAuth>
-          <MyTownsPage />
-        </RequireAuth>
-      );
-    }
-
-    // Shop routes
-    if (currentPath === '/catalogue') {
-      return <CataloguePage />;
-    }
-
-    if (currentPath === '/cart') {
-      return <CartPage />;
-    }
-
-    if (currentPath === '/checkout') {
-      return (
-        <RequireAuth>
-          <CheckoutPage />
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath === '/my-orders') {
-      return (
-        <RequireAuth>
-          <MyOrdersPage />
-        </RequireAuth>
-      );
-    }
-
-    if (currentPath.startsWith('/order/')) {
-      const orderId = parseInt(currentPath.split('/order/')[1]);
-      return (
-        <RequireAuth>
-          <OrderDetailPage orderId={orderId} />
-        </RequireAuth>
-      );
-    }
-
-    // Default route - home page
-    return <ProvinceListPage />;
-  };
-
-  return <ShopLayout>{renderRoute()}</ShopLayout>;
+  return <RouterProvider router={router} />;
 }
 
 export function navigate(path: string) {
-  window.location.hash = path;
+  router.navigate({ to: path });
 }

@@ -25,6 +25,23 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const RetailerId = IDL.Nat;
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const Time = IDL.Int;
+export const DriverApplication = IDL.Record({
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Text,
+  }),
+  'applicant' : IDL.Principal,
+  'vehicleDetails' : IDL.Text,
+  'name' : IDL.Text,
+  'submittedAt' : Time,
+  'reviewedBy' : IDL.Opt(IDL.Principal),
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
+  'kycDocs' : IDL.Vec(ExternalBlob),
+});
 export const ProductId = IDL.Nat;
 export const ListingId = IDL.Nat;
 export const ListingStatus = IDL.Variant({
@@ -32,7 +49,6 @@ export const ListingStatus = IDL.Variant({
   'discontinued' : IDL.Null,
   'outOfStock' : IDL.Null,
 });
-export const Time = IDL.Int;
 export const PromoDetails = IDL.Record({
   'endDate' : IDL.Opt(Time),
   'price' : IDL.Nat,
@@ -83,7 +99,6 @@ export const OrderRecord = IDL.Record({
   'totalAmount' : IDL.Nat,
   'items' : IDL.Vec(CartItem),
 });
-export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const PersonalShopperStatus = IDL.Variant({
   'pending' : IDL.Null,
   'approved' : IDL.Null,
@@ -108,15 +123,12 @@ export const PickupPointApplication = IDL.Record({
     'rejected' : IDL.Text,
   }),
   'applicant' : IDL.Principal,
-  'province' : IDL.Text,
   'name' : IDL.Text,
   'submittedAt' : Time,
   'reviewedBy' : IDL.Opt(IDL.Principal),
-  'email' : IDL.Text,
   'address' : IDL.Text,
-  'phone' : IDL.Text,
-  'townSuburb' : IDL.Text,
-  'kycDocs' : IDL.Vec(ExternalBlob),
+  'businessImage' : ExternalBlob,
+  'contactNumber' : IDL.Text,
 });
 export const Product = IDL.Record({
   'id' : ProductId,
@@ -223,11 +235,17 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'approveDriver' : IDL.Func([IDL.Principal], [], []),
   'approvePersonalShopper' : IDL.Func([IDL.Principal], [], []),
   'approvePickupPoint' : IDL.Func([IDL.Principal], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'associateRetailerPrincipal' : IDL.Func([IDL.Principal, RetailerId], [], []),
   'createCategory' : IDL.Func([IDL.Text], [], []),
+  'createDriverApplication' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob)],
+      [DriverApplication],
+      [],
+    ),
   'createListing' : IDL.Func(
       [RetailerId, ProductId, IDL.Nat, IDL.Nat],
       [NewListing],
@@ -244,15 +262,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'createPickupPointApplication' : IDL.Func(
-      [
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Vec(ExternalBlob),
-      ],
+      [IDL.Text, IDL.Text, IDL.Text, ExternalBlob],
       [PickupPointApplication],
       [],
     ),
@@ -267,6 +277,11 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCatalogue' : IDL.Func([], [IDL.Vec(ShopProduct)], ['query']),
+  'getDriverApplication' : IDL.Func(
+      [],
+      [IDL.Opt(DriverApplication)],
+      ['query'],
+    ),
   'getListing' : IDL.Func([ListingId], [IDL.Opt(NewListing)], ['query']),
   'getMyOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
   'getMyRetailer' : IDL.Func([], [IDL.Opt(Retailer)], ['query']),
@@ -323,6 +338,11 @@ export const idlService = IDL.Service({
   'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'listCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+  'listPendingDriverApplications' : IDL.Func(
+      [],
+      [IDL.Vec(DriverApplication)],
+      ['query'],
+    ),
   'listPendingPersonalShopperApplications' : IDL.Func(
       [],
       [IDL.Vec(PersonalShopperApplication)],
@@ -335,6 +355,7 @@ export const idlService = IDL.Service({
     ),
   'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
+  'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'removePromo' : IDL.Func([ListingId], [NewListing], []),
@@ -381,6 +402,23 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const RetailerId = IDL.Nat;
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const Time = IDL.Int;
+  const DriverApplication = IDL.Record({
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'approved' : IDL.Null,
+      'rejected' : IDL.Text,
+    }),
+    'applicant' : IDL.Principal,
+    'vehicleDetails' : IDL.Text,
+    'name' : IDL.Text,
+    'submittedAt' : Time,
+    'reviewedBy' : IDL.Opt(IDL.Principal),
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
+    'kycDocs' : IDL.Vec(ExternalBlob),
+  });
   const ProductId = IDL.Nat;
   const ListingId = IDL.Nat;
   const ListingStatus = IDL.Variant({
@@ -388,7 +426,6 @@ export const idlFactory = ({ IDL }) => {
     'discontinued' : IDL.Null,
     'outOfStock' : IDL.Null,
   });
-  const Time = IDL.Int;
   const PromoDetails = IDL.Record({
     'endDate' : IDL.Opt(Time),
     'price' : IDL.Nat,
@@ -439,7 +476,6 @@ export const idlFactory = ({ IDL }) => {
     'totalAmount' : IDL.Nat,
     'items' : IDL.Vec(CartItem),
   });
-  const ExternalBlob = IDL.Vec(IDL.Nat8);
   const PersonalShopperStatus = IDL.Variant({
     'pending' : IDL.Null,
     'approved' : IDL.Null,
@@ -464,15 +500,12 @@ export const idlFactory = ({ IDL }) => {
       'rejected' : IDL.Text,
     }),
     'applicant' : IDL.Principal,
-    'province' : IDL.Text,
     'name' : IDL.Text,
     'submittedAt' : Time,
     'reviewedBy' : IDL.Opt(IDL.Principal),
-    'email' : IDL.Text,
     'address' : IDL.Text,
-    'phone' : IDL.Text,
-    'townSuburb' : IDL.Text,
-    'kycDocs' : IDL.Vec(ExternalBlob),
+    'businessImage' : ExternalBlob,
+    'contactNumber' : IDL.Text,
   });
   const Product = IDL.Record({
     'id' : ProductId,
@@ -579,6 +612,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'approveDriver' : IDL.Func([IDL.Principal], [], []),
     'approvePersonalShopper' : IDL.Func([IDL.Principal], [], []),
     'approvePickupPoint' : IDL.Func([IDL.Principal], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
@@ -588,6 +622,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createCategory' : IDL.Func([IDL.Text], [], []),
+    'createDriverApplication' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob)],
+        [DriverApplication],
+        [],
+      ),
     'createListing' : IDL.Func(
         [RetailerId, ProductId, IDL.Nat, IDL.Nat],
         [NewListing],
@@ -604,15 +643,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createPickupPointApplication' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Vec(ExternalBlob),
-        ],
+        [IDL.Text, IDL.Text, IDL.Text, ExternalBlob],
         [PickupPointApplication],
         [],
       ),
@@ -627,6 +658,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCatalogue' : IDL.Func([], [IDL.Vec(ShopProduct)], ['query']),
+    'getDriverApplication' : IDL.Func(
+        [],
+        [IDL.Opt(DriverApplication)],
+        ['query'],
+      ),
     'getListing' : IDL.Func([ListingId], [IDL.Opt(NewListing)], ['query']),
     'getMyOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
     'getMyRetailer' : IDL.Func([], [IDL.Opt(Retailer)], ['query']),
@@ -683,6 +719,11 @@ export const idlFactory = ({ IDL }) => {
     'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'listCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'listPendingDriverApplications' : IDL.Func(
+        [],
+        [IDL.Vec(DriverApplication)],
+        ['query'],
+      ),
     'listPendingPersonalShopperApplications' : IDL.Func(
         [],
         [IDL.Vec(PersonalShopperApplication)],
@@ -695,6 +736,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
+    'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'removePromo' : IDL.Func([ListingId], [NewListing], []),

@@ -1,53 +1,78 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T11:29:50.975Z",
-  "summary": "The diff includes multiple frontend hook changes despite the build request explicitly requiring a backend-only step and no frontend changes. The backend diff is truncated and does not show the new Pickup Point application/admin methods, so implementation of REQ-20/21/22 cannot be confirmed from the provided evidence.",
+  "generatedAt": "2026-02-12T13:26:04.488Z",
+  "summary": "The diff does not demonstrate a full rollback to Version 34 across frontend and backend. Instead, it shows ongoing/expanded functionality (notably admin gating in the frontend and extensive backend type/import surface suggesting newer features), which conflicts with the requested complete revert with no retained Version 35+ changes.",
   "missing_requirements": [
     {
-      "id": "REQ-20",
-      "requirement": "Add backend canister method(s) in `backend/main.mo` for authenticated users to create a Pickup Point application, store it in `pickupPointApplications`, prevent duplicates, set `status=#pending`, `submittedAt=Time.now()`, `reviewedBy=null`, and store the uploaded business image using `Storage.ExternalBlob` without changing the public `PickupPointApplication` type.",
-      "reason": "The `backend/main.mo` diff is truncated and only shows type/import sections; no new `shared ({ caller })` create method or persistence logic for `pickupPointApplications` is visible in the provided diff excerpt.",
+      "id": "REQ-39",
+      "requirement": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+      "reason": "The diff shows active modifications introducing/using admin-check UI gating and a large backend surface area (imports/types for approvals, storage mixins, driver/shopper/pickup-point applications, analytics, etc.), which indicates the codebase is not being reverted wholesale to an older snapshot. There is no evidence in the diff summary of restoring Version 34-specific files/logic or removing Version 35+ changes; rather, multiple files are modified in ways consistent with continuing Version 35+ behavior.",
       "evidence": [
-        "backend/main.mo (truncated; excerpt shows type definitions, not new methods)"
+        "backend/main.mo",
+        "frontend/src/components/auth/RequireAdmin.tsx",
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/components/shop/ShopLayout.tsx",
+        "frontend-file-summaries.txt",
+        "project_state.json"
       ]
     },
     {
-      "id": "REQ-21",
-      "requirement": "Add an admin `query ({ caller })` method in `backend/main.mo` to list only pending Pickup Point applications, trapping unless caller has `#admin` permission.",
-      "reason": "No admin query/list method for pending pickup point applications is visible in the provided truncated backend diff excerpt.",
+      "id": "REQ-39",
+      "requirement": "Caller’s admin account is recognized by the backend as it was in Version 34 (admin-only routes and actions work again for the same principal).",
+      "reason": "While the frontend adds/uses an isCallerAdmin check (which changes UI access behavior), the diff summary does not provide evidence that backend admin recognition/assignment has been restored to Version 34 behavior for the same principal (no clear revert of admin list/logic is shown; backend content is truncated and shows newer authorization mixins/imports).",
       "evidence": [
-        "backend/main.mo (truncated; no query method shown)"
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "requirement": "Add admin `shared ({ caller })` methods in `backend/main.mo` to approve/reject a Pickup Point application by applicant principal, enforce `#admin`, trap if missing, update application status/reviewedBy, assign pickup point id via `nextPickupPointId` and record in `approvedPickupPoints`, and handle re-approve/re-reject deterministically.",
-      "reason": "No approve/reject methods or related state update logic (`approvedPickupPoints`, `nextPickupPointId`) is visible in the truncated backend diff excerpt.",
-      "evidence": [
-        "backend/main.mo (truncated; no approve/reject methods shown)"
+        "backend/main.mo (truncated)",
+        "frontend/src/components/auth/RequireAdmin.tsx",
+        "frontend/src/components/shop/ShopHeader.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Frontend hooks added/modified for town membership and default town auto-assignment placeholders (disabled queries/mutations, console logging, and new types), despite the build request requiring a backend-only change with no frontend routes/pages/hooks changes.",
-      "reason": "The build request explicitly says to keep this build step backend-only and not change frontend hooks/pages; the diff modifies multiple files under `frontend/src/hooks` and includes additional frontend-related changes in the summaries.",
+      "description": "Admin-gated UI wrapper with a loading state and an 'Access Denied' card, using a new/explicit RequireAdmin component driven by useIsCallerAdmin.",
+      "reason": "The BuildRequest is strictly to revert to Version 34 with no new/changed features; adding/modifying admin gating UI is a feature change unless it exactly matches Version 34 (not evidenced).",
       "evidence": [
-        "frontend/src/hooks/useEnsureDefaultTownOsizweni.ts",
-        "frontend/src/hooks/useTownMembership.ts",
-        "frontend/src/hooks/useTowns.ts",
-        "frontend-file-summaries.txt"
+        "frontend/src/components/auth/RequireAdmin.tsx"
+      ]
+    },
+    {
+      "description": "Shop header conditionally renders an 'Admin' navigation button based on useIsCallerAdmin and includes authenticated-only nav items (e.g., Retailer, My Towns) with updated header structure.",
+      "reason": "Not requested; the only requested work is a full revert to Version 34 UI/behavior, and the diff shows specific navigation logic updates rather than a rollback.",
+      "evidence": [
+        "frontend/src/components/shop/ShopHeader.tsx"
+      ]
+    },
+    {
+      "description": "Shop layout behavior includes DefaultTownSetupDialog and ProfileSetupDialog with specific anti-flash/profile-null logic, implying newer UX flows.",
+      "reason": "Not requested by the revert-only BuildRequest and appears to be additional/retained functionality rather than restoring Version 34.",
+      "evidence": [
+        "frontend/src/components/shop/ShopLayout.tsx",
+        "frontend-file-summaries.txt (ShopLayout entry)"
+      ]
+    },
+    {
+      "description": "Backend canister code includes (at least) extensive newer domain types and modules (AccessControl, MixinAuthorization, blob storage mixins, user approvals, driver/shopper/pickup-point application types, analytics types).",
+      "reason": "The BuildRequest forbids implementing/modifying features beyond restoring Version 34; the backend snippet suggests a broadened feature set rather than a clean rollback (cannot confirm exact Version 34 parity from truncated content).",
+      "evidence": [
+        "backend/main.mo (imports and type definitions shown, truncated)"
+      ]
+    },
+    {
+      "description": "Project state summary references expanded scope for Drivers and Pickup Points activation via Join Us flow and admin approvals.",
+      "reason": "The BuildRequest is to revert to Version 34 with no additional scope; the presence of this scope text indicates non-revert work is being tracked/retained.",
+      "evidence": [
+        "project_state.json"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.66,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useEnsureDefaultTownOsizweni.ts",
-    "frontend/src/hooks/useTownMembership.ts",
-    "frontend/src/hooks/useTowns.ts",
+    "frontend/src/components/auth/RequireAdmin.tsx",
+    "frontend/src/components/shop/ShopHeader.tsx",
+    "frontend/src/components/shop/ShopLayout.tsx",
     "project_state.json"
   ]
 }

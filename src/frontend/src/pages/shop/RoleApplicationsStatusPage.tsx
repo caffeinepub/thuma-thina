@@ -5,19 +5,22 @@ import { Info, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { navigate } from '@/router/HashRouter';
 import { useGetMyShopperApplication } from '@/hooks/useShopperApplication';
+import { useGetMyPickupPointApplication } from '@/hooks/usePickupPointApplication';
+import { useGetDriverApplication } from '@/hooks/useDriverApplication';
 import { formatICDateTime } from '@/utils/time';
 import { getExternalBlobUrl } from '@/utils/externalBlobUrl';
 
 export function RoleApplicationsStatusPage() {
-  const { data: shopperApplication, isLoading, isFetched } = useGetMyShopperApplication();
+  const { data: shopperApplication, isLoading: shopperLoading, isFetched: shopperFetched } = useGetMyShopperApplication();
+  const { data: pickupPointApplication, isLoading: pickupLoading, isFetched: pickupFetched } = useGetMyPickupPointApplication();
+  const { data: driverApplication, isLoading: driverLoading, isFetched: driverFetched } = useGetDriverApplication();
 
-  const hasApplication = shopperApplication !== null;
+  const hasShopperApplication = shopperApplication !== null;
+  const hasPickupPointApplication = pickupPointApplication !== null;
+  const hasDriverApplication = driverApplication !== null;
+  const hasAnyApplication = hasShopperApplication || hasPickupPointApplication || hasDriverApplication;
 
-  const getStatusBadge = () => {
-    if (!shopperApplication) return null;
-
-    const status = shopperApplication.status;
-
+  const getStatusBadge = (status: any) => {
     if (status.__kind__ === 'pending') {
       return (
         <Badge variant="secondary" className="gap-1">
@@ -48,11 +51,7 @@ export function RoleApplicationsStatusPage() {
     return null;
   };
 
-  const getStatusMessage = () => {
-    if (!shopperApplication) return null;
-
-    const status = shopperApplication.status;
-
+  const getStatusMessage = (status: any, rejectionReason?: string) => {
     if (status.__kind__ === 'pending') {
       return (
         <Alert>
@@ -69,7 +68,7 @@ export function RoleApplicationsStatusPage() {
         <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800 dark:text-green-200">
-            Congratulations! Your application has been approved. You can now start accepting shopping assignments.
+            Congratulations! Your application has been approved.
           </AlertDescription>
         </Alert>
       );
@@ -80,7 +79,7 @@ export function RoleApplicationsStatusPage() {
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
           <AlertDescription>
-            Your application was rejected. Reason: {status.rejected}
+            Your application was rejected. Reason: {status.rejected || rejectionReason || 'No reason provided'}
           </AlertDescription>
         </Alert>
       );
@@ -89,7 +88,7 @@ export function RoleApplicationsStatusPage() {
     return null;
   };
 
-  if (isLoading) {
+  if (shopperLoading || pickupLoading || driverLoading) {
     return (
       <div className="container-custom py-8">
         <div className="max-w-4xl mx-auto">
@@ -109,12 +108,12 @@ export function RoleApplicationsStatusPage() {
           </p>
         </div>
 
-        {!hasApplication && isFetched && (
+        {!hasAnyApplication && shopperFetched && pickupFetched && driverFetched && (
           <>
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                You haven't submitted any applications yet. Apply now to become a personal shopper!
+                You haven't submitted any applications yet. Apply now to become a personal shopper, driver, or pickup point!
               </AlertDescription>
             </Alert>
 
@@ -134,9 +133,9 @@ export function RoleApplicationsStatusPage() {
           </>
         )}
 
-        {hasApplication && shopperApplication && (
+        {hasShopperApplication && shopperApplication && (
           <>
-            {getStatusMessage()}
+            {getStatusMessage(shopperApplication.status, shopperApplication.rejectionReason || undefined)}
 
             <Card>
               <CardHeader>
@@ -147,7 +146,7 @@ export function RoleApplicationsStatusPage() {
                       Submitted on {formatICDateTime(shopperApplication.submittedAt)}
                     </CardDescription>
                   </div>
-                  {getStatusBadge()}
+                  {getStatusBadge(shopperApplication.status)}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -198,22 +197,144 @@ export function RoleApplicationsStatusPage() {
           </>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Other Roles</CardTitle>
-            <CardDescription>
-              Interested in other opportunities?
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Driver and Pickup Point applications are coming soon. Check back later!
-            </p>
-            <Button variant="outline" onClick={() => navigate('/join-us')}>
-              View All Roles
-            </Button>
-          </CardContent>
-        </Card>
+        {hasPickupPointApplication && pickupPointApplication && (
+          <>
+            {getStatusMessage(pickupPointApplication.status)}
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Pickup Point Application</CardTitle>
+                    <CardDescription>
+                      Submitted on {formatICDateTime(pickupPointApplication.submittedAt)}
+                    </CardDescription>
+                  </div>
+                  {getStatusBadge(pickupPointApplication.status)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Business Name</p>
+                    <p className="text-base">{pickupPointApplication.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Address</p>
+                    <p className="text-base">{pickupPointApplication.address}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Contact Number</p>
+                    <p className="text-base">{pickupPointApplication.contactNumber}</p>
+                  </div>
+                </div>
+
+                {pickupPointApplication.businessImage && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Business Image</p>
+                    <img
+                      src={getExternalBlobUrl(pickupPointApplication.businessImage)}
+                      alt="Business"
+                      className="max-w-xs rounded-lg border"
+                    />
+                  </div>
+                )}
+
+                {pickupPointApplication.status.__kind__ === 'rejected' && (
+                  <div className="pt-4 border-t">
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        If you believe this was a mistake or would like to reapply with updated information, please contact support.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {hasDriverApplication && driverApplication && (
+          <>
+            {getStatusMessage(driverApplication.status)}
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Driver Application</CardTitle>
+                    <CardDescription>
+                      Submitted on {formatICDateTime(driverApplication.submittedAt)}
+                    </CardDescription>
+                  </div>
+                  {getStatusBadge(driverApplication.status)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Name</p>
+                    <p className="text-base">{driverApplication.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Email</p>
+                    <p className="text-base">{driverApplication.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                    <p className="text-base">{driverApplication.phone}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-muted-foreground">Vehicle Details</p>
+                    <p className="text-base">{driverApplication.vehicleDetails}</p>
+                  </div>
+                </div>
+
+                {driverApplication.kycDocs && driverApplication.kycDocs.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Selfie Image</p>
+                    <img
+                      src={getExternalBlobUrl(driverApplication.kycDocs[0])}
+                      alt="Driver selfie"
+                      className="max-w-xs rounded-lg border"
+                    />
+                  </div>
+                )}
+
+                {driverApplication.status.__kind__ === 'rejected' && (
+                  <div className="pt-4 border-t">
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        If you believe this was a mistake or would like to reapply with updated information, please contact support.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {!hasDriverApplication && !hasShopperApplication && !hasPickupPointApplication && (shopperFetched || pickupFetched || driverFetched) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Other Roles</CardTitle>
+              <CardDescription>
+                Interested in other opportunities?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Explore all available roles and apply today!
+              </p>
+              <Button variant="outline" onClick={() => navigate('/join-us')}>
+                View All Roles
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

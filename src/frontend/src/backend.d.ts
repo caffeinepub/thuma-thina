@@ -43,6 +43,26 @@ export interface Retailer {
     phone: string;
     townSuburb: string;
 }
+export interface DriverApplication {
+    status: {
+        __kind__: "pending";
+        pending: null;
+    } | {
+        __kind__: "approved";
+        approved: null;
+    } | {
+        __kind__: "rejected";
+        rejected: string;
+    };
+    applicant: Principal;
+    vehicleDetails: string;
+    name: string;
+    submittedAt: Time;
+    reviewedBy?: Principal;
+    email: string;
+    phone: string;
+    kycDocs: Array<ExternalBlob>;
+}
 export interface WeekdayTimeRange {
     day: bigint;
     closeTime: bigint;
@@ -168,15 +188,12 @@ export interface PickupPointApplication {
         rejected: string;
     };
     applicant: Principal;
-    province: string;
     name: string;
     submittedAt: Time;
     reviewedBy?: Principal;
-    email: string;
     address: string;
-    phone: string;
-    townSuburb: string;
-    kycDocs: Array<ExternalBlob>;
+    businessImage: ExternalBlob;
+    contactNumber: string;
 }
 export interface UserApprovalInfo {
     status: ApprovalStatus;
@@ -223,15 +240,17 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    approveDriver(principal: Principal): Promise<void>;
     approvePersonalShopper(user: Principal): Promise<void>;
     approvePickupPoint(user: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     associateRetailerPrincipal(principal: Principal, retailerId: RetailerId): Promise<void>;
     createCategory(category: string): Promise<void>;
+    createDriverApplication(name: string, email: string, phone: string, vehicleDetails: string, kycDocs: Array<ExternalBlob>): Promise<DriverApplication>;
     createListing(retailerId: RetailerId, productId: ProductId, price: bigint, stock: bigint): Promise<NewListing>;
     createOrder(items: Array<CartItem>, deliveryMethod: DeliveryMethod, paymentMethod: PaymentMethod): Promise<OrderRecord>;
     createPersonalShopperApplication(name: string, email: string, phone: string, selfieImage: ExternalBlob): Promise<PersonalShopperApplication>;
-    createPickupPointApplication(name: string, email: string, phone: string, address: string, townSuburb: string, province: string, kycDocs: Array<ExternalBlob>): Promise<PickupPointApplication>;
+    createPickupPointApplication(name: string, address: string, contactNumber: string, businessImage: ExternalBlob): Promise<PickupPointApplication>;
     createProduct(name: string, description: string, image: ExternalBlob, category: string): Promise<Product>;
     createRetailer(input: RetailerInput): Promise<Retailer>;
     deleteListing(id: ListingId): Promise<void>;
@@ -239,6 +258,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCatalogue(): Promise<Array<ShopProduct>>;
+    getDriverApplication(): Promise<DriverApplication | null>;
     getListing(id: ListingId): Promise<NewListing | null>;
     getMyOrders(): Promise<Array<OrderRecord>>;
     getMyRetailer(): Promise<Retailer | null>;
@@ -268,10 +288,12 @@ export interface backendInterface {
     listAllOrders(): Promise<Array<OrderRecord>>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     listCategories(): Promise<Array<string>>;
+    listPendingDriverApplications(): Promise<Array<DriverApplication>>;
     listPendingPersonalShopperApplications(): Promise<Array<PersonalShopperApplication>>;
     listPendingPickupPointApplications(): Promise<Array<PickupPointApplication>>;
     listProducts(): Promise<Array<Product>>;
     listRetailers(): Promise<Array<Retailer>>;
+    rejectDriver(principal: Principal, reason: string): Promise<void>;
     rejectPersonalShopper(user: Principal, reason: string): Promise<void>;
     rejectPickupPoint(user: Principal, reason: string): Promise<void>;
     removePromo(id: ListingId): Promise<NewListing>;

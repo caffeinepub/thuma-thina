@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 21,
   "summary": "Scope now includes activating Drivers and Pickup Points on the app via the Join Us flow: implement driver signup (mirrors shopper + vehicle/licence fields + selfie) with admin approval to set drivers active; and connect backend for pickup point signup (name/address/contact number + business image) with admin approve/reject in the existing approvals area (no separate admin section). Shoppers flow remains in scope; dashboards remain out of scope for now.",
   "architectural_notes": [
     "Admin role already exists (manages retailers/listings/products) and will also approve/manage shoppers.",
@@ -17,9 +17,14 @@
   "known_issues": [
     "Automated build attempts repeatedly failed due to internal limits when trying to implement larger modules.",
     "Frontend shows 'Towns functionality is not yet implemented in the backend' / 'backend not connected' in towns dashboards, indicating missing or mismatched backend endpoints for towns/user-town linking.",
-    "Repeated build attempts to implement Driver and Pickup Point flows failed (builder could not process request), suggesting changes must be split into very small backend-only steps first."
+    "Repeated build attempts to implement Driver and Pickup Point flows failed (builder could not process request), suggesting changes must be split into very small backend-only steps first.",
+    "Join Us → Pickup Points is still disabled / shows “Coming soon”, so users cannot start the Pickup Point signup/application workflow; consequently there are no applications for admin to manage.",
+    "Attempting the next “tiny step” build for enabling Driver signup (frontend unlock in Join Us + initial backend submit) failed with 'Our AI couldn't handle that request', indicating driver-related changes may still need to be split into even smaller steps.",
+    "Regression since v33: Admin button/module no longer appears in the navigation panel even when logged in as an admin (admin access previously worked through v32).",
+    "Performance issue: navigating between tabs is slow to initialize.",
+    "After deploying v35, backend no longer recognizes the user’s admin account; user requested full revert to v34 (frontend + backend) to restore admin recognition."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-audit-the-frontend-for-actor-calls-that-are-currently-stubbed-throw-backend-method-not-yet-implemented-or-are-described-as-placeholders-and-implement-the-corresponding-backend-canister-methods-in-backend-main-mo-so-the-ui-can-function-without-backend-not-connected-not-yet-implemented-messaging",
@@ -106,6 +111,126 @@
       "title": "Implement “My Applications” tracking for shoppers by updating `frontend/src/pages/shop/RoleApplicationsStatusPage.tsx` to show the caller’s shopper application status (pending/approved/rejected + rejection reason when present) and provide a link back to apply if no application exists.",
       "reqIds": [
         "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enable-pickup-point-applications-in-the-join-us-flow-by-removing-the-disabled-coming-soon-state-and-allowing-users-to-navigate-to-a-pickup-point-application-form",
+      "title": "Enable Pickup Point applications in the Join Us flow by removing the disabled “Coming Soon” state and allowing users to navigate to a Pickup Point application form.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-pickup-point-application-form-page-that-lets-an-authenticated-user-submit-a-pickup-point-application-with-the-required-fields-name-address-contact-number-and-a-single-business-image-upload-and-submits-it-to-the-backend",
+      "title": "Add a Pickup Point application form page that lets an authenticated user submit a Pickup Point application with the required fields (name, address, contact number, and a single business image upload) and submits it to the backend.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-admin-ui-to-review-approve-and-reject-pickup-point-applications-end-to-end-including-viewing-submitted-details-and-the-uploaded-business-image",
+      "title": "Implement an admin UI to review, approve, and reject Pickup Point applications end-to-end (including viewing submitted details and the uploaded business image).",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-frontend-react-query-hooks-for-pickup-point-applications-submit-admin-list-approve-reject-optionally-fetch-caller-application-and-remove-any-remaining-placeholder-behavior-for-pickup-point-related-hooks",
+      "title": "Add frontend React Query hooks for Pickup Point applications (submit + admin list/approve/reject + optionally fetch caller application) and remove any remaining placeholder behavior for pickup point-related hooks.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enable-the-driver-option-in-the-join-us-page-by-removing-the-disabled-coming-soon-state-and-navigating-to-a-new-driver-application-form-route-when-clicked",
+      "title": "Enable the Driver option in the Join Us page by removing the disabled “Coming Soon” state and navigating to a new Driver application form route when clicked.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-driver-application-form-page-that-mirrors-the-existing-shopper-application-ux-form-validation-single-image-upload-with-preview-upload-progress-and-submits-a-driver-application-to-the-backend",
+      "title": "Add a new Driver application form page that mirrors the existing Shopper application UX (form + validation + single image upload with preview + upload progress) and submits a driver application to the backend.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-frontend-react-query-hooks-for-driver-applications-submit-fetch-caller-application-and-wire-them-into-the-new-driverapplicationpage-and-my-applications-status-page",
+      "title": "Implement frontend React Query hooks for driver applications (submit + fetch caller application) and wire them into the new DriverApplicationPage and My Applications status page.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-routing-and-my-applications-ui-so-users-can-view-their-driver-application-status-pending-approved-rejected-rejection-reason-when-present-similarly-to-shopper-and-pickup-point-status-behavior",
+      "title": "Update routing and My Applications UI so users can view their Driver application status (pending/approved/rejected + rejection reason when present), similarly to shopper and pickup point status behavior.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-placeholder-driver-implementations-in-frontend-src-hooks-useroleapplications-ts-so-the-existing-admin-drivers-page-works-end-to-end-against-the-backend-list-pending-approve-reject",
+      "title": "Replace the placeholder driver implementations in `frontend/src/hooks/useRoleApplications.ts` so the existing Admin Drivers page works end-to-end against the backend (list pending + approve + reject).",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-app-renders-the-shared-shop-layout-top-navigation-header-footer-on-all-routes-by-updating-the-tanstack-router-root-route-to-render-shoplayout-with-an-outlet-for-child-routes-so-the-header-and-footer-are-always-present-when-the-app-loads",
+      "title": "Ensure the app renders the shared shop layout (top navigation header + footer) on all routes by updating the TanStack Router root route to render `ShopLayout` with an `Outlet` for child routes (so the header and footer are always present when the app loads).",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-broken-navigation-targets-in-the-top-navigation-so-header-buttons-route-to-existing-paths-defined-in-frontend-src-router-hashrouter-tsx-e-g-align-the-retailer-nav-button-with-retailer-dashboard-or-another-existing-retailer-route",
+      "title": "Fix broken navigation targets in the top navigation so header buttons route to existing paths defined in `frontend/src/router/HashRouter.tsx` (e.g., align the Retailer nav button with `/retailer-dashboard` or another existing retailer route).",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-admin-navigation-entry-to-the-pre-v33-behavior-by-rendering-an-admin-button-in-the-shop-header-navigation-desktop-mobile-regardless-of-the-caller-s-admin-status-so-the-admin-module-is-always-visible-in-the-navigation-panel",
+      "title": "Restore the Admin navigation entry to the pre-v33 behavior by rendering an “Admin” button in the Shop header navigation (desktop + mobile) regardless of the caller’s admin status, so the Admin module is always visible in the navigation panel.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-keep-admin-access-control-enforced-at-the-route-page-level-non-admin-users-who-navigate-to-admin-or-any-admin-route-must-see-the-existing-access-denied-experience-while-admins-can-access-the-dashboard-and-modules",
+      "title": "Keep admin access control enforced at the route/page level: non-admin users who navigate to /admin (or any /admin/* route) must see the existing “Access Denied” experience, while admins can access the dashboard and modules.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-perceived-performance-when-navigating-between-tabs-routes-by-preventing-the-full-screen-initializing-overlay-from-re-appearing-after-the-actor-has-already-been-successfully-initialized-once-during-the-current-session",
+      "title": "Improve perceived performance when navigating between tabs/routes by preventing the full-screen “Initializing…” overlay from re-appearing after the actor has already been successfully initialized once during the current session.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fully-revert-the-project-both-frontend-and-backend-canister-code-to-the-exact-state-of-version-34-with-no-partial-retention-of-any-changes-introduced-after-version-34",
+      "title": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+      "reqIds": [
+        "REQ-39"
       ],
       "version": 1
     }
@@ -292,6 +417,22 @@
       "summary": "Add backend admin mutation methods in `backend/main.mo` to approve or reject a specific Pickup Point application by applicant principal, updating application status and related pickup point approval state.",
       "reqIds": [
         "REQ-22"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Implement backend canister support for Pickup Point applications: create application (authenticated users only), fetch caller’s application, list pending applications (admin only), and approve/reject (admin only), persisting in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-43",
+      "summary": "Implement backend canister support for Driver applications: create application (authenticated users only), fetch caller application, list pending applications (admin only), and approve/reject (admin only), persisted in the existing `driverApplications : Map<Principal, DriverApplication>` state and updating `approvedDrivers` on approval.",
+      "reqIds": [
+        "REQ-32"
       ],
       "status": "pending"
     }

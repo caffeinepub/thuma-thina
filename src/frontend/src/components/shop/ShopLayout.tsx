@@ -6,7 +6,6 @@ import { DefaultTownSetupDialog } from '@/components/towns/DefaultTownSetupDialo
 import { ProfileSetupDialog } from '@/components/auth/ProfileSetupDialog';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useEnsureDefaultTownOsizweni } from '@/hooks/useEnsureDefaultTownOsizweni';
-import { useIsCallerAdmin } from '@/hooks/useQueries';
 import { useGetCallerUserProfile } from '@/hooks/useUserProfiles';
 
 interface ShopLayoutProps {
@@ -17,13 +16,10 @@ export function ShopLayout({ children }: ShopLayoutProps) {
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
   
-  const { data: isAdmin, isLoading: isAdminLoading } = useIsCallerAdmin();
   const { shouldShowManualDialog } = useEnsureDefaultTownOsizweni();
   const { data: userProfile, isLoading: profileLoading, isFetched: profileFetched } = useGetCallerUserProfile();
 
-  // Admins never see the default town setup dialog
-  // Regular users only see it if auto-assignment to Osizweni failed
-  const showDefaultTownSetup = isAuthenticated && !isAdminLoading && !isAdmin && shouldShowManualDialog;
+  const showDefaultTownSetup = isAuthenticated && shouldShowManualDialog;
 
   // Show profile setup dialog when authenticated, profile query is fetched, and profile is null
   const showProfileSetup = isAuthenticated && !profileLoading && profileFetched && userProfile === null;

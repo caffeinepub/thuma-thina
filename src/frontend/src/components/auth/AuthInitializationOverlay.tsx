@@ -1,12 +1,34 @@
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useActor } from '@/hooks/useActor';
+import { useRef, useEffect } from 'react';
 
 export function AuthInitializationOverlay() {
   const { isLoggingIn, identity } = useInternetIdentity();
   const { isFetching: actorFetching } = useActor();
+  
+  // Track if actor has been initialized for this session/principal
+  const initializedPrincipalRef = useRef<string | null>(null);
+  const currentPrincipal = identity?.getPrincipal().toString() || null;
+
+  useEffect(() => {
+    // Reset initialization flag when identity changes or becomes null
+    if (currentPrincipal !== initializedPrincipalRef.current) {
+      initializedPrincipalRef.current = null;
+    }
+  }, [currentPrincipal]);
+
+  useEffect(() => {
+    // Mark as initialized once actor is ready for this principal
+    if (!actorFetching && currentPrincipal && !initializedPrincipalRef.current) {
+      initializedPrincipalRef.current = currentPrincipal;
+    }
+  }, [actorFetching, currentPrincipal]);
 
   const isAuthenticated = !!identity;
-  const showLoading = isLoggingIn || (isAuthenticated && actorFetching);
+  const hasInitialized = initializedPrincipalRef.current === currentPrincipal;
+  
+  // Show overlay only during login or first-time initialization for this session
+  const showLoading = isLoggingIn || (isAuthenticated && actorFetching && !hasInitialized);
 
   if (showLoading) {
     return (

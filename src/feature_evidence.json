@@ -1,4 +1,28 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-fully-revert-the-project-both-frontend-and-backend-canister-code-to-the-exact-state-of-version-34-with-no-partial-retention-of-any-changes-introduced-after-version-34",
+      "featureTitle": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+      "files": [
+        "frontend/src/components/auth/RequireAdmin.tsx",
+        "frontend/src/components/shop/ShopHeader.tsx",
+        "frontend/src/components/shop/ShopLayout.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-39"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

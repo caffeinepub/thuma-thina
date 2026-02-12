@@ -1,81 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Implement minimal backend support for Pickup Point applications (create + admin list/approve/reject)",
-  "priority": "normal",
+  "title": "Revert entire deployment back to Version 34 (frontend + backend)",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-20",
-      "text": "Add backend canister methods in `backend/main.mo` to allow authenticated users to submit a Pickup Point application and persist it in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
-      "target": "backend",
+      "id": "REQ-39",
+      "text": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-3",
+          "msg-5",
+          "msg-6"
         ],
         "quotes": [
-          "ok so build these tiny steps"
+          "ok no undo the last update entirely please",
+          "1 not version 35 but 34 2 yes return the app exactly to version 34 no partial keeps 3 yes backend revert because now backend does not recognize my admin account",
+          "run the revert"
         ]
       },
       "acceptanceCriteria": [
-        "A new `shared ({ caller })` method exists to create a pickup point application and returns the created `PickupPointApplication`.",
-        "The create method traps unless `caller` has `#user` permission via `AccessControl.hasPermission` (consistent with existing Personal Shopper methods).",
-        "The create method traps if an application already exists for `caller` (prevents duplicate submissions).",
-        "The created application is stored under `pickupPointApplications.add(caller, app)` with `status = #pending`, `submittedAt = Time.now()`, and `reviewedBy = null`.",
-        "The application supports storing the uploaded business image using the existing `Storage.ExternalBlob` type (e.g., stored as a single-entry `kycDocs` array or equivalent without changing the public `PickupPointApplication` type)."
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "text": "Add backend admin query methods in `backend/main.mo` to list pending Pickup Point applications for review.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "ok so build these tiny steps"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new `query ({ caller })` method exists to list pending pickup point applications and returns `[PickupPointApplication]`.",
-        "The list method traps unless `caller` has `#admin` permission.",
-        "The list method returns only applications whose `status` is `#pending`."
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "text": "Add backend admin mutation methods in `backend/main.mo` to approve or reject a specific Pickup Point application by applicant principal, updating application status and related pickup point approval state.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "ok so build these tiny steps"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new `shared ({ caller })` method exists to approve a pickup point application by applicant `Principal`.",
-        "A new `shared ({ caller })` method exists to reject a pickup point application by applicant `Principal` and a rejection `reason : Text`.",
-        "Both methods trap unless `caller` has `#admin` permission.",
-        "Both methods trap if the target application does not exist.",
-        "Approve sets application `status = #approved` and `reviewedBy = ?caller` (and updates `submittedAt` is not modified).",
-        "Reject sets application `status = #rejected(reason)` and `reviewedBy = ?caller`.",
-        "Approving assigns a pickup point id using the existing `nextPickupPointId` counter and records the approved relationship in `approvedPickupPoints : Map<Nat, Principal>` (e.g., `approvedPickupPoints.add(nextPickupPointId, applicant)` then increments `nextPickupPointId`).",
-        "Re-approving an already-approved application and re-rejecting an already-rejected application are handled deterministically (either trap with a clear error or no-op), without corrupting stored state."
+        "The deployed frontend matches Version 34 behavior and UI exactly (no Version 35+ changes remain).",
+        "The deployed backend canister code matches Version 34 exactly (no Version 35+ methods/state logic changes remain).",
+        "The caller’s admin account is recognized by the backend as it was in Version 34 (admin-only routes and actions work again for the same principal)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single-actor Motoko canister; implement all logic in `backend/main.mo`.",
-    "Do not modify files under `frontend/src/components/ui` or other frontend immutable paths listed in SYSTEM_CONTEXT.",
-    "Keep this build step backend-only (no frontend routes/pages/hooks changes).",
-    "Use English for any user-facing text (including trap messages)."
+    "Revert must target Version 34 (not Version 35).",
+    "No partial keeps: do not retain any subset of the reverted update.",
+    "Include backend revert as well as frontend revert."
   ],
   "nonGoals": [
-    "Implementing the Pickup Point signup UI flow (Join Us button enabling, form page, image upload UI).",
-    "Implementing an admin Pickup Points page (`frontend/src/pages/admin/AdminPickupPointsPage.tsx`) or wiring frontend hooks to these methods.",
-    "Implementing driver application backend/frontend changes.",
-    "Implementing shopper changes (already handled separately)."
+    "Implementing or modifying any features beyond restoring Version 34.",
+    "Refactoring or improving performance/navigation beyond what existed in Version 34.",
+    "Adding new admin role logic or changing admin assignment mechanisms."
   ],
   "imageRequirements": {
     "required": [],

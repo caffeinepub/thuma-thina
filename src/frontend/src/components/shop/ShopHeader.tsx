@@ -2,21 +2,21 @@ import { Button } from '@/components/ui/button';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { LoginButton } from '@/components/auth/LoginButton';
-import { useIsCallerAdmin } from '@/hooks/useQueries';
 import { useCart } from '@/components/shop/cart/CartProvider';
 import { navigate } from '@/router/HashRouter';
 import { THEME_ASSETS } from '@/utils/themeAssets';
 import { Badge } from '@/components/ui/badge';
 import { BrandImage } from '@/components/brand/BrandImage';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
+import { useIsCallerAdmin } from '@/hooks/useQueries';
 
 export function ShopHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: isAdmin } = useIsCallerAdmin();
   const { getItemCount } = useCart();
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
   const cartItemCount = getItemCount();
+  const { data: isAdmin } = useIsCallerAdmin();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -51,7 +51,7 @@ export function ShopHeader() {
               </Button>
             )}
             {isAuthenticated && (
-              <Button variant="ghost" onClick={() => navigate('/retailer')}>
+              <Button variant="ghost" onClick={() => navigate('/retailer-dashboard')}>
                 Retailer
               </Button>
             )}
@@ -110,7 +110,7 @@ export function ShopHeader() {
               </Button>
             )}
             {isAuthenticated && (
-              <Button variant="ghost" className="justify-start" onClick={() => navigate('/retailer')}>
+              <Button variant="ghost" className="justify-start" onClick={() => navigate('/retailer-dashboard')}>
                 Retailer
               </Button>
             )}

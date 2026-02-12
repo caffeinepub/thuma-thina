@@ -1,337 +1,164 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Info,
-  Users,
-  Package,
-  Store,
-  MapPin,
-  UserCheck,
-  List,
-  Truck,
-  ShoppingBag,
-  ShoppingCart,
-  Settings,
-} from 'lucide-react';
-import { useListApprovals, useSetApproval } from '@/hooks/useQueries';
-import { useListProducts } from '@/hooks/useProducts';
-import { useGlobalCatalogue } from '@/hooks/useCatalog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { ApprovalStatus } from '@/backend';
-import { toast } from 'sonner';
+  Users,
+  ShoppingBag,
+  Store,
+  Package,
+  Truck,
+  MapPin,
+  Settings,
+  Map,
+  FileText,
+} from 'lucide-react';
 import { navigate } from '@/router/HashRouter';
 
 export function AdminDashboardPage() {
-  const { data: approvals, isLoading } = useListApprovals();
-  const { data: products } = useListProducts();
-  const { data: catalogue } = useGlobalCatalogue();
-  const setApproval = useSetApproval();
-
-  const handleApprove = async (principal: string) => {
-    try {
-      await setApproval.mutateAsync({
-        user: principal as any,
-        status: ApprovalStatus.approved,
-      });
-      toast.success('User approved successfully');
-    } catch (error) {
-      toast.error('Failed to approve user');
-    }
-  };
-
-  const handleReject = async (principal: string) => {
-    try {
-      await setApproval.mutateAsync({
-        user: principal as any,
-        status: ApprovalStatus.rejected,
-      });
-      toast.success('User rejected');
-    } catch (error) {
-      toast.error('Failed to reject user');
-    }
-  };
-
-  const pendingCount = approvals?.filter((a) => a.status === ApprovalStatus.pending).length || 0;
-  const approvedCount = approvals?.filter((a) => a.status === ApprovalStatus.approved).length || 0;
-  const productsCount = products?.length || 0;
-  const listingsCount = catalogue?.reduce((sum, p) => sum + p.listings.length, 0) || 0;
-
   return (
     <div className="container-custom py-8">
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage the Thuma Thina platform</p>
+          <p className="text-muted-foreground">Manage your Thuma Thina platform</p>
         </div>
 
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>Platform Development Status</AlertTitle>
-          <AlertDescription>
-            Full admin console now available. Manage users, towns, products, listings, retailers, drivers,
-            shoppers, orders, and system settings.
-          </AlertDescription>
-        </Alert>
-
-        {/* Stats Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingCount}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{approvedCount}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{productsCount}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Listings</CardTitle>
-              <List className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{listingsCount}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* User Approvals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Approvals</CardTitle>
-            <CardDescription>Manage user access to the platform</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : !approvals || approvals.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No approval requests yet</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Principal</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {approvals.map((approval) => (
-                    <TableRow key={approval.principal.toString()}>
-                      <TableCell className="font-mono text-xs">
-                        {approval.principal.toString().slice(0, 20)}...
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            approval.status === ApprovalStatus.approved
-                              ? 'default'
-                              : approval.status === ApprovalStatus.pending
-                              ? 'secondary'
-                              : 'destructive'
-                          }
-                        >
-                          {approval.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {approval.status === ApprovalStatus.pending && (
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprove(approval.principal.toString())}
-                              disabled={setApproval.isPending}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject(approval.principal.toString())}
-                              disabled={setApproval.isPending}
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Management Sections */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/towns')}
-          >
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/shoppers')}>
             <CardHeader>
-              <MapPin className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Towns Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <ShoppingBag className="h-8 w-8 text-primary" />
+                <Badge variant="secondary">Active</Badge>
+              </div>
+              <CardTitle>Personal Shoppers</CardTitle>
+              <CardDescription>Manage shopper applications and approvals</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Manage the list of towns where Thuma Thina operates
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Shoppers
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/town-applications')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/drivers')}>
             <CardHeader>
-              <UserCheck className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Town Applications</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <Truck className="h-8 w-8 text-primary" />
+                <Badge variant="secondary">Coming Soon</Badge>
+              </div>
+              <CardTitle>Delivery Drivers</CardTitle>
+              <CardDescription>Manage driver applications and approvals</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Review and approve additional town membership requests
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Drivers
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/products')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/pickup-points')}>
             <CardHeader>
-              <Package className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Product Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <MapPin className="h-8 w-8 text-primary" />
+                <Badge variant="secondary">Active</Badge>
+              </div>
+              <CardTitle>Pickup Points</CardTitle>
+              <CardDescription>Manage pickup point applications</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Manage the universal product catalogue</p>
+              <Button variant="outline" className="w-full">
+                Manage Pickup Points
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/listings')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/retailers')}>
             <CardHeader>
-              <List className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Listings Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <Store className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Retailers</CardTitle>
+              <CardDescription>Manage retailers and their information</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Link products to retailers with prices</p>
+              <Button variant="outline" className="w-full">
+                Manage Retailers
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/retailers')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/products')}>
             <CardHeader>
-              <Store className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Retailer Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <Package className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Products</CardTitle>
+              <CardDescription>Manage product catalog</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Register and manage retailers across all towns
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Products
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/drivers')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/listings')}>
             <CardHeader>
-              <Truck className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Driver Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <FileText className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Listings</CardTitle>
+              <CardDescription>Manage product listings and pricing</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Review driver applications and manage approved drivers
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Listings
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/shoppers')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/orders')}>
             <CardHeader>
-              <ShoppingBag className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Shopper Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <ShoppingBag className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Orders</CardTitle>
+              <CardDescription>View and manage customer orders</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Review shopper applications and manage approved shoppers
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Orders
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/orders')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/towns')}>
             <CardHeader>
-              <ShoppingCart className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Order Management</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <div className="flex items-center justify-between">
+                <Map className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle>Towns</CardTitle>
+              <CardDescription>Manage towns and locations</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                View and manage all orders, update status and assignments
-              </p>
+              <Button variant="outline" className="w-full">
+                Manage Towns
+              </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="cursor-pointer transition-all hover:shadow-md"
-            onClick={() => navigate('/admin/settings')}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/settings')}>
             <CardHeader>
-              <Settings className="h-8 w-8 text-primary mb-2" />
+              <div className="flex items-center justify-between">
+                <Settings className="h-8 w-8 text-primary" />
+              </div>
               <CardTitle>System Settings</CardTitle>
-              <CardDescription>Available now</CardDescription>
+              <CardDescription>Configure platform settings</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Configure system settings and perform administrative actions
-              </p>
+              <Button variant="outline" className="w-full">
+                System Settings
+              </Button>
             </CardContent>
           </Card>
         </div>
