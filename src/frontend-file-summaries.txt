@@ -46,7 +46,7 @@
   "frontend/src/pages/admin/AdminManageListingsPage.tsx": "Admin listings management page with live data rendering, search filtering, delete confirmation dialog, and edit actions using ListingEditDialog component with proper error handling and toast feedback.",
   "frontend/src/pages/admin/AdminPickupPointsPage.tsx": "Admin pickup point management page with tabs for pending/approved/rejected applications, detailed review dialog with business image display using getExternalBlobUrl, approve/reject actions with required rejection reason, and proper React Query integration using PickupPointApplication type.",
   "frontend/src/main.tsx": "Application bootstrap that wraps the app with QueryClientProvider and InternetIdentityProvider with proper query client configuration.",
-  "frontend/src/router/HashRouter.tsx": "Hash-based router with all application routes including the new driver dashboard route wrapped with RequireAuth and RequireApprovedDriver guards.",
+  "frontend/src/router/HashRouter.tsx": "Hash-based router with all application routes including the new pickup-point dashboard route at /pickup-point-dashboard wrapped with RequireAuth guard.",
   "frontend/src/components/auth/LoginButton.tsx": "Login/logout button component that handles Internet Identity authentication and clears query cache on logout.",
   "frontend/src/components/auth/RequireAuth.tsx": "Authentication guard component that shows login prompt for unauthenticated users and renders children for authenticated users.",
   "frontend/src/components/auth/RequireApproved.tsx": "Approval guard component that checks user approval status, allows admins through, and shows approval request UI for non-approved users.",
@@ -97,5 +97,6 @@
   "frontend/src/hooks/useShopperOrders.ts": "React Query hooks for shopper dashboard operations including listing eligible/assigned orders, fetching order details with expanded items, accepting orders, and completing orders with proper cache invalidation and polling.",
   "frontend/src/components/auth/RequireApprovedShopper.tsx": "Authentication guard component that checks if user is an approved personal shopper or admin, displaying appropriate access-denied screens with application status and navigation to application forms.",
   "frontend/src/hooks/useDriverOrders.ts": "React Query hook for fetching driver-eligible orders from the backend with 10-second polling interval matching shopper dashboard pattern.",
-  "frontend/src/components/auth/RequireApprovedDriver.tsx": "Authentication guard component that checks if user is an approved driver or admin, displaying appropriate access-denied screens with application status and navigation to application forms."
+  "frontend/src/components/auth/RequireApprovedDriver.tsx": "Authentication guard component that checks if user is an approved driver or admin, displaying appropriate access-denied screens with application status and navigation to application forms.",
+  "frontend/src/pages/shop/PickupPointDashboardPage.tsx": "Placeholder pickup-point dashboard page with a welcome card and descriptive text indicating upcoming functionality for order management."
 }

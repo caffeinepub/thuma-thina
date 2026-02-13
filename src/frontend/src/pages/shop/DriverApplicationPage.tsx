@@ -8,13 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { navigate } from '@/router/HashRouter';
 import { toast } from 'sonner';
-import { useSubmitDriverApplication, useGetDriverApplication } from '@/hooks/useDriverApplication';
-import { ExternalBlob } from '@/backend';
+import { useSubmitDriverApplication, useGetMyDriverApplication } from '@/hooks/useDriverApplication';
 import { fileToBytes, validateImageFile } from '@/utils/fileBytes';
 
 export function DriverApplicationPage() {
   const submitApplication = useSubmitDriverApplication();
-  const { data: existingApplication, isLoading: loadingExisting, isFetched } = useGetDriverApplication();
+  const { data: existingApplication, isLoading: loadingExisting, isFetched } = useGetMyDriverApplication();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -84,18 +83,13 @@ export function DriverApplicationPage() {
       // Convert file to bytes
       const bytes = await fileToBytes(selfieFile);
 
-      // Create ExternalBlob with upload progress tracking
-      const selfieBlob = ExternalBlob.fromBytes(bytes as Uint8Array<ArrayBuffer>).withUploadProgress((percentage) => {
-        setUploadProgress(percentage);
-      });
-
       // Submit application
       await submitApplication.mutateAsync({
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         vehicleDetails: formData.vehicleDetails.trim(),
-        selfieImage: selfieBlob,
+        selfieBytes: bytes,
       });
 
       toast.success('Application submitted successfully!');

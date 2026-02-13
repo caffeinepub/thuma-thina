@@ -13,6 +13,7 @@ import { PickupPointApplicationPage } from '@/pages/shop/PickupPointApplicationP
 import { DriverApplicationPage } from '@/pages/shop/DriverApplicationPage';
 import { ShopperDashboardPage } from '@/pages/shop/ShopperDashboardPage';
 import { DriverDashboardPage } from '@/pages/shop/DriverDashboardPage';
+import { PickupPointDashboardPage } from '@/pages/shop/PickupPointDashboardPage';
 import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
 import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
 import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
@@ -167,6 +168,16 @@ const driverDashboardRoute = createRoute({
       <RequireApprovedDriver>
         <DriverDashboardPage />
       </RequireApprovedDriver>
+    </RequireAuth>
+  ),
+});
+
+const pickupPointDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pickup-point-dashboard',
+  component: () => (
+    <RequireAuth>
+      <PickupPointDashboardPage />
     </RequireAuth>
   ),
 });
@@ -338,6 +349,7 @@ const routeTree = rootRoute.addChildren([
   driverApplicationRoute,
   shopperDashboardRoute,
   driverDashboardRoute,
+  pickupPointDashboardRoute,
   retailerDashboardRoute,
   retailerOrdersRoute,
   adminDashboardRoute,

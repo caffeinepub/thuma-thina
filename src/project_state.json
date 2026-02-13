@@ -1,18 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Driver app: shopper-completed orders appear on driver dashboard as available orders; drivers can accept orders, mark them delivered, and view a completed orders list. Current next step is to build the basic order data model only.",
+  "summary": "App update to support a pickup-point ordering workflow: pickup points (registered with a town) can view prioritized listings (own-town first, all towns included) and create/checkout orders on behalf of customers, feeding into a shopper/driver status pipeline ending with pickup-point marking order collected.",
   "architectural_notes": [
-    "Order flow: shopper-completed orders become available orders on driver dashboard; drivers accept; delivered orders move to Completed list."
+    "Due to platform build limitations, implement the pickup-point dashboard in very small incremental steps (start with an empty route + placeholder, then add data fetching, list rendering, sorting, etc.)."
   ],
   "known_issues": [
-    "Build failed multiple times when attempting to implement full driver accept/deliver workflow in one step; needs to be broken into smaller builds."
+    "Automated builds fail when the request bundles too many changes at once (dashboard + route + components + backend calls/queries)."
   ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-ensure-the-existing-driver-dashboard-page-can-load-and-render-the-eligible-orders-feed-using-the-existing-hook-uselisteligibledriverorders-without-runtime-errors-if-backend-filtering-status-semantics-differ-update-frontend-display-logic-only-as-needed-to-match-the-backend-s-ready-for-delivery-status-while-keeping-user-facing-text-in-english",
-      "title": "Ensure the existing Driver Dashboard page can load and render the eligible orders feed using the existing hook useListEligibleDriverOrders without runtime errors.\n\nIf backend filtering/status semantics differ, update frontend display logic only as needed to match the backend’s “ready for delivery” status while keeping user-facing text in English.",
+      "id": "feature-create-a-new-pickup-point-dashboard-page-component-that-renders-placeholder-content-only-no-backend-calls-no-listing-queries-no-order-cart-actions-the-page-must-include-a-clear-h1-title-and-short-description-indicating-this-is-the-upcoming-pickup-point-dashboard",
+      "title": "Create a new Pickup Point Dashboard page component that renders placeholder content only (no backend calls, no listing queries, no order/cart actions). The page must include a clear H1 title and short description indicating this is the upcoming pickup-point dashboard.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-authenticated-route-for-the-pickup-point-dashboard-in-the-tanstack-router-configuration-frontend-src-router-hashrouter-tsx-the-route-must-be-protected-by-requireauth-and-render-the-new-placeholder-pickup-point-dashboard-page-at-a-stable-path-e-g-pickup-point-dashboard",
+      "title": "Add a new authenticated route for the Pickup Point Dashboard in the TanStack router configuration (frontend/src/router/HashRouter.tsx). The route must be protected by RequireAuth and render the new placeholder Pickup Point Dashboard page at a stable path (e.g., /pickup-point-dashboard).",
       "reqIds": [
         "REQ-2"
       ],
@@ -22,32 +30,37 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Create basic Orders data model for shopper-completed orders to appear on driver dashboard (available orders feed)",
+      "summary": "Pickup-point dashboard to browse all active listings, prioritized by the pickup-point’s registered town (own-town first, then other towns).",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Allow drivers to accept available orders (claim/assign order to driver)",
+      "summary": "Pickup-point registration requires selecting a town from admin-created towns; saved town is used for dashboard sorting.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Allow drivers to mark accepted orders as delivered and move them to a Completed orders list",
+      "summary": "Pickup-point order creation/checkout flow from listings (pickup points are the only buyers; customers can browse only).",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Implement the backend Orders data model persistence and core query/mutation methods used by the existing frontend hooks so that customer-created orders can be stored and later surfaced as “available orders” on the driver dashboard.\n\nAt minimum, ensure backend/main.mo exposes functional implementations for the existing frontend expectations:\n- createOrder(items, deliveryMethod, paymentMethod) -> OrderRecord\n- getMyOrders() -> [OrderRecord]\n- getOrder(orderId) -> ?OrderRecord\n- listEligibleDriverOrders() -> [OrderRecord] (returns shopper-completed orders that are ready for delivery)\n- listAllOrders() -> [OrderRecord] (admin)\n- updateOrderStatus(orderId, status) -> () (admin)\n\nAlso ensure OrderId generation and OrderRecord.totalAmount are computed and stored consistently so that the driver dashboard can render total and timestamps.",
-      "reqIds": [
-        "REQ-1"
-      ],
+      "summary": "Order lifecycle/status flow: after pickup-point checkout -> Ready -> Shopper accepted -> Shopper completed -> Driver accepted -> Driver delivered -> Ready for pickup -> Pickup-point marks Collected (end).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Implement build in incremental steps starting with Step 1: create empty pickup-point dashboard route with placeholder text.",
+      "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Implement basic Orders data model and APIs for driver eligible orders feed",
+  "gameProjectType": "none",
+  "projectName": "Step 1: Add empty Pickup Point Dashboard route with placeholder page",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

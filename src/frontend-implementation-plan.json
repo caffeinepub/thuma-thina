@@ -1,20 +1,39 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Driver Dashboard eligible orders feed rendering hardening",
+  "title": "Step 1: Pickup Point Dashboard placeholder page + authenticated route",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Ensure Driver Dashboard loads and renders the eligible orders feed via useListEligibleDriverOrders with robust status/field rendering and no runtime crashes.",
+      "id": "REQ-1",
+      "summary": "Create a placeholder Pickup Point Dashboard page component under shop pages with an H1 title and short description, and no data fetching.",
       "acceptanceCriteria": [
-        "Visiting the Driver Dashboard triggers useListEligibleDriverOrders and renders either: loading skeletons, an error alert, an empty-state alert, or the table of orders, without crashing.",
-        "Each eligible order row renders order id, item count, formatted totalAmount, formatted createdAt, and a status badge based on the returned OrderRecord.status shape."
+        "A new page component exists under frontend/src/pages/shop for the pickup-point dashboard.",
+        "When rendered, the page shows a visible title (H1) and a short English placeholder description.",
+        "The page does not import or call any data-fetching hooks (React Query) or actor methods.",
+        "The page renders without runtime errors and uses existing layout conventions (e.g., container-custom + spacing) consistent with other shop pages."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
+          "path": "frontend/src/pages/shop/PickupPointDashboardPage.tsx",
+          "operation": "create",
+          "description": "Create the PickupPointDashboardPage component rendering placeholder-only UI: a container-custom wrapper with existing spacing conventions (e.g., py-8 + space-y-*), a clear H1 title (\"Pickup Point Dashboard\") and a short English description indicating this is an upcoming dashboard. Do not import/use React Query hooks or actor calls. (Verify the component's usage instructions before implementing.)"
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Register a new /pickup-point-dashboard route in the TanStack HashRouter, protected by RequireAuth, rendering the new placeholder page.",
+      "acceptanceCriteria": [
+        "Navigating to /pickup-point-dashboard while logged out shows the existing login gate (RequireAuth behavior).",
+        "Navigating to /pickup-point-dashboard while logged in renders the new placeholder pickup-point dashboard page.",
+        "The new route is included in the router's routeTree so it is reachable at runtime.",
+        "No other routes, dashboards, or role-approval guards are changed in this step."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
           "operation": "modify",
-          "description": "Harden eligible orders table rendering to avoid runtime errors when OrderRecord fields are missing/undefined and to tolerate backend status semantics changes. Keep user-facing text in English. Continue using existing shadcn-ui primitives already imported (Card, Alert, Table, Badge, Skeleton) for consistent UI; verify the component's usage instructions before implementing."
+          "description": "Add an import for PickupPointDashboardPage, define a new route at path '/pickup-point-dashboard' that renders the page inside RequireAuth (use the existing RequireAuth guard provided by the authorization setup; no additional approval/role gating in this step), and include the route in routeTree so it is reachable. Keep all other routes unchanged. (Verify the component's usage instructions before implementing.)"
         }
       ]
     }
