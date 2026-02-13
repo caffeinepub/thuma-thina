@@ -1,236 +1,20 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
-  "summary": "Scope now includes activating Drivers and Pickup Points on the app via the Join Us flow: implement driver signup (mirrors shopper + vehicle/licence fields + selfie) with admin approval to set drivers active; and connect backend for pickup point signup (name/address/contact number + business image) with admin approve/reject in the existing approvals area (no separate admin section). Shoppers flow remains in scope; dashboards remain out of scope for now.",
+  "projectStateVersion": 3,
+  "summary": "Driver app: shopper-completed orders appear on driver dashboard as available orders; drivers can accept orders, mark them delivered, and view a completed orders list. Current next step is to build the basic order data model only.",
   "architectural_notes": [
-    "Admin role already exists (manages retailers/listings/products) and will also approve/manage shoppers.",
-    "Orders module already exists (checked-out orders available for shopper workflow).",
-    "For towns, products do not store a town field; retailer registration includes address + town, and product town context is derived from the retailer.",
-    "Users can link to multiple towns and manage favorite towns freely (no admin approval required for additional towns).",
-    "Retailers default to one town but may link to multiple towns for franchises.",
-    "Shoppers and drivers can belong to multiple towns; town membership influences which orders they see; customers use towns to prioritize nearby listings.",
-    "Admin console work in this phase is limited to Drivers, Shoppers, Order Management, and System Settings; Retailers/Listings/Products/Towns are not being modified.",
-    "Admin console sections should be separate pages/sections rather than a single unified dashboard for this phase.",
-    "Role-based admin access levels (super-admin vs admin) are out of scope for this phase.",
-    "Join Us: separate signup forms per role (shoppers/drivers/pickup points), but current scope is shoppers only."
+    "Order flow: shopper-completed orders become available orders on driver dashboard; drivers accept; delivered orders move to Completed list."
   ],
   "known_issues": [
-    "Automated build attempts repeatedly failed due to internal limits when trying to implement larger modules.",
-    "Frontend shows 'Towns functionality is not yet implemented in the backend' / 'backend not connected' in towns dashboards, indicating missing or mismatched backend endpoints for towns/user-town linking.",
-    "Repeated build attempts to implement Driver and Pickup Point flows failed (builder could not process request), suggesting changes must be split into very small backend-only steps first.",
-    "Join Us → Pickup Points is still disabled / shows “Coming soon”, so users cannot start the Pickup Point signup/application workflow; consequently there are no applications for admin to manage.",
-    "Attempting the next “tiny step” build for enabling Driver signup (frontend unlock in Join Us + initial backend submit) failed with 'Our AI couldn't handle that request', indicating driver-related changes may still need to be split into even smaller steps.",
-    "Regression since v33: Admin button/module no longer appears in the navigation panel even when logged in as an admin (admin access previously worked through v32).",
-    "Performance issue: navigating between tabs is slow to initialize.",
-    "After deploying v35, backend no longer recognizes the user’s admin account; user requested full revert to v34 (frontend + backend) to restore admin recognition."
+    "Build failed multiple times when attempting to implement full driver accept/deliver workflow in one step; needs to be broken into smaller builds."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-audit-the-frontend-for-actor-calls-that-are-currently-stubbed-throw-backend-method-not-yet-implemented-or-are-described-as-placeholders-and-implement-the-corresponding-backend-canister-methods-in-backend-main-mo-so-the-ui-can-function-without-backend-not-connected-not-yet-implemented-messaging",
-      "title": "Audit the frontend for actor calls that are currently stubbed, throw \"Backend method not yet implemented\", or are described as placeholders, and implement the corresponding backend canister methods in `backend/main.mo` so the UI can function without \"backend not connected\" / \"not yet implemented\" messaging.",
+      "id": "feature-ensure-the-existing-driver-dashboard-page-can-load-and-render-the-eligible-orders-feed-using-the-existing-hook-uselisteligibledriverorders-without-runtime-errors-if-backend-filtering-status-semantics-differ-update-frontend-display-logic-only-as-needed-to-match-the-backend-s-ready-for-delivery-status-while-keeping-user-facing-text-in-english",
+      "title": "Ensure the existing Driver Dashboard page can load and render the eligible orders feed using the existing hook useListEligibleDriverOrders without runtime errors.\n\nIf backend filtering/status semantics differ, update frontend display logic only as needed to match the backend’s “ready for delivery” status while keeping user-facing text in English.",
       "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-towns-membership-frontend-integration-to-call-the-implemented-backend-methods-and-remove-the-hardcoded-placeholder-behavior-implement-frontend-src-hooks-usetownmembership-ts-queries-mutations-and-update-towns-pages-to-stop-showing-the-static-towns-functionality-is-not-yet-implemented-in-the-backend-alert-once-the-backend-is-connected",
-      "title": "Update the towns membership frontend integration to call the implemented backend methods and remove the hardcoded placeholder behavior: implement `frontend/src/hooks/useTownMembership.ts` queries/mutations, and update towns pages to stop showing the static \"Towns functionality is not yet implemented in the backend\" alert once the backend is connected.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-complete-the-missing-user-profile-backend-integration-wire-the-existing-profile-related-backend-methods-to-the-frontend-hooks-and-implement-any-missing-backend-methods-that-are-referenced-by-the-frontend-useuserprofiles-ts-so-profile-read-write-no-longer-behaves-as-a-placeholder",
-      "title": "Complete the missing User Profile backend integration: wire the existing profile-related backend methods to the frontend hooks and implement any missing backend methods that are referenced by the frontend (`useUserProfiles.ts`) so profile read/write no longer behaves as a placeholder.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-separate-admin-sections-routes-pages-for-drivers-shoppers-order-management-and-system-settings-keeping-the-existing-admin-sections-for-towns-products-listings-and-retailers-unchanged",
-      "title": "Add separate admin sections (routes + pages) for Drivers, Shoppers, Order Management, and System Settings, keeping the existing admin sections for Towns, Products, Listings, and Retailers unchanged.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-the-drivers-admin-module-ui-with-all-admin-actions-available-through-the-ui-no-backend-only-actions-including-reviewing-driver-applications-and-managing-approved-drivers",
-      "title": "Implement the Drivers admin module UI with all admin actions available through the UI (no backend-only actions), including reviewing driver applications and managing approved drivers.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-the-shoppers-admin-module-ui-with-all-admin-actions-available-through-the-ui-no-backend-only-actions-including-reviewing-shopper-applications-and-managing-approved-shoppers",
-      "title": "Implement the Shoppers admin module UI with all admin actions available through the UI (no backend-only actions), including reviewing shopper applications and managing approved shoppers.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-the-order-management-admin-module-as-a-separate-admin-section-with-full-ui-actions-for-managing-orders-end-to-end",
-      "title": "Implement the Order Management admin module as a separate admin section with full UI actions for managing orders end-to-end.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-the-system-settings-admin-module-as-a-separate-admin-section-including-a-functioning-danger-zone-admin-action-area-and-any-required-backend-support",
-      "title": "Implement the System Settings admin module as a separate admin section, including a functioning 'danger zone' admin action area and any required backend support.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-replace-the-placeholder-implementations-in-frontend-src-hooks-useroleapplications-ts-for-shopper-application-admin-actions-so-the-admin-shoppers-ui-frontend-src-pages-admin-adminshopperspage-tsx-works-end-to-end-against-the-backend-list-approve-reject",
-      "title": "Replace the placeholder implementations in `frontend/src/hooks/useRoleApplications.ts` for shopper application admin actions so the Admin Shoppers UI (`frontend/src/pages/admin/AdminShoppersPage.tsx`) works end-to-end against the backend (list, approve, reject).",
-      "reqIds": [
-        "REQ-17"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-a-personal-shopper-signup-ui-flow-add-a-shopper-application-form-page-reachable-from-the-existing-join-us-page-frontend-src-pages-shop-joinuspage-tsx-and-submit-the-application-to-the-backend-including-uploading-a-single-selfie-image",
-      "title": "Implement a Personal Shopper signup UI flow: add a shopper application form page reachable from the existing Join Us page (`frontend/src/pages/shop/JoinUsPage.tsx`) and submit the application to the backend, including uploading a single selfie image.",
-      "reqIds": [
-        "REQ-18"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-my-applications-tracking-for-shoppers-by-updating-frontend-src-pages-shop-roleapplicationsstatuspage-tsx-to-show-the-caller-s-shopper-application-status-pending-approved-rejected-rejection-reason-when-present-and-provide-a-link-back-to-apply-if-no-application-exists",
-      "title": "Implement “My Applications” tracking for shoppers by updating `frontend/src/pages/shop/RoleApplicationsStatusPage.tsx` to show the caller’s shopper application status (pending/approved/rejected + rejection reason when present) and provide a link back to apply if no application exists.",
-      "reqIds": [
-        "REQ-19"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-enable-pickup-point-applications-in-the-join-us-flow-by-removing-the-disabled-coming-soon-state-and-allowing-users-to-navigate-to-a-pickup-point-application-form",
-      "title": "Enable Pickup Point applications in the Join Us flow by removing the disabled “Coming Soon” state and allowing users to navigate to a Pickup Point application form.",
-      "reqIds": [
-        "REQ-23"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-pickup-point-application-form-page-that-lets-an-authenticated-user-submit-a-pickup-point-application-with-the-required-fields-name-address-contact-number-and-a-single-business-image-upload-and-submits-it-to-the-backend",
-      "title": "Add a Pickup Point application form page that lets an authenticated user submit a Pickup Point application with the required fields (name, address, contact number, and a single business image upload) and submits it to the backend.",
-      "reqIds": [
-        "REQ-24"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-an-admin-ui-to-review-approve-and-reject-pickup-point-applications-end-to-end-including-viewing-submitted-details-and-the-uploaded-business-image",
-      "title": "Implement an admin UI to review, approve, and reject Pickup Point applications end-to-end (including viewing submitted details and the uploaded business image).",
-      "reqIds": [
-        "REQ-26"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-frontend-react-query-hooks-for-pickup-point-applications-submit-admin-list-approve-reject-optionally-fetch-caller-application-and-remove-any-remaining-placeholder-behavior-for-pickup-point-related-hooks",
-      "title": "Add frontend React Query hooks for Pickup Point applications (submit + admin list/approve/reject + optionally fetch caller application) and remove any remaining placeholder behavior for pickup point-related hooks.",
-      "reqIds": [
-        "REQ-27"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-enable-the-driver-option-in-the-join-us-page-by-removing-the-disabled-coming-soon-state-and-navigating-to-a-new-driver-application-form-route-when-clicked",
-      "title": "Enable the Driver option in the Join Us page by removing the disabled “Coming Soon” state and navigating to a new Driver application form route when clicked.",
-      "reqIds": [
-        "REQ-28"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-new-driver-application-form-page-that-mirrors-the-existing-shopper-application-ux-form-validation-single-image-upload-with-preview-upload-progress-and-submits-a-driver-application-to-the-backend",
-      "title": "Add a new Driver application form page that mirrors the existing Shopper application UX (form + validation + single image upload with preview + upload progress) and submits a driver application to the backend.",
-      "reqIds": [
-        "REQ-29"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-frontend-react-query-hooks-for-driver-applications-submit-fetch-caller-application-and-wire-them-into-the-new-driverapplicationpage-and-my-applications-status-page",
-      "title": "Implement frontend React Query hooks for driver applications (submit + fetch caller application) and wire them into the new DriverApplicationPage and My Applications status page.",
-      "reqIds": [
-        "REQ-30"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-routing-and-my-applications-ui-so-users-can-view-their-driver-application-status-pending-approved-rejected-rejection-reason-when-present-similarly-to-shopper-and-pickup-point-status-behavior",
-      "title": "Update routing and My Applications UI so users can view their Driver application status (pending/approved/rejected + rejection reason when present), similarly to shopper and pickup point status behavior.",
-      "reqIds": [
-        "REQ-31"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-replace-the-placeholder-driver-implementations-in-frontend-src-hooks-useroleapplications-ts-so-the-existing-admin-drivers-page-works-end-to-end-against-the-backend-list-pending-approve-reject",
-      "title": "Replace the placeholder driver implementations in `frontend/src/hooks/useRoleApplications.ts` so the existing Admin Drivers page works end-to-end against the backend (list pending + approve + reject).",
-      "reqIds": [
-        "REQ-33"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-app-renders-the-shared-shop-layout-top-navigation-header-footer-on-all-routes-by-updating-the-tanstack-router-root-route-to-render-shoplayout-with-an-outlet-for-child-routes-so-the-header-and-footer-are-always-present-when-the-app-loads",
-      "title": "Ensure the app renders the shared shop layout (top navigation header + footer) on all routes by updating the TanStack Router root route to render `ShopLayout` with an `Outlet` for child routes (so the header and footer are always present when the app loads).",
-      "reqIds": [
-        "REQ-34"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-fix-broken-navigation-targets-in-the-top-navigation-so-header-buttons-route-to-existing-paths-defined-in-frontend-src-router-hashrouter-tsx-e-g-align-the-retailer-nav-button-with-retailer-dashboard-or-another-existing-retailer-route",
-      "title": "Fix broken navigation targets in the top navigation so header buttons route to existing paths defined in `frontend/src/router/HashRouter.tsx` (e.g., align the Retailer nav button with `/retailer-dashboard` or another existing retailer route).",
-      "reqIds": [
-        "REQ-35"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-restore-the-admin-navigation-entry-to-the-pre-v33-behavior-by-rendering-an-admin-button-in-the-shop-header-navigation-desktop-mobile-regardless-of-the-caller-s-admin-status-so-the-admin-module-is-always-visible-in-the-navigation-panel",
-      "title": "Restore the Admin navigation entry to the pre-v33 behavior by rendering an “Admin” button in the Shop header navigation (desktop + mobile) regardless of the caller’s admin status, so the Admin module is always visible in the navigation panel.",
-      "reqIds": [
-        "REQ-36"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-keep-admin-access-control-enforced-at-the-route-page-level-non-admin-users-who-navigate-to-admin-or-any-admin-route-must-see-the-existing-access-denied-experience-while-admins-can-access-the-dashboard-and-modules",
-      "title": "Keep admin access control enforced at the route/page level: non-admin users who navigate to /admin (or any /admin/* route) must see the existing “Access Denied” experience, while admins can access the dashboard and modules.",
-      "reqIds": [
-        "REQ-37"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-improve-perceived-performance-when-navigating-between-tabs-routes-by-preventing-the-full-screen-initializing-overlay-from-re-appearing-after-the-actor-has-already-been-successfully-initialized-once-during-the-current-session",
-      "title": "Improve perceived performance when navigating between tabs/routes by preventing the full-screen “Initializing…” overlay from re-appearing after the actor has already been successfully initialized once during the current session.",
-      "reqIds": [
-        "REQ-38"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-fully-revert-the-project-both-frontend-and-backend-canister-code-to-the-exact-state-of-version-34-with-no-partial-retention-of-any-changes-introduced-after-version-34",
-      "title": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
-      "reqIds": [
-        "REQ-39"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -238,206 +22,32 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Shoppers (personal shoppers) module: shopper signup (name, surname, residential address, date of birth, ID number; cellphone number, email), admin approval, shopper dashboard to view checked-out orders, accept an order (exclusive lock), and mark order complete; support shopper assignment to one/more retailers or general shoppers with retailer-based order visibility.",
+      "summary": "Create basic Orders data model for shopper-completed orders to appear on driver dashboard (available orders feed)",
       "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "AR-2",
-      "summary": "Backend: allow admin to register/manage towns (frontend already exists).",
+      "summary": "Allow drivers to accept available orders (claim/assign order to driver)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Towns personalization: retailers register physical address + town; products inherit town via retailer (no product.town field); users can link multiple towns; browsing prioritizes listings from linked towns then shows others.",
+      "summary": "Allow drivers to mark accepted orders as delivered and move them to a Completed orders list",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Implement backend towns APIs in `backend/main.mo` so admins can register (create) new towns and manage them, matching the existing frontend towns admin UI and hooks.",
+      "summary": "Implement the backend Orders data model persistence and core query/mutation methods used by the existing frontend hooks so that customer-created orders can be stored and later surfaced as “available orders” on the driver dashboard.\n\nAt minimum, ensure backend/main.mo exposes functional implementations for the existing frontend expectations:\n- createOrder(items, deliveryMethod, paymentMethod) -> OrderRecord\n- getMyOrders() -> [OrderRecord]\n- getOrder(orderId) -> ?OrderRecord\n- listEligibleDriverOrders() -> [OrderRecord] (returns shopper-completed orders that are ready for delivery)\n- listAllOrders() -> [OrderRecord] (admin)\n- updateOrderStatus(orderId, status) -> () (admin)\n\nAlso ensure OrderId generation and OrderRecord.totalAmount are computed and stored consistently so that the driver dashboard can render total and timestamps.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Implement backend query methods to list towns for the existing frontend hooks, including listing all towns and listing only active towns.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Implement backend admin-only methods to update and remove towns so the existing admin towns UI can edit and soft-remove towns.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Implement full towns backend integration so users can view/select/manage their linked (favorite) towns in the towns dashboard without 'backend not connected' placeholders; ensure admin towns dashboard is fully backed by APIs.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Remove admin approval requirement for users adding additional towns; allow users to freely add/remove favorite towns at any time.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Retailers town linkage: default one town per retailer, but support multi-town for franchise retailers (ability to add more towns).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Shoppers and drivers can belong to multiple towns; use town membership to drive 'closest' visibility (listings for customers; orders for shoppers/drivers).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Implement all remaining missing backend components across the app (audit and complete any placeholder/unimplemented backend features).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Implement full Town Membership backend support (favorite towns) in `backend/main.mo`, replacing the additional-town approval requirement: users must be able to freely set a default town, add additional favorite towns, remove additional favorite towns, and fetch their current default/additional towns. Any existing admin-approval town application logic must not be required for adding/removing favorite towns.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-16",
-      "summary": "Implement any remaining missing backend methods referenced by non-empty frontend hooks/pages (e.g., retailer portal, orders, listings, admin dashboards) that currently fail due to absent actor endpoints, ensuring the app’s reachable screens can fetch data without runtime actor-method-not-found errors.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-17",
-      "summary": "Admin console: implement Drivers admin module (separate section) with full UI actions (CRUD/management as applicable) and corresponding backend endpoints if missing.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-18",
-      "summary": "Admin console: implement Shoppers admin module UI (separate section) exposing all admin actions in the UI (e.g., approvals/management) and add any missing backend endpoints needed.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-19",
-      "summary": "Admin console: implement Order Management admin module (separate section) with all required admin actions available via UI and add any missing backend endpoints needed.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-20",
-      "summary": "Admin console: implement System Settings admin module (separate section) with all settings/actions available via UI and add any missing backend endpoints needed; no super-admin vs admin roles in this phase.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-26",
-      "summary": "Add/complete backend actor methods in backend/main.mo required to support Drivers admin, Shoppers admin, Order Management admin, and System Settings admin features, ensuring they match the frontend’s actor calls and do not break existing functionality.",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-27",
-      "summary": "Join Us: Personal Shoppers signup + admin approval to become active on the app. Signup fields: name, surname, residential address, date of birth, ID number, cellphone number, email, plus a single selfie image upload. Dashboards are out of scope for now.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-28",
-      "summary": "Implement backend support in `backend/main.mo` for Personal Shopper applications, including creating an application with all required fields + a single selfie image (stored via the existing blob storage mixin), retrieving the caller’s own application, and listing applications for admins.",
-      "reqIds": [
-        "REQ-15"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-29",
-      "summary": "Implement backend admin actions in `backend/main.mo` to approve and reject Personal Shopper applications, recording reviewer principal and rejection reason when applicable, and ensure the approval makes the shopper “active” in the system.",
-      "reqIds": [
-        "REQ-16"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-30",
-      "summary": "Drivers Join Us activation: implement driver application signup similar to shoppers (same fields + vehicle type (car/van/bike) + learners license (yes/no) + drivers license (yes/no) + selfie upload) and admin approval/rejection to set drivers active in the system.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-31",
-      "summary": "Drivers “My Applications” status page: allow drivers to view their driver application status (pending/approved/rejected + rejection reason when present) similar to shoppers’ RoleApplicationsStatusPage behavior.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-32",
-      "summary": "Pickup Points backend integration (minimal step): add backend support to create pickup point applications (name, address, contact number, business image upload), list pending applications for admins, and admin approve/reject (no new admin section; reuse existing approvals area used for shoppers/drivers).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-33",
-      "summary": "Add backend canister methods in `backend/main.mo` to allow authenticated users to submit a Pickup Point application and persist it in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
-      "reqIds": [
-        "REQ-20"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-34",
-      "summary": "Add backend admin query methods in `backend/main.mo` to list pending Pickup Point applications for review.",
-      "reqIds": [
-        "REQ-21"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-35",
-      "summary": "Add backend admin mutation methods in `backend/main.mo` to approve or reject a specific Pickup Point application by applicant principal, updating application status and related pickup point approval state.",
-      "reqIds": [
-        "REQ-22"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-38",
-      "summary": "Implement backend canister support for Pickup Point applications: create application (authenticated users only), fetch caller’s application, list pending applications (admin only), and approve/reject (admin only), persisting in the existing `pickupPointApplications : Map<Principal, PickupPointApplication>` state.",
-      "reqIds": [
-        "REQ-25"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-43",
-      "summary": "Implement backend canister support for Driver applications: create application (authenticated users only), fetch caller application, list pending applications (admin only), and approve/reject (admin only), persisted in the existing `driverApplications : Map<Principal, DriverApplication>` state and updating `approvedDrivers` on approval.",
-      "reqIds": [
-        "REQ-32"
-      ],
-      "status": "pending"
     }
   ],
-  "projectName": "Backend: Admin CRUD APIs to register and manage towns",
+  "projectName": "Implement basic Orders data model and APIs for driver eligible orders feed",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

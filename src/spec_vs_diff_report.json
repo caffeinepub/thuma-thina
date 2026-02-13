@@ -1,78 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T13:26:04.488Z",
-  "summary": "The diff does not demonstrate a full rollback to Version 34 across frontend and backend. Instead, it shows ongoing/expanded functionality (notably admin gating in the frontend and extensive backend type/import surface suggesting newer features), which conflicts with the requested complete revert with no retained Version 35+ changes.",
+  "generatedAt": "2026-02-13T08:46:12.681Z",
+  "summary": "Frontend DriverDashboardPage was updated to defensively render eligible orders (loading/error/empty/table) and to handle multiple OrderStatus variants via __kind__. Backend/main.mo diff is truncated and does not show any Orders data model or required order APIs, so core backend requirements cannot be verified as implemented.",
   "missing_requirements": [
     {
-      "id": "REQ-39",
-      "requirement": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
-      "reason": "The diff shows active modifications introducing/using admin-check UI gating and a large backend surface area (imports/types for approvals, storage mixins, driver/shopper/pickup-point applications, analytics, etc.), which indicates the codebase is not being reverted wholesale to an older snapshot. There is no evidence in the diff summary of restoring Version 34-specific files/logic or removing Version 35+ changes; rather, multiple files are modified in ways consistent with continuing Version 35+ behavior.",
+      "id": "REQ-1",
+      "requirement": "Implement backend Orders persistence and expose createOrder/getMyOrders/getOrder/listEligibleDriverOrders/listAllOrders/updateOrderStatus with consistent OrderId generation, totalAmount computation, timestamps, status filtering, and required authorization patterns.",
+      "reason": "The backend/main.mo diff excerpt only shows type/import declarations and is truncated before any Orders storage or the required public methods. There is no visible evidence that the required order APIs, persistence, filtering (eligible == status.__kind__ === 'purchased'), totalAmount computation, or admin/auth enforcement were implemented.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/components/auth/RequireAdmin.tsx",
-        "frontend/src/components/shop/ShopHeader.tsx",
-        "frontend/src/components/shop/ShopLayout.tsx",
-        "frontend-file-summaries.txt",
-        "project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-39",
-      "requirement": "Caller’s admin account is recognized by the backend as it was in Version 34 (admin-only routes and actions work again for the same principal).",
-      "reason": "While the frontend adds/uses an isCallerAdmin check (which changes UI access behavior), the diff summary does not provide evidence that backend admin recognition/assignment has been restored to Version 34 behavior for the same principal (no clear revert of admin list/logic is shown; backend content is truncated and shows newer authorization mixins/imports).",
-      "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/components/auth/RequireAdmin.tsx",
-        "frontend/src/components/shop/ShopHeader.tsx"
+        "backend/main.mo (truncated; no order APIs shown)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Admin-gated UI wrapper with a loading state and an 'Access Denied' card, using a new/explicit RequireAdmin component driven by useIsCallerAdmin.",
-      "reason": "The BuildRequest is strictly to revert to Version 34 with no new/changed features; adding/modifying admin gating UI is a feature change unless it exactly matches Version 34 (not evidenced).",
+      "description": "Driver dashboard status badge logic includes additional status kinds beyond the explicitly required 'purchased' eligible status (pending/assigned/ready/inDelivery/delivered/cancelled) and displays user-facing labels for them.",
+      "reason": "REQ-2 only requires rendering eligible orders and a status badge based on returned status shape; it does not request adding UI support for non-eligible lifecycle statuses (and REQ non-goals explicitly exclude accept/deliver workflows).",
       "evidence": [
-        "frontend/src/components/auth/RequireAdmin.tsx"
-      ]
-    },
-    {
-      "description": "Shop header conditionally renders an 'Admin' navigation button based on useIsCallerAdmin and includes authenticated-only nav items (e.g., Retailer, My Towns) with updated header structure.",
-      "reason": "Not requested; the only requested work is a full revert to Version 34 UI/behavior, and the diff shows specific navigation logic updates rather than a rollback.",
-      "evidence": [
-        "frontend/src/components/shop/ShopHeader.tsx"
-      ]
-    },
-    {
-      "description": "Shop layout behavior includes DefaultTownSetupDialog and ProfileSetupDialog with specific anti-flash/profile-null logic, implying newer UX flows.",
-      "reason": "Not requested by the revert-only BuildRequest and appears to be additional/retained functionality rather than restoring Version 34.",
-      "evidence": [
-        "frontend/src/components/shop/ShopLayout.tsx",
-        "frontend-file-summaries.txt (ShopLayout entry)"
-      ]
-    },
-    {
-      "description": "Backend canister code includes (at least) extensive newer domain types and modules (AccessControl, MixinAuthorization, blob storage mixins, user approvals, driver/shopper/pickup-point application types, analytics types).",
-      "reason": "The BuildRequest forbids implementing/modifying features beyond restoring Version 34; the backend snippet suggests a broadened feature set rather than a clean rollback (cannot confirm exact Version 34 parity from truncated content).",
-      "evidence": [
-        "backend/main.mo (imports and type definitions shown, truncated)"
-      ]
-    },
-    {
-      "description": "Project state summary references expanded scope for Drivers and Pickup Points activation via Join Us flow and admin approvals.",
-      "reason": "The BuildRequest is to revert to Version 34 with no additional scope; the presence of this scope text indicates non-revert work is being tracked/retained.",
-      "evidence": [
-        "project_state.json"
+        "frontend/src/pages/shop/DriverDashboardPage.tsx"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/auth/RequireAdmin.tsx",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/components/shop/ShopLayout.tsx",
+    "frontend/src/pages/shop/DriverDashboardPage.tsx",
     "project_state.json"
   ]
 }

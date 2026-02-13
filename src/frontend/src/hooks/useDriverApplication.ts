@@ -1,29 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { DriverApplication, ExternalBlob } from '@/backend';
+import { ExternalBlob } from '@/backend';
+import type { DriverApplication } from '@/backend';
 
 export const driverApplicationKeys = {
-  myDriverApplication: ['myDriverApplication'],
+  myApplication: ['myDriverApplication'],
+  myStatus: ['myDriverStatus'],
 };
 
-export function useGetDriverApplication() {
+export function useGetMyDriverApplication() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  const query = useQuery<DriverApplication | null>({
-    queryKey: driverApplicationKeys.myDriverApplication,
+  return useQuery<DriverApplication | null>({
+    queryKey: driverApplicationKeys.myApplication,
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       return actor.getDriverApplication();
     },
     enabled: !!actor && !actorFetching,
-    retry: false,
   });
+}
 
-  return {
-    ...query,
-    isLoading: actorFetching || query.isLoading,
-    isFetched: !!actor && query.isFetched,
-  };
+export function useGetMyDriverStatus() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<{ __kind__: 'pending' } | { __kind__: 'approved' } | { __kind__: 'rejected'; rejected: string } | null>({
+    queryKey: driverApplicationKeys.myStatus,
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      const app = await actor.getDriverApplication();
+      return app ? app.status : null;
+    },
+    enabled: !!actor && !actorFetching,
+  });
 }
 
 export function useSubmitDriverApplication() {
@@ -31,25 +40,29 @@ export function useSubmitDriverApplication() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async ({
+      name,
+      email,
+      phone,
+      vehicleDetails,
+      selfieBytes,
+    }: {
       name: string;
       email: string;
       phone: string;
       vehicleDetails: string;
-      selfieImage: ExternalBlob;
+      selfieBytes: Uint8Array;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createDriverApplication(
-        data.name,
-        data.email,
-        data.phone,
-        data.vehicleDetails,
-        [data.selfieImage]
-      );
+
+      const selfieBlob = ExternalBlob.fromBytes(new Uint8Array(selfieBytes));
+      const kycDocs = [selfieBlob];
+
+      return actor.createDriverApplication(name, email, phone, vehicleDetails, kycDocs);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: driverApplicationKeys.myDriverApplication });
-      queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+      queryClient.invalidateQueries({ queryKey: driverApplicationKeys.myApplication });
+      queryClient.invalidateQueries({ queryKey: driverApplicationKeys.myStatus });
     },
   });
 }

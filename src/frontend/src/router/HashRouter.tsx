@@ -11,6 +11,8 @@ import { RoleApplicationsStatusPage } from '@/pages/shop/RoleApplicationsStatusP
 import { ShopperApplicationPage } from '@/pages/shop/ShopperApplicationPage';
 import { PickupPointApplicationPage } from '@/pages/shop/PickupPointApplicationPage';
 import { DriverApplicationPage } from '@/pages/shop/DriverApplicationPage';
+import { ShopperDashboardPage } from '@/pages/shop/ShopperDashboardPage';
+import { DriverDashboardPage } from '@/pages/shop/DriverDashboardPage';
 import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
 import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
 import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
@@ -26,6 +28,8 @@ import { AdminPickupPointsPage } from '@/pages/admin/AdminPickupPointsPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { RequireAdmin } from '@/components/auth/RequireAdmin';
+import { RequireApprovedShopper } from '@/components/auth/RequireApprovedShopper';
+import { RequireApprovedDriver } from '@/components/auth/RequireApprovedDriver';
 import { ShopLayout } from '@/components/shop/ShopLayout';
 
 const rootRoute = createRootRoute({
@@ -139,6 +143,30 @@ const driverApplicationRoute = createRoute({
   component: () => (
     <RequireAuth>
       <DriverApplicationPage />
+    </RequireAuth>
+  ),
+});
+
+const shopperDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/shopper-dashboard',
+  component: () => (
+    <RequireAuth>
+      <RequireApprovedShopper>
+        <ShopperDashboardPage />
+      </RequireApprovedShopper>
+    </RequireAuth>
+  ),
+});
+
+const driverDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/driver-dashboard',
+  component: () => (
+    <RequireAuth>
+      <RequireApprovedDriver>
+        <DriverDashboardPage />
+      </RequireApprovedDriver>
     </RequireAuth>
   ),
 });
@@ -308,6 +336,8 @@ const routeTree = rootRoute.addChildren([
   shopperApplicationRoute,
   pickupPointApplicationRoute,
   driverApplicationRoute,
+  shopperDashboardRoute,
+  driverDashboardRoute,
   retailerDashboardRoute,
   retailerOrdersRoute,
   adminDashboardRoute,

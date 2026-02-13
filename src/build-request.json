@@ -1,40 +1,56 @@
 {
   "kind": "build_request",
-  "title": "Revert entire deployment back to Version 34 (frontend + backend)",
-  "priority": "high",
+  "title": "Implement basic Orders data model and APIs for driver eligible orders feed",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-39",
-      "text": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
-      "target": "both",
+      "id": "REQ-1",
+      "text": "Implement the backend Orders data model persistence and core query/mutation methods used by the existing frontend hooks so that customer-created orders can be stored and later surfaced as “available orders” on the driver dashboard.\n\nAt minimum, ensure backend/main.mo exposes functional implementations for the existing frontend expectations:\n- createOrder(items, deliveryMethod, paymentMethod) -> OrderRecord\n- getMyOrders() -> [OrderRecord]\n- getOrder(orderId) -> ?OrderRecord\n- listEligibleDriverOrders() -> [OrderRecord] (returns shopper-completed orders that are ready for delivery)\n- listAllOrders() -> [OrderRecord] (admin)\n- updateOrderStatus(orderId, status) -> () (admin)\n\nAlso ensure OrderId generation and OrderRecord.totalAmount are computed and stored consistently so that the driver dashboard can render total and timestamps.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-3",
-          "msg-5",
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "ok no undo the last update entirely please",
-          "1 not version 35 but 34 2 yes return the app exactly to version 34 no partial keeps 3 yes backend revert because now backend does not recognize my admin account",
-          "run the revert"
+          "build order model only"
         ]
       },
       "acceptanceCriteria": [
-        "The deployed frontend matches Version 34 behavior and UI exactly (no Version 35+ changes remain).",
-        "The deployed backend canister code matches Version 34 exactly (no Version 35+ methods/state logic changes remain).",
-        "The caller’s admin account is recognized by the backend as it was in Version 34 (admin-only routes and actions work again for the same principal)."
+        "From the existing Checkout flow, calling createOrder stores a new OrderRecord with a unique id, createdAt, updatedAt, status, items, deliveryMethod, paymentMethod, and totalAmount.",
+        "getMyOrders returns only orders where OrderRecord.customer == caller.",
+        "getOrder returns null when the order does not exist and returns the correct OrderRecord when it exists (including for the owner).",
+        "listEligibleDriverOrders returns the set of orders that are in the “shopper completed / ready for delivery” status used by the DriverDashboardPage (frontend expects status.__kind__ === 'purchased' to show “Ready for Pickup”).",
+        "AdminOrders hooks work end-to-end: listAllOrders returns all stored orders for admins; updateOrderStatus updates status and updatedAt for the specified order.",
+        "All methods enforce existing authorization patterns in backend/main.mo (e.g., authenticated user required for customer methods; admin permission required for admin methods)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Ensure the existing Driver Dashboard page can load and render the eligible orders feed using the existing hook useListEligibleDriverOrders without runtime errors.\n\nIf backend filtering/status semantics differ, update frontend display logic only as needed to match the backend’s “ready for delivery” status while keeping user-facing text in English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "build order model only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Visiting the Driver Dashboard triggers useListEligibleDriverOrders and renders either: loading skeletons, an error alert, an empty-state alert, or the table of orders, without crashing.",
+        "Each eligible order row renders order id, item count, formatted totalAmount, formatted createdAt, and a status badge based on the returned OrderRecord.status shape."
       ]
     }
   ],
   "constraints": [
-    "Revert must target Version 34 (not Version 35).",
-    "No partial keeps: do not retain any subset of the reverted update.",
-    "Include backend revert as well as frontend revert."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit any files under frontend/src/components/ui or any frontend immutablePaths listed in SYSTEM_CONTEXT.",
+    "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Implementing or modifying any features beyond restoring Version 34.",
-    "Refactoring or improving performance/navigation beyond what existed in Version 34.",
-    "Adding new admin role logic or changing admin assignment mechanisms."
+    "Do not implement driver order acceptance/claiming.",
+    "Do not implement driver delivered/completed workflow or completed orders list.",
+    "Do not add new authentication providers (Internet Identity only)."
   ],
   "imageRequirements": {
     "required": [],

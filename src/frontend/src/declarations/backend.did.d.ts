@@ -29,6 +29,12 @@ export interface DriverApplication {
   'phone' : string,
   'kycDocs' : Array<ExternalBlob>,
 }
+export interface ExpandedOrderItem {
+  'listing' : [] | [NewListing],
+  'retailer' : [] | [Retailer],
+  'cartItem' : CartItem,
+  'product' : [] | [Product],
+}
 export type ExternalBlob = Uint8Array;
 export interface HolidayOverride {
   'closeTime' : [] | [bigint],
@@ -158,6 +164,10 @@ export interface ShopProduct {
   'description' : string,
   'image' : [] | [ExternalBlob],
 }
+export interface ShopperOrderView {
+  'order' : OrderRecord,
+  'expandedItems' : Array<ExpandedOrderItem>,
+}
 export type Time = bigint;
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
@@ -204,6 +214,7 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'acceptShopperOrder' : ActorMethod<[OrderId], undefined>,
   'approveDriver' : ActorMethod<[Principal], undefined>,
   'approvePersonalShopper' : ActorMethod<[Principal], undefined>,
   'approvePickupPoint' : ActorMethod<[Principal], undefined>,
@@ -212,6 +223,7 @@ export interface _SERVICE {
     [Principal, RetailerId],
     undefined
   >,
+  'completeShopperOrder' : ActorMethod<[OrderId], OrderRecord>,
   'createCategory' : ActorMethod<[string], undefined>,
   'createDriverApplication' : ActorMethod<
     [string, string, string, string, Array<ExternalBlob>],
@@ -267,6 +279,8 @@ export interface _SERVICE {
   'getRetailer' : ActorMethod<[RetailerId], [] | [Retailer]>,
   'getRetailerListings' : ActorMethod<[RetailerId], Array<NewListing>>,
   'getRetailerPrincipalMapping' : ActorMethod<[Principal], [] | [RetailerId]>,
+  'getShopperOrderDetails' : ActorMethod<[OrderId], [] | [ShopperOrderView]>,
+  'getShopperOrderExpanded' : ActorMethod<[OrderId], [] | [ShopperOrderView]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
@@ -274,6 +288,8 @@ export interface _SERVICE {
   'listAllOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'listCategories' : ActorMethod<[], Array<string>>,
+  'listEligibleDriverOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'listMyAssignedShopperOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listPendingDriverApplications' : ActorMethod<[], Array<DriverApplication>>,
   'listPendingPersonalShopperApplications' : ActorMethod<
     [],
@@ -285,6 +301,7 @@ export interface _SERVICE {
   >,
   'listProducts' : ActorMethod<[], Array<Product>>,
   'listRetailers' : ActorMethod<[], Array<Retailer>>,
+  'listShopperEligiblePickupOrders' : ActorMethod<[], Array<OrderRecord>>,
   'rejectDriver' : ActorMethod<[Principal, string], undefined>,
   'rejectPersonalShopper' : ActorMethod<[Principal, string], undefined>,
   'rejectPickupPoint' : ActorMethod<[Principal, string], undefined>,

@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fully-revert-the-project-both-frontend-and-backend-canister-code-to-the-exact-state-of-version-34-with-no-partial-retention-of-any-changes-introduced-after-version-34",
-      "featureTitle": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+      "featureId": "feature-ensure-the-existing-driver-dashboard-page-can-load-and-render-the-eligible-orders-feed-using-the-existing-hook-uselisteligibledriverorders-without-runtime-errors-if-backend-filtering-status-semantics-differ-update-frontend-display-logic-only-as-needed-to-match-the-backend-s-ready-for-delivery-status-while-keeping-user-facing-text-in-english",
+      "featureTitle": "Ensure the existing Driver Dashboard page can load and render the eligible orders feed using the existing hook useListEligibleDriverOrders without runtime errors.\n\nIf backend filtering/status semantics differ, update frontend display logic only as needed to match the backend’s “ready for delivery” status while keeping user-facing text in English.",
       "files": [
-        "frontend/src/components/auth/RequireAdmin.tsx",
-        "frontend/src/components/shop/ShopHeader.tsx",
-        "frontend/src/components/shop/ShopLayout.tsx"
+        "frontend/src/pages/shop/DriverDashboardPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -20,7 +18,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-39"
+        "REQ-2"
       ],
       "confidence": "high"
     }

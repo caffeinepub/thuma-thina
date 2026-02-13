@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { navigate } from '@/router/HashRouter';
 import { useGetMyShopperApplication } from '@/hooks/useShopperApplication';
 import { useGetMyPickupPointApplication } from '@/hooks/usePickupPointApplication';
-import { useGetDriverApplication } from '@/hooks/useDriverApplication';
+import { useGetMyDriverApplication } from '@/hooks/useDriverApplication';
 import { formatICDateTime } from '@/utils/time';
 import { getExternalBlobUrl } from '@/utils/externalBlobUrl';
 
 export function RoleApplicationsStatusPage() {
   const { data: shopperApplication, isLoading: shopperLoading, isFetched: shopperFetched } = useGetMyShopperApplication();
   const { data: pickupPointApplication, isLoading: pickupLoading, isFetched: pickupFetched } = useGetMyPickupPointApplication();
-  const { data: driverApplication, isLoading: driverLoading, isFetched: driverFetched } = useGetDriverApplication();
+  const { data: driverApplication, isLoading: driverLoading, isFetched: driverFetched } = useGetMyDriverApplication();
 
   const hasShopperApplication = shopperApplication !== null;
   const hasPickupPointApplication = pickupPointApplication !== null;
@@ -174,22 +174,13 @@ export function RoleApplicationsStatusPage() {
                 {shopperApplication.selfieImage && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">Selfie Image</p>
-                    <img
-                      src={getExternalBlobUrl(shopperApplication.selfieImage)}
-                      alt="Applicant selfie"
-                      className="max-w-xs rounded-lg border"
-                    />
-                  </div>
-                )}
-
-                {shopperApplication.status.__kind__ === 'rejected' && (
-                  <div className="pt-4 border-t">
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        If you believe this was a mistake or would like to reapply with updated information, please contact support.
-                      </AlertDescription>
-                    </Alert>
+                    <div className="border rounded-lg p-4 bg-muted/50 max-w-xs">
+                      <img
+                        src={getExternalBlobUrl(shopperApplication.selfieImage)}
+                        alt="Shopper selfie"
+                        className="w-full h-auto rounded-lg object-cover"
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -220,34 +211,25 @@ export function RoleApplicationsStatusPage() {
                     <p className="text-base">{pickupPointApplication.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Address</p>
-                    <p className="text-base">{pickupPointApplication.address}</p>
-                  </div>
-                  <div>
                     <p className="text-sm font-medium text-muted-foreground">Contact Number</p>
                     <p className="text-base">{pickupPointApplication.contactNumber}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-muted-foreground">Address</p>
+                    <p className="text-base">{pickupPointApplication.address}</p>
                   </div>
                 </div>
 
                 {pickupPointApplication.businessImage && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">Business Image</p>
-                    <img
-                      src={getExternalBlobUrl(pickupPointApplication.businessImage)}
-                      alt="Business"
-                      className="max-w-xs rounded-lg border"
-                    />
-                  </div>
-                )}
-
-                {pickupPointApplication.status.__kind__ === 'rejected' && (
-                  <div className="pt-4 border-t">
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        If you believe this was a mistake or would like to reapply with updated information, please contact support.
-                      </AlertDescription>
-                    </Alert>
+                    <div className="border rounded-lg p-4 bg-muted/50 max-w-md">
+                      <img
+                        src={getExternalBlobUrl(pickupPointApplication.businessImage)}
+                        alt="Business"
+                        className="w-full h-auto rounded-lg object-cover"
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -294,46 +276,18 @@ export function RoleApplicationsStatusPage() {
                 {driverApplication.kycDocs && driverApplication.kycDocs.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-2">Selfie Image</p>
-                    <img
-                      src={getExternalBlobUrl(driverApplication.kycDocs[0])}
-                      alt="Driver selfie"
-                      className="max-w-xs rounded-lg border"
-                    />
-                  </div>
-                )}
-
-                {driverApplication.status.__kind__ === 'rejected' && (
-                  <div className="pt-4 border-t">
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        If you believe this was a mistake or would like to reapply with updated information, please contact support.
-                      </AlertDescription>
-                    </Alert>
+                    <div className="border rounded-lg p-4 bg-muted/50 max-w-xs">
+                      <img
+                        src={getExternalBlobUrl(driverApplication.kycDocs[0])}
+                        alt="Driver selfie"
+                        className="w-full h-auto rounded-lg object-cover"
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
           </>
-        )}
-
-        {!hasDriverApplication && !hasShopperApplication && !hasPickupPointApplication && (shopperFetched || pickupFetched || driverFetched) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Other Roles</CardTitle>
-              <CardDescription>
-                Interested in other opportunities?
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Explore all available roles and apply today!
-              </p>
-              <Button variant="outline" onClick={() => navigate('/join-us')}>
-                View All Roles
-              </Button>
-            </CardContent>
-          </Card>
         )}
       </div>
     </div>

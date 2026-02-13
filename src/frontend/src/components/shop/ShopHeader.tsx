@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { BrandImage } from '@/components/brand/BrandImage';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useIsCallerAdmin } from '@/hooks/useQueries';
+import { useGetMyShopperStatus } from '@/hooks/useShopperApplication';
+import { useGetMyDriverStatus } from '@/hooks/useDriverApplication';
 
 export function ShopHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,6 +19,11 @@ export function ShopHeader() {
   const isAuthenticated = !!identity;
   const cartItemCount = getItemCount();
   const { data: isAdmin } = useIsCallerAdmin();
+  const { data: shopperStatus } = useGetMyShopperStatus();
+  const { data: driverStatus } = useGetMyDriverStatus();
+
+  const isApprovedShopper = shopperStatus?.__kind__ === 'approved' || isAdmin;
+  const isApprovedDriver = driverStatus?.__kind__ === 'approved' || isAdmin;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,9 +57,19 @@ export function ShopHeader() {
                 My Towns
               </Button>
             )}
+            {isApprovedShopper && (
+              <Button variant="ghost" onClick={() => navigate('/shopper-dashboard')}>
+                Shopper
+              </Button>
+            )}
+            {isApprovedDriver && (
+              <Button variant="ghost" onClick={() => navigate('/driver-dashboard')}>
+                Driver
+              </Button>
+            )}
             {isAuthenticated && (
-              <Button variant="ghost" onClick={() => navigate('/retailer-dashboard')}>
-                Retailer
+              <Button variant="ghost" onClick={() => navigate('/my-orders')}>
+                My Orders
               </Button>
             )}
             {isAdmin && (
@@ -64,7 +81,10 @@ export function ShopHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/cart')}>
+          <button
+            onClick={() => navigate('/cart')}
+            className="relative p-2 hover:bg-accent rounded-md transition-colors"
+          >
             <ShoppingCart className="h-5 w-5" />
             {cartItemCount > 0 && (
               <Badge
@@ -74,20 +94,18 @@ export function ShopHeader() {
                 {cartItemCount}
               </Badge>
             )}
-          </Button>
+          </button>
 
           <div className="hidden md:block">
             <LoginButton />
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
+          <button
+            className="md:hidden p-2 hover:bg-accent rounded-md transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
 
@@ -95,31 +113,97 @@ export function ShopHeader() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background">
           <nav className="container-custom py-4 flex flex-col gap-2">
-            <Button variant="ghost" className="justify-start" onClick={() => navigate('/')}>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/');
+                setMobileMenuOpen(false);
+              }}
+            >
               Home
             </Button>
-            <Button variant="ghost" className="justify-start" onClick={() => navigate('/catalogue')}>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/catalogue');
+                setMobileMenuOpen(false);
+              }}
+            >
               Shop
             </Button>
-            <Button variant="ghost" className="justify-start" onClick={() => navigate('/join-us')}>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                navigate('/join-us');
+                setMobileMenuOpen(false);
+              }}
+            >
               Join Us
             </Button>
             {isAuthenticated && (
-              <Button variant="ghost" className="justify-start" onClick={() => navigate('/my-towns')}>
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/my-towns');
+                  setMobileMenuOpen(false);
+                }}
+              >
                 My Towns
               </Button>
             )}
+            {isApprovedShopper && (
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/shopper-dashboard');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Shopper
+              </Button>
+            )}
+            {isApprovedDriver && (
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/driver-dashboard');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Driver
+              </Button>
+            )}
             {isAuthenticated && (
-              <Button variant="ghost" className="justify-start" onClick={() => navigate('/retailer-dashboard')}>
-                Retailer
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/my-orders');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                My Orders
               </Button>
             )}
             {isAdmin && (
-              <Button variant="ghost" className="justify-start" onClick={() => navigate('/admin')}>
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/admin');
+                  setMobileMenuOpen(false);
+                }}
+              >
                 Admin
               </Button>
             )}
-            <div className="pt-2 border-t">
+            <div className="pt-2 border-t mt-2">
               <LoginButton />
             </div>
           </nav>

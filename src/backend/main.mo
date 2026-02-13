@@ -3,13 +3,13 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import UserApproval "user-approval/approval";
-import Map "mo:core/Map";
 import List "mo:core/List";
-import Array "mo:core/Array";
+import Map "mo:core/Map";
 import Nat "mo:core/Nat";
-import Time "mo:core/Time";
-import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Time "mo:core/Time";
+import Array "mo:core/Array";
+import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 
 actor {
@@ -291,6 +291,18 @@ actor {
     appliedAt : Time.Time;
     reviewedBy : ?Principal;
     reviewedAt : ?Time.Time;
+  };
+
+  public type ShopperOrderView = {
+    order : OrderRecord;
+    expandedItems : [ExpandedOrderItem];
+  };
+
+  public type ExpandedOrderItem = {
+    cartItem : CartItem;
+    listing : ?NewListing;
+    product : ?Product;
+    retailer : ?Retailer;
   };
 
   public type PersonalShopperStatus = {
@@ -1319,5 +1331,211 @@ actor {
         driverApplications.add(principal, updated);
       };
     };
+  };
+
+  private func isShopper(caller : Principal) : Bool {
+    approvedShoppers.containsKey(caller) or personalShopperApprovals.containsKey(caller);
+  };
+
+  private func isDriver(caller : Principal) : Bool {
+    approvedDrivers.containsKey(caller);
+  };
+
+  private func getOrderTown(customer : Principal) : TownId {
+    switch (townMemberships.get(customer)) {
+      case (null) { 0 };
+      case (?membership) { membership.default };
+    };
+  };
+
+  private func isOrderForShopper(order : OrderRecord, principal : Principal) : Bool {
+    switch (order.status) {
+      case (#assigned { shopperId }) { shopperId == principal };
+      case (_) { false };
+    };
+  };
+
+  private func toShopperOrderView(order : OrderRecord) : ShopperOrderView {
+    {
+      order;
+      expandedItems = order.items.map(
+        func(cartItem) {
+          let listing = listings.get(cartItem.listingId);
+          let product = switch (listing) {
+            case (null) { null };
+            case (?l) { products.get(l.productId) };
+          };
+          let retailer = switch (listing) {
+            case (null) { null };
+            case (?l) { retailers.get(l.retailerId) };
+          };
+          {
+            cartItem;
+            listing;
+            product;
+            retailer;
+          };
+        }
+      );
+    };
+  };
+
+  public query ({ caller }) func listShopperEligiblePickupOrders() : async [OrderRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view shopper orders");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can view eligible orders");
+    };
+
+    let shopperTown = switch (townMemberships.get(caller)) {
+      case (null) { return [] };
+      case (?membership) { membership.default };
+    };
+
+    let allOrders = orders.values().toArray();
+    allOrders.filter<OrderRecord>(
+      func(order) {
+        switch (order.deliveryMethod) {
+          case (#pickupPoint(_)) {
+            order.status == #pending and getOrderTown(order.customer) == shopperTown;
+          };
+          case (_) { false };
+        };
+      }
+    );
+  };
+
+  public shared ({ caller }) func acceptShopperOrder(orderId : OrderId) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can accept orders");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can accept orders");
+    };
+
+    let shopperTown = switch (townMemberships.get(caller)) {
+      case (null) { Runtime.trap("Shopper must have a town membership") };
+      case (?membership) { membership.default };
+    };
+
+    switch (orders.get(orderId)) {
+      case (null) { Runtime.trap("Order not found") };
+      case (?order) {
+        switch (order.status) {
+          case (#pending) {
+            let orderTown = getOrderTown(order.customer);
+            if (orderTown != shopperTown) {
+              Runtime.trap("Order is not in your town");
+            };
+
+            switch (order.deliveryMethod) {
+              case (#pickupPoint(_)) {};
+              case (_) { Runtime.trap("Order is not a pickup point order") };
+            };
+
+            let updated = { order with
+              status = #assigned({ shopperId = caller });
+              updatedAt = Time.now();
+            };
+            orders.add(orderId, updated);
+          };
+          case (_) { Runtime.trap("Order already claimed or not available") };
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func listMyAssignedShopperOrders() : async [OrderRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view assigned orders");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can view assigned orders");
+    };
+
+    let allOrders = orders.values().toArray();
+    allOrders.filter<OrderRecord>(func(order) { isOrderForShopper(order, caller) });
+  };
+
+  public shared ({ caller }) func completeShopperOrder(orderId : OrderId) : async OrderRecord {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can complete orders");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can complete orders");
+    };
+
+    switch (orders.get(orderId)) {
+      case (null) { Runtime.trap("Order not found") };
+      case (?order) {
+        if (not isOrderForShopper(order, caller) and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Forbidden: You are not the assigned shopper for this order");
+        };
+
+        let completed = { order with
+          status = #purchased;
+          updatedAt = Time.now();
+        };
+        orders.add(orderId, completed);
+        completed;
+      };
+    };
+  };
+
+  public query ({ caller }) func getShopperOrderDetails(orderId : OrderId) : async ?ShopperOrderView {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view order details");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can view order details");
+    };
+
+    switch (orders.get(orderId)) {
+      case (null) { null };
+      case (?order) { ?toShopperOrderView(order) };
+    };
+  };
+
+  public query ({ caller }) func getShopperOrderExpanded(orderId : OrderId) : async ?ShopperOrderView {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view order details");
+    };
+
+    if (not (isShopper(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved shoppers can view order details");
+    };
+
+    switch (orders.get(orderId)) {
+      case (null) { null };
+      case (?order) { ?toShopperOrderView(order) };
+    };
+  };
+
+  public query ({ caller }) func listEligibleDriverOrders() : async [OrderRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view driver orders");
+    };
+
+    if (not (isDriver(caller) or AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only approved drivers can view eligible orders");
+    };
+
+    let driverTown = switch (townMemberships.get(caller)) {
+      case (null) { return [] };
+      case (?membership) { membership.default };
+    };
+
+    let allOrders = orders.values().toArray();
+    allOrders.filter<OrderRecord>(
+      func(order) {
+        order.status == #purchased and getOrderTown(order.customer) == driverTown;
+      }
+    );
   };
 };

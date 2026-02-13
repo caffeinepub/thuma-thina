@@ -19,14 +19,49 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const OrderId = IDL.Nat;
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
 export const RetailerId = IDL.Nat;
-export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const OrderStatus = IDL.Variant({
+  'inDelivery' : IDL.Record({ 'driverId' : IDL.Principal }),
+  'assigned' : IDL.Record({ 'shopperId' : IDL.Principal }),
+  'cancelled' : IDL.Text,
+  'pending' : IDL.Null,
+  'purchased' : IDL.Null,
+  'delivered' : IDL.Null,
+  'ready' : IDL.Null,
+});
+export const PaymentMethod = IDL.Variant({
+  'icp' : IDL.Null,
+  'zar' : IDL.Null,
+  'nomayini' : IDL.Null,
+});
 export const Time = IDL.Int;
+export const DeliveryMethod = IDL.Variant({
+  'home' : IDL.Record({ 'address' : IDL.Text }),
+  'pickupPoint' : IDL.Record({ 'pointId' : IDL.Nat }),
+});
+export const ListingId = IDL.Nat;
+export const CartItem = IDL.Record({
+  'listingId' : ListingId,
+  'quantity' : IDL.Nat,
+});
+export const OrderRecord = IDL.Record({
+  'id' : OrderId,
+  'status' : OrderStatus,
+  'paymentMethod' : PaymentMethod,
+  'customer' : IDL.Principal,
+  'createdAt' : Time,
+  'deliveryMethod' : DeliveryMethod,
+  'updatedAt' : Time,
+  'totalAmount' : IDL.Nat,
+  'items' : IDL.Vec(CartItem),
+});
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const DriverApplication = IDL.Record({
   'status' : IDL.Variant({
     'pending' : IDL.Null,
@@ -43,7 +78,6 @@ export const DriverApplication = IDL.Record({
   'kycDocs' : IDL.Vec(ExternalBlob),
 });
 export const ProductId = IDL.Nat;
-export const ListingId = IDL.Nat;
 export const ListingStatus = IDL.Variant({
   'active' : IDL.Null,
   'discontinued' : IDL.Null,
@@ -64,40 +98,6 @@ export const NewListing = IDL.Record({
   'price' : IDL.Nat,
   'promo' : IDL.Opt(PromoDetails),
   'retailerId' : RetailerId,
-});
-export const CartItem = IDL.Record({
-  'listingId' : ListingId,
-  'quantity' : IDL.Nat,
-});
-export const DeliveryMethod = IDL.Variant({
-  'home' : IDL.Record({ 'address' : IDL.Text }),
-  'pickupPoint' : IDL.Record({ 'pointId' : IDL.Nat }),
-});
-export const PaymentMethod = IDL.Variant({
-  'icp' : IDL.Null,
-  'zar' : IDL.Null,
-  'nomayini' : IDL.Null,
-});
-export const OrderId = IDL.Nat;
-export const OrderStatus = IDL.Variant({
-  'inDelivery' : IDL.Record({ 'driverId' : IDL.Principal }),
-  'assigned' : IDL.Record({ 'shopperId' : IDL.Principal }),
-  'cancelled' : IDL.Text,
-  'pending' : IDL.Null,
-  'purchased' : IDL.Null,
-  'delivered' : IDL.Null,
-  'ready' : IDL.Null,
-});
-export const OrderRecord = IDL.Record({
-  'id' : OrderId,
-  'status' : OrderStatus,
-  'paymentMethod' : PaymentMethod,
-  'customer' : IDL.Principal,
-  'createdAt' : Time,
-  'deliveryMethod' : DeliveryMethod,
-  'updatedAt' : Time,
-  'totalAmount' : IDL.Nat,
-  'items' : IDL.Vec(CartItem),
 });
 export const PersonalShopperStatus = IDL.Variant({
   'pending' : IDL.Null,
@@ -197,6 +197,16 @@ export const ShopProduct = IDL.Record({
   'description' : IDL.Text,
   'image' : IDL.Opt(ExternalBlob),
 });
+export const ExpandedOrderItem = IDL.Record({
+  'listing' : IDL.Opt(NewListing),
+  'retailer' : IDL.Opt(Retailer),
+  'cartItem' : CartItem,
+  'product' : IDL.Opt(Product),
+});
+export const ShopperOrderView = IDL.Record({
+  'order' : OrderRecord,
+  'expandedItems' : IDL.Vec(ExpandedOrderItem),
+});
 export const ApprovalStatus = IDL.Variant({
   'pending' : IDL.Null,
   'approved' : IDL.Null,
@@ -235,11 +245,13 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'acceptShopperOrder' : IDL.Func([OrderId], [], []),
   'approveDriver' : IDL.Func([IDL.Principal], [], []),
   'approvePersonalShopper' : IDL.Func([IDL.Principal], [], []),
   'approvePickupPoint' : IDL.Func([IDL.Principal], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'associateRetailerPrincipal' : IDL.Func([IDL.Principal, RetailerId], [], []),
+  'completeShopperOrder' : IDL.Func([OrderId], [OrderRecord], []),
   'createCategory' : IDL.Func([IDL.Text], [], []),
   'createDriverApplication' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob)],
@@ -327,6 +339,16 @@ export const idlService = IDL.Service({
       [IDL.Opt(RetailerId)],
       ['query'],
     ),
+  'getShopperOrderDetails' : IDL.Func(
+      [OrderId],
+      [IDL.Opt(ShopperOrderView)],
+      ['query'],
+    ),
+  'getShopperOrderExpanded' : IDL.Func(
+      [OrderId],
+      [IDL.Opt(ShopperOrderView)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -338,6 +360,12 @@ export const idlService = IDL.Service({
   'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'listCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+  'listEligibleDriverOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
+  'listMyAssignedShopperOrders' : IDL.Func(
+      [],
+      [IDL.Vec(OrderRecord)],
+      ['query'],
+    ),
   'listPendingDriverApplications' : IDL.Func(
       [],
       [IDL.Vec(DriverApplication)],
@@ -355,6 +383,11 @@ export const idlService = IDL.Service({
     ),
   'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
+  'listShopperEligiblePickupOrders' : IDL.Func(
+      [],
+      [IDL.Vec(OrderRecord)],
+      ['query'],
+    ),
   'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
@@ -396,14 +429,49 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const OrderId = IDL.Nat;
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
   const RetailerId = IDL.Nat;
-  const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const OrderStatus = IDL.Variant({
+    'inDelivery' : IDL.Record({ 'driverId' : IDL.Principal }),
+    'assigned' : IDL.Record({ 'shopperId' : IDL.Principal }),
+    'cancelled' : IDL.Text,
+    'pending' : IDL.Null,
+    'purchased' : IDL.Null,
+    'delivered' : IDL.Null,
+    'ready' : IDL.Null,
+  });
+  const PaymentMethod = IDL.Variant({
+    'icp' : IDL.Null,
+    'zar' : IDL.Null,
+    'nomayini' : IDL.Null,
+  });
   const Time = IDL.Int;
+  const DeliveryMethod = IDL.Variant({
+    'home' : IDL.Record({ 'address' : IDL.Text }),
+    'pickupPoint' : IDL.Record({ 'pointId' : IDL.Nat }),
+  });
+  const ListingId = IDL.Nat;
+  const CartItem = IDL.Record({
+    'listingId' : ListingId,
+    'quantity' : IDL.Nat,
+  });
+  const OrderRecord = IDL.Record({
+    'id' : OrderId,
+    'status' : OrderStatus,
+    'paymentMethod' : PaymentMethod,
+    'customer' : IDL.Principal,
+    'createdAt' : Time,
+    'deliveryMethod' : DeliveryMethod,
+    'updatedAt' : Time,
+    'totalAmount' : IDL.Nat,
+    'items' : IDL.Vec(CartItem),
+  });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
   const DriverApplication = IDL.Record({
     'status' : IDL.Variant({
       'pending' : IDL.Null,
@@ -420,7 +488,6 @@ export const idlFactory = ({ IDL }) => {
     'kycDocs' : IDL.Vec(ExternalBlob),
   });
   const ProductId = IDL.Nat;
-  const ListingId = IDL.Nat;
   const ListingStatus = IDL.Variant({
     'active' : IDL.Null,
     'discontinued' : IDL.Null,
@@ -441,40 +508,6 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Nat,
     'promo' : IDL.Opt(PromoDetails),
     'retailerId' : RetailerId,
-  });
-  const CartItem = IDL.Record({
-    'listingId' : ListingId,
-    'quantity' : IDL.Nat,
-  });
-  const DeliveryMethod = IDL.Variant({
-    'home' : IDL.Record({ 'address' : IDL.Text }),
-    'pickupPoint' : IDL.Record({ 'pointId' : IDL.Nat }),
-  });
-  const PaymentMethod = IDL.Variant({
-    'icp' : IDL.Null,
-    'zar' : IDL.Null,
-    'nomayini' : IDL.Null,
-  });
-  const OrderId = IDL.Nat;
-  const OrderStatus = IDL.Variant({
-    'inDelivery' : IDL.Record({ 'driverId' : IDL.Principal }),
-    'assigned' : IDL.Record({ 'shopperId' : IDL.Principal }),
-    'cancelled' : IDL.Text,
-    'pending' : IDL.Null,
-    'purchased' : IDL.Null,
-    'delivered' : IDL.Null,
-    'ready' : IDL.Null,
-  });
-  const OrderRecord = IDL.Record({
-    'id' : OrderId,
-    'status' : OrderStatus,
-    'paymentMethod' : PaymentMethod,
-    'customer' : IDL.Principal,
-    'createdAt' : Time,
-    'deliveryMethod' : DeliveryMethod,
-    'updatedAt' : Time,
-    'totalAmount' : IDL.Nat,
-    'items' : IDL.Vec(CartItem),
   });
   const PersonalShopperStatus = IDL.Variant({
     'pending' : IDL.Null,
@@ -574,6 +607,16 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'image' : IDL.Opt(ExternalBlob),
   });
+  const ExpandedOrderItem = IDL.Record({
+    'listing' : IDL.Opt(NewListing),
+    'retailer' : IDL.Opt(Retailer),
+    'cartItem' : CartItem,
+    'product' : IDL.Opt(Product),
+  });
+  const ShopperOrderView = IDL.Record({
+    'order' : OrderRecord,
+    'expandedItems' : IDL.Vec(ExpandedOrderItem),
+  });
   const ApprovalStatus = IDL.Variant({
     'pending' : IDL.Null,
     'approved' : IDL.Null,
@@ -612,6 +655,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'acceptShopperOrder' : IDL.Func([OrderId], [], []),
     'approveDriver' : IDL.Func([IDL.Principal], [], []),
     'approvePersonalShopper' : IDL.Func([IDL.Principal], [], []),
     'approvePickupPoint' : IDL.Func([IDL.Principal], [], []),
@@ -621,6 +665,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'completeShopperOrder' : IDL.Func([OrderId], [OrderRecord], []),
     'createCategory' : IDL.Func([IDL.Text], [], []),
     'createDriverApplication' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(ExternalBlob)],
@@ -708,6 +753,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(RetailerId)],
         ['query'],
       ),
+    'getShopperOrderDetails' : IDL.Func(
+        [OrderId],
+        [IDL.Opt(ShopperOrderView)],
+        ['query'],
+      ),
+    'getShopperOrderExpanded' : IDL.Func(
+        [OrderId],
+        [IDL.Opt(ShopperOrderView)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -719,6 +774,16 @@ export const idlFactory = ({ IDL }) => {
     'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'listCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'listEligibleDriverOrders' : IDL.Func(
+        [],
+        [IDL.Vec(OrderRecord)],
+        ['query'],
+      ),
+    'listMyAssignedShopperOrders' : IDL.Func(
+        [],
+        [IDL.Vec(OrderRecord)],
+        ['query'],
+      ),
     'listPendingDriverApplications' : IDL.Func(
         [],
         [IDL.Vec(DriverApplication)],
@@ -736,6 +801,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
+    'listShopperEligiblePickupOrders' : IDL.Func(
+        [],
+        [IDL.Vec(OrderRecord)],
+        ['query'],
+      ),
     'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),

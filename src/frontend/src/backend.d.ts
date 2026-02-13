@@ -63,6 +63,12 @@ export interface DriverApplication {
     phone: string;
     kycDocs: Array<ExternalBlob>;
 }
+export interface ExpandedOrderItem {
+    listing?: NewListing;
+    retailer?: Retailer;
+    cartItem: CartItem;
+    product?: Product;
+}
 export interface WeekdayTimeRange {
     day: bigint;
     closeTime: bigint;
@@ -206,6 +212,10 @@ export interface ShopProduct {
     description: string;
     image?: ExternalBlob;
 }
+export interface ShopperOrderView {
+    order: OrderRecord;
+    expandedItems: Array<ExpandedOrderItem>;
+}
 export type ProductId = bigint;
 export interface CartItem {
     listingId: ListingId;
@@ -240,11 +250,13 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    acceptShopperOrder(orderId: OrderId): Promise<void>;
     approveDriver(principal: Principal): Promise<void>;
     approvePersonalShopper(user: Principal): Promise<void>;
     approvePickupPoint(user: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     associateRetailerPrincipal(principal: Principal, retailerId: RetailerId): Promise<void>;
+    completeShopperOrder(orderId: OrderId): Promise<OrderRecord>;
     createCategory(category: string): Promise<void>;
     createDriverApplication(name: string, email: string, phone: string, vehicleDetails: string, kycDocs: Array<ExternalBlob>): Promise<DriverApplication>;
     createListing(retailerId: RetailerId, productId: ProductId, price: bigint, stock: bigint): Promise<NewListing>;
@@ -281,6 +293,8 @@ export interface backendInterface {
     getRetailer(id: RetailerId): Promise<Retailer | null>;
     getRetailerListings(retailerId: RetailerId): Promise<Array<NewListing>>;
     getRetailerPrincipalMapping(principal: Principal): Promise<RetailerId | null>;
+    getShopperOrderDetails(orderId: OrderId): Promise<ShopperOrderView | null>;
+    getShopperOrderExpanded(orderId: OrderId): Promise<ShopperOrderView | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
@@ -288,11 +302,14 @@ export interface backendInterface {
     listAllOrders(): Promise<Array<OrderRecord>>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     listCategories(): Promise<Array<string>>;
+    listEligibleDriverOrders(): Promise<Array<OrderRecord>>;
+    listMyAssignedShopperOrders(): Promise<Array<OrderRecord>>;
     listPendingDriverApplications(): Promise<Array<DriverApplication>>;
     listPendingPersonalShopperApplications(): Promise<Array<PersonalShopperApplication>>;
     listPendingPickupPointApplications(): Promise<Array<PickupPointApplication>>;
     listProducts(): Promise<Array<Product>>;
     listRetailers(): Promise<Array<Retailer>>;
+    listShopperEligiblePickupOrders(): Promise<Array<OrderRecord>>;
     rejectDriver(principal: Principal, reason: string): Promise<void>;
     rejectPersonalShopper(user: Principal, reason: string): Promise<void>;
     rejectPickupPoint(user: Principal, reason: string): Promise<void>;

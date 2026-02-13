@@ -1,34 +1,31 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T13:26:04.492Z",
+  "generatedAt": "2026-02-13T08:46:12.685Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
+    "total": 2,
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-39",
-        "summary": "Fully revert the project (both frontend and backend canister code) to the exact state of Version 34, with no partial retention of any changes introduced after Version 34.",
+        "id": "REQ-1",
+        "summary": "Implement the backend Orders data model persistence and core query/mutation methods used by the existing frontend hooks so that customer-created orders can be stored and later surfaced as “available orders” on the driver dashboard.\n\nAt minimum, ensure backend/main.mo exposes functional implementations for the existing frontend expectations:\n- createOrder(items, deliveryMethod, paymentMethod) -> OrderRecord\n- getMyOrders() -> [OrderRecord]\n- getOrder(orderId) -> ?OrderRecord\n- listEligibleDriverOrders() -> [OrderRecord] (returns shopper-completed orders that are ready for delivery)\n- listAllOrders() -> [OrderRecord] (admin)\n- updateOrderStatus(orderId, status) -> () (admin)\n\nAlso ensure OrderId generation and OrderRecord.totalAmount are computed and stored consistently so that the driver dashboard can render total and timestamps.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Ensure the existing Driver Dashboard page can load and render the eligible orders feed using the existing hook useListEligibleDriverOrders without runtime errors.\n\nIf backend filtering/status semantics differ, update frontend display logic only as needed to match the backend’s “ready for delivery” status while keeping user-facing text in English.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/main.tsx",
-          "frontend/src/router/HashRouter.tsx",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/auth/RequireAdmin.tsx",
-          "frontend/src/components/shop/ShopLayout.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx",
-          "frontend/src/index.css"
+          "frontend/src/pages/shop/DriverDashboardPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/auth/RequireAdmin.tsx",
-          "frontend/src/components/shop/ShopLayout.tsx",
-          "frontend/src/components/shop/ShopHeader.tsx"
+          "frontend/src/pages/shop/DriverDashboardPage.tsx"
         ]
       }
     ]
@@ -39,9 +36,7 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/auth/RequireAdmin.tsx",
-    "frontend/src/components/shop/ShopHeader.tsx",
-    "frontend/src/components/shop/ShopLayout.tsx",
+    "frontend/src/pages/shop/DriverDashboardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

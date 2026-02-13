@@ -1,60 +1,20 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Full frontend revert to Version 34 (no Version 35+ remnants)",
+  "title": "Driver Dashboard eligible orders feed rendering hardening",
   "requirements": [
     {
-      "id": "REQ-39",
-      "summary": "Restore the frontend code and UI behavior to the exact Version 34 state, removing all Version 35+ changes and ensuring admin UI gating behaves as it did in Version 34.",
+      "id": "REQ-2",
+      "summary": "Ensure Driver Dashboard loads and renders the eligible orders feed via useListEligibleDriverOrders with robust status/field rendering and no runtime crashes.",
       "acceptanceCriteria": [
-        "The deployed frontend matches Version 34 behavior and UI exactly (no Version 35+ changes remain).",
-        "The caller’s admin account is recognized by the backend as it was in Version 34 (admin-only routes and actions work again for the same principal)."
+        "Visiting the Driver Dashboard triggers useListEligibleDriverOrders and renders either: loading skeletons, an error alert, an empty-state alert, or the table of orders, without crashing.",
+        "Each eligible order row renders order id, item count, formatted totalAmount, formatted createdAt, and a status badge based on the returned OrderRecord.status shape."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/shop/DriverDashboardPage.tsx",
           "operation": "modify",
-          "description": "Replace the file contents with the exact Version 34 implementation (providers, layout wiring, and global UI behavior). Ensure no Version 35+ provider/wrapper additions remain."
-        },
-        {
-          "path": "frontend/src/main.tsx",
-          "operation": "modify",
-          "description": "Restore the exact Version 34 app bootstrap (React Query, Internet Identity provider wiring, and CSS import) to eliminate any post‑V34 initialization changes."
-        },
-        {
-          "path": "frontend/src/router/HashRouter.tsx",
-          "operation": "modify",
-          "description": "Revert the full route tree to the exact Version 34 routes and wrappers, including any admin route gating patterns and navigation behavior present in Version 34 (and removing any routes introduced after V34)."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Restore Version 34 actor initialization behavior (identity handling, access-control initialization flow, and query invalidation behavior) so admin recognition and permission checks work as they did in Version 34."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Revert Version 34 admin/approval query hooks and cache keys to match Version 34 behavior, including any differences in how admin checks are performed and cached."
-        },
-        {
-          "path": "frontend/src/components/auth/RequireAdmin.tsx",
-          "operation": "modify",
-          "description": "Restore the Version 34 admin-guard UI/behavior (loading, access denied handling, and navigation) so admin-only screens behave exactly as in Version 34."
-        },
-        {
-          "path": "frontend/src/components/shop/ShopLayout.tsx",
-          "operation": "modify",
-          "description": "Revert layout composition to Version 34 (header/footer, overlays, dialogs, and conditional gating). Remove any post‑V34 dialogs/overlays or conditional logic that changes user flow from Version 34."
-        },
-        {
-          "path": "frontend/src/components/shop/ShopHeader.tsx",
-          "operation": "modify",
-          "description": "Restore the Version 34 header navigation structure and conditional links (including admin navigation visibility rules) to match Version 34 UI exactly."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Revert global styling/theme tokens to the exact Version 34 values (Tailwind layers, theme variables, and shared utilities) so the visual design matches Version 34 precisely."
+          "description": "Harden eligible orders table rendering to avoid runtime errors when OrderRecord fields are missing/undefined and to tolerate backend status semantics changes. Keep user-facing text in English. Continue using existing shadcn-ui primitives already imported (Card, Alert, Table, Badge, Skeleton) for consistent UI; verify the component's usage instructions before implementing."
         }
       ]
     }
