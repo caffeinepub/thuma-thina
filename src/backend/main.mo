@@ -12,6 +12,8 @@ import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 
+
+
 actor {
   type TownId = Nat;
   type RetailerId = Nat;
@@ -152,6 +154,7 @@ actor {
     name : Text;
     email : Text;
     phone : Text;
+    defaultTown : ?Nat;
   };
 
   public type DriverApplication = {
@@ -191,6 +194,7 @@ actor {
     address : Text;
     contactNumber : Text;
     businessImage : Storage.ExternalBlob;
+    townId : ?TownId;
     status : {
       #pending;
       #approved;
@@ -330,6 +334,22 @@ actor {
     approvedAt : Time.Time;
   };
 
+  public type PickupOrderInput = {
+    items : [CartItem];
+    paymentMethod : PaymentMethod;
+    customerName : Text;
+    customerPhone : Text;
+    deliveryAddress : ?Text;
+  };
+
+  public type PickupOrder = {
+    orderRecord : OrderRecord;
+    customerName : Text;
+    customerPhone : Text;
+    deliveryAddress : ?Text;
+    createdByPickupPoint : Principal;
+  };
+
   var towns = Map.empty<TownId, Town>();
   var provinces = List.empty<Province>();
   var retailers = Map.empty<Nat, Retailer>();
@@ -356,6 +376,9 @@ actor {
   var personalShopperApprovals = Map.empty<Principal, PersonalShopperApproval>();
   var personalShopperStatus = Map.empty<Principal, PersonalShopperStatus>();
 
+  var pickupOrders = Map.empty<Nat, PickupOrder>();
+  var nextPickupOrderId = 0;
+
   var nextTownId = 0;
   var nextRetailerId = 0;
   var nextProductId = 0;
@@ -371,6 +394,123 @@ actor {
 
   include MixinAuthorization(accessControlState);
   include MixinStorage();
+
+  public query ({ caller }) func listTowns() : async [Town] {
+    towns.values().toArray();
+  };
+
+  public shared ({ caller }) func createTown(name : Text, province : Text) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can create towns");
+    };
+    if (name == "") { Runtime.trap("Town name is required") };
+    if (province == "") { Runtime.trap("Province is required") };
+
+    let now = Time.now();
+    let town = {
+      id = nextTownId;
+      name;
+      province;
+      status = #active;
+      createdAt = now;
+      updatedAt = now;
+    };
+    towns.add(town.id, town);
+    nextTownId += 1;
+    town;
+  };
+
+  public shared ({ caller }) func updateTown(id : TownId, name : Text, province : Text) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update towns");
+    };
+
+    switch (towns.get(id)) {
+      case (null) { Runtime.trap("Town not found") };
+      case (?existing) {
+        let updated = {
+          existing with
+          name;
+          province;
+          updatedAt = Time.now();
+        };
+        towns.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  public shared ({ caller }) func removeTown(id : TownId) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can remove towns");
+    };
+
+    switch (towns.get(id)) {
+      case (null) { Runtime.trap("Town not found") };
+      case (?existing) {
+        let updated = {
+          existing with
+          status = #removed;
+          updatedAt = Time.now();
+        };
+        towns.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  public query ({ caller }) func getTown(id : TownId) : async ?Town {
+    towns.get(id);
+  };
+
+  public query ({ caller }) func listActiveTowns() : async [Town] {
+    towns.values().toArray().filter<Town>(func(town) { town.status == #active });
+  };
+
+  public query ({ caller }) func listRemovedTowns() : async [Town] {
+    towns.values().toArray().filter<Town>(func(town) { town.status == #removed });
+  };
+
+  public shared ({ caller }) func restoreTown(id : TownId) : async Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can restore towns");
+    };
+
+    switch (towns.get(id)) {
+      case (null) { Runtime.trap("Town not found") };
+      case (?existing) {
+        let updated = {
+          existing with
+          status = #active;
+          updatedAt = Time.now();
+        };
+        towns.add(id, updated);
+        updated;
+      };
+    };
+  };
+
+  public query ({ caller }) func isCallerApproved() : async Bool {
+    AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
+  };
+
+  public shared ({ caller }) func requestApproval() : async () {
+    UserApproval.requestApproval(approvalState, caller);
+  };
+
+  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.setApproval(approvalState, user, status);
+  };
+
+  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.listApprovals(approvalState);
+  };
 
   public query ({ caller }) func getPersonalShopperStatus() : async ?PersonalShopperStatus {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -519,6 +659,7 @@ actor {
     address : Text,
     contactNumber : Text,
     businessImage : Storage.ExternalBlob,
+    townId : TownId,
   ) : async PickupPointApplication {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create applications");
@@ -538,12 +679,24 @@ actor {
       Runtime.trap("Contact number is required");
     };
 
+    switch (towns.get(townId)) {
+      case (null) {
+        Runtime.trap("Invalid town: TownId " # townId.toText() # " does not exist");
+      };
+      case (?town) {
+        if (town.status != #active) {
+          Runtime.trap("Invalid town: TownId " # townId.toText() # " is not active");
+        };
+      };
+    };
+
     let app : PickupPointApplication = {
       applicant = caller;
       name;
       address;
       contactNumber;
       businessImage;
+      townId = ?townId;
       status = #pending;
       submittedAt = Time.now();
       reviewedBy = null;
@@ -661,28 +814,6 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
-  };
-
-  public query ({ caller }) func isCallerApproved() : async Bool {
-    AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
-  };
-
-  public shared ({ caller }) func requestApproval() : async () {
-    UserApproval.requestApproval(approvalState, caller);
-  };
-
-  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
-    UserApproval.setApproval(approvalState, user, status);
-  };
-
-  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
-    UserApproval.listApprovals(approvalState);
   };
 
   public shared ({ caller }) func createProduct(name : Text, description : Text, image : Storage.ExternalBlob, category : Text) : async Product {
@@ -1118,81 +1249,124 @@ actor {
   public shared ({ caller }) func createOrder(
     items : [CartItem],
     deliveryMethod : DeliveryMethod,
-    paymentMethod : PaymentMethod
+    paymentMethod : PaymentMethod,
   ) : async OrderRecord {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create orders");
     };
 
-    if (items.size() == 0) {
-      Runtime.trap("Order must contain at least one item");
-    };
-
-    var totalAmount : Nat = 0;
-
-    for (item in items.vals()) {
-      if (item.quantity == 0) {
-        Runtime.trap("Item quantity must be greater than zero");
-      };
-
-      switch (listings.get(item.listingId)) {
-        case (null) {
-          Runtime.trap("Listing not found: " # item.listingId.toText());
-        };
-        case (?listing) {
-          if (not isListingOrderable(listing)) {
-            Runtime.trap("Listing is not orderable: " # item.listingId.toText());
-          };
-
-          if (listing.stock < item.quantity) {
-            Runtime.trap("Insufficient stock for listing: " # item.listingId.toText());
-          };
-
-          let activePrice = getActivePrice(listing);
-          totalAmount += activePrice * item.quantity;
-
-          let updatedListing : NewListing = {
-            listing with
-            stock = listing.stock - item.quantity;
-            updatedAt = Time.now();
-          };
-          listings.add(listing.id, updatedListing);
-        };
-      };
-    };
-
-    switch (deliveryMethod) {
-      case (#pickupPoint { pointId }) {
-        switch (approvedPickupPoints.get(pointId)) {
-          case (null) {
-            Runtime.trap("Invalid pickup point: " # pointId.toText());
-          };
-          case (?_) {};
-        };
-      };
-      case (#home { address }) {
-        if (address.size() == 0) {
-          Runtime.trap("Delivery address cannot be empty");
-        };
-      };
-    };
-
-    let now = Time.now();
-    let order : OrderRecord = {
-      id = nextOrderId;
-      customer = caller;
-      items;
-      deliveryMethod;
-      paymentMethod;
-      totalAmount;
-      status = #pending;
-      createdAt = now;
-      updatedAt = now;
-    };
-
+    let order = createOrderInternal(caller, items, deliveryMethod, paymentMethod, #standard);
     orders.add(order.id, order);
     nextOrderId += 1;
     order;
+  };
+
+  public shared ({ caller }) func createPickupOrder(input : PickupOrderInput) : async PickupOrder {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can create pickup orders");
+    };
+
+    if (not isApprovedPickupPoint(caller)) {
+      Runtime.trap("Unauthorized: Only approved pickup points can create orders");
+    };
+
+    let deliveryMethod = switch (input.deliveryAddress) {
+      case (null) {
+        switch (findPickupPointId(caller)) {
+          case (null) {
+            let newId = nextPickupPointId;
+            nextPickupPointId += 1;
+            #pickupPoint({ pointId = newId });
+          };
+          case (?pointId) { #pickupPoint({ pointId }) };
+        };
+      };
+      case (?_) {
+        switch (findPickupPointId(caller)) {
+          case (null) {
+            let newId = nextPickupPointId;
+            nextPickupPointId += 1;
+            #pickupPoint({ pointId = newId });
+          };
+          case (?pointId) { #pickupPoint({ pointId }) };
+        };
+      };
+    };
+
+    let order = createOrderInternal(caller, input.items, deliveryMethod, input.paymentMethod, #pickupPointWithDetails);
+    orders.add(order.id, order);
+    nextOrderId += 1;
+
+    let pickupOrder : PickupOrder = {
+      orderRecord = order;
+      customerName = input.customerName;
+      customerPhone = input.customerPhone;
+      deliveryAddress = input.deliveryAddress;
+      createdByPickupPoint = caller;
+    };
+
+    let pickupOrderId = nextPickupOrderId;
+    pickupOrders.add(pickupOrderId, pickupOrder);
+    nextPickupOrderId += 1;
+    pickupOrder;
+  };
+
+  public query ({ caller }) func getPickupOrder(pickupOrderId : Nat) : async ?PickupOrder {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access pickup orders");
+    };
+
+    switch (pickupOrders.get(pickupOrderId)) {
+      case (null) { null };
+      case (?pickupOrder) {
+        if (pickupOrder.createdByPickupPoint == caller or AccessControl.isAdmin(accessControlState, caller)) {
+          ?pickupOrder;
+        } else {
+          Runtime.trap("Unauthorized: Can only view your own created pickup orders");
+        };
+      };
+    };
+  };
+
+  public query ({ caller }) func listMyPickupOrders() : async [PickupOrder] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can list pickup orders");
+    };
+
+    if (not isApprovedPickupPoint(caller)) {
+      Runtime.trap("Unauthorized: Only approved pickup points can list pickup orders");
+    };
+
+    let allPickupOrders = pickupOrders.values().toArray();
+    allPickupOrders.filter<PickupOrder>(func(po) { po.createdByPickupPoint == caller });
+  };
+
+  public query ({ caller }) func listMyPickupCreatedOrders() : async [OrderRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can list orders");
+    };
+
+    if (not isApprovedPickupPoint(caller)) {
+      Runtime.trap("Unauthorized: Only approved pickup points can list orders");
+    };
+
+    let ordersArray = orders.values().toArray();
+
+    let result = ordersArray.filter(
+      func(order) {
+        switch (order.deliveryMethod) {
+          case (#pickupPoint({ pointId })) {
+            switch (findPickupPointId(caller)) {
+              case (?callerId) { pointId == callerId };
+              case (null) { false };
+            };
+          };
+          case (_) { false };
+        };
+      }
+    );
+
+    result;
   };
 
   public query ({ caller }) func getMyOrders() : async [OrderRecord] {
@@ -1339,6 +1513,18 @@ actor {
 
   private func isDriver(caller : Principal) : Bool {
     approvedDrivers.containsKey(caller);
+  };
+
+  private func isApprovedPickupPoint(caller : Principal) : Bool {
+    approvedPickupPoints.values().toArray().any(func(p) { p == caller });
+  };
+
+  private func findPickupPointId(caller : Principal) : ?Nat {
+    let entries = approvedPickupPoints.toArray();
+    switch (entries.find(func(entry) { entry.1 == caller })) {
+      case (null) { null };
+      case (?entry) { ?entry.0 };
+    };
   };
 
   private func getOrderTown(customer : Principal) : TownId {
@@ -1538,5 +1724,80 @@ actor {
       }
     );
   };
-};
 
+  private func createOrderInternal(
+    caller : Principal,
+    items : [CartItem],
+    deliveryMethod : DeliveryMethod,
+    paymentMethod : PaymentMethod,
+    _orderType : { #standard; #pickupPointWithDetails },
+  ) : OrderRecord {
+    if (items.size() == 0) {
+      Runtime.trap("Order must contain at least one item");
+    };
+
+    var totalAmount : Nat = 0;
+
+    for (item in items.vals()) {
+      if (item.quantity == 0) {
+        Runtime.trap("Item quantity must be greater than zero");
+      };
+
+      switch (listings.get(item.listingId)) {
+        case (null) {
+          Runtime.trap("Listing not found: " # item.listingId.toText());
+        };
+        case (?listing) {
+          if (not isListingOrderable(listing)) {
+            Runtime.trap("Listing is not orderable: " # item.listingId.toText());
+          };
+
+          if (listing.stock < item.quantity) {
+            Runtime.trap("Insufficient stock for listing: " # item.listingId.toText());
+          };
+
+          let activePrice = getActivePrice(listing);
+          totalAmount += activePrice * item.quantity;
+
+          let updatedListing : NewListing = {
+            listing with
+            stock = listing.stock - item.quantity;
+            updatedAt = Time.now();
+          };
+          listings.add(listing.id, updatedListing);
+        };
+      };
+    };
+
+    switch (deliveryMethod) {
+      case (#pickupPoint { pointId }) {
+        switch (approvedPickupPoints.get(pointId)) {
+          case (null) {
+            Runtime.trap("Invalid pickup point: " # pointId.toText());
+          };
+          case (?_) {};
+        };
+      };
+      case (#home { address }) {
+        if (address.size() == 0) {
+          Runtime.trap("Delivery address cannot be empty");
+        };
+      };
+    };
+
+    let now = Time.now();
+    let order : OrderRecord = {
+      id = nextOrderId;
+      customer = caller;
+      items;
+      deliveryMethod;
+      paymentMethod;
+      totalAmount;
+      status = #pending;
+      createdAt = now;
+      updatedAt = now;
+    };
+
+    order;
+  };
+};

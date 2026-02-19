@@ -11,6 +11,7 @@ import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useIsCallerAdmin } from '@/hooks/useQueries';
 import { useGetMyShopperStatus } from '@/hooks/useShopperApplication';
 import { useGetMyDriverStatus } from '@/hooks/useDriverApplication';
+import { useGetMyPickupPointStatus } from '@/hooks/usePickupPointApplication';
 
 export function ShopHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -21,9 +22,11 @@ export function ShopHeader() {
   const { data: isAdmin } = useIsCallerAdmin();
   const { data: shopperStatus } = useGetMyShopperStatus();
   const { data: driverStatus } = useGetMyDriverStatus();
+  const { data: pickupPointStatus } = useGetMyPickupPointStatus();
 
   const isApprovedShopper = shopperStatus?.__kind__ === 'approved' || isAdmin;
   const isApprovedDriver = driverStatus?.__kind__ === 'approved' || isAdmin;
+  const isApprovedPickupPoint = pickupPointStatus?.__kind__ === 'approved' || isAdmin;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,6 +68,11 @@ export function ShopHeader() {
             {isApprovedDriver && (
               <Button variant="ghost" onClick={() => navigate('/driver-dashboard')}>
                 Driver
+              </Button>
+            )}
+            {isApprovedPickupPoint && (
+              <Button variant="ghost" onClick={() => navigate('/pickup-point-dashboard')}>
+                Pickup Point
               </Button>
             )}
             {isAuthenticated && (
@@ -177,6 +185,18 @@ export function ShopHeader() {
                 }}
               >
                 Driver
+              </Button>
+            )}
+            {isApprovedPickupPoint && (
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => {
+                  navigate('/pickup-point-dashboard');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Pickup Point
               </Button>
             )}
             {isAuthenticated && (

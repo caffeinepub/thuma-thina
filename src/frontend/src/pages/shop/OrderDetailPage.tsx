@@ -1,11 +1,12 @@
 import { useGetOrder } from '@/hooks/useOrders';
+import { useListMyPickupOrders } from '@/hooks/usePickupPointOrders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Package, MapPin, CreditCard } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, CreditCard, Store, User, Phone } from 'lucide-react';
 import { navigate } from '@/router/HashRouter';
 import { formatICDateTime } from '@/utils/time';
 import { formatZAR } from '@/utils/money';
@@ -18,6 +19,9 @@ interface OrderDetailPageProps {
 
 export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const { data: order, isLoading, error } = useGetOrder(orderId);
+  const { data: pickupOrders } = useListMyPickupOrders();
+
+  const pickupOrder = pickupOrders?.find((po) => Number(po.orderRecord.id) === orderId);
 
   const getStatusBadge = (status: OrderStatus) => {
     if (status.__kind__ === 'pending') {
@@ -109,6 +113,47 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Pickup Point Attribution */}
+              {pickupOrder && (
+                <>
+                  <Alert>
+                    <Store className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Created by Pickup Point</strong>
+                      <p className="text-sm mt-1">This order was placed on behalf of a walk-in customer</p>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Customer Information
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Name:</span>
+                        <span>{pickupOrder.customerName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Phone:</span>
+                        <span>{pickupOrder.customerPhone}</span>
+                      </div>
+                      {pickupOrder.deliveryAddress && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Delivery Address:</span>
+                          <span>{pickupOrder.deliveryAddress}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+                </>
+              )}
+
               {/* Order Items */}
               <div>
                 <h3 className="font-semibold mb-3">Order Items</h3>

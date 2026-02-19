@@ -1,39 +1,59 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Step 1: Pickup Point Dashboard placeholder page + authenticated route",
+  "title": "Enforce mandatory default town requirement for all users",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Create a placeholder Pickup Point Dashboard page component under shop pages with an H1 title and short description, and no data fetching.",
+      "summary": "Make default town field mandatory in ProfileSetupDialog and prevent dialog dismissal until town is selected",
       "acceptanceCriteria": [
-        "A new page component exists under frontend/src/pages/shop for the pickup-point dashboard.",
-        "When rendered, the page shows a visible title (H1) and a short English placeholder description.",
-        "The page does not import or call any data-fetching hooks (React Query) or actor methods.",
-        "The page renders without runtime errors and uses existing layout conventions (e.g., container-custom + spacing) consistent with other shop pages."
+        "ProfileSetupDialog cannot be dismissed or closed until a default town is selected",
+        "Form validation prevents submission without a default town",
+        "User cannot proceed to use the app without completing town selection"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/shop/PickupPointDashboardPage.tsx",
-          "operation": "create",
-          "description": "Create the PickupPointDashboardPage component rendering placeholder-only UI: a container-custom wrapper with existing spacing conventions (e.g., py-8 + space-y-*), a clear H1 title (\"Pickup Point Dashboard\") and a short English description indicating this is an upcoming dashboard. Do not import/use React Query hooks or actor calls. (Verify the component's usage instructions before implementing.)"
+          "path": "frontend/src/components/auth/ProfileSetupDialog.tsx",
+          "operation": "modify",
+          "description": "Remove the onOpenChange prop from the Dialog component to prevent dismissal. Add form validation to require defaultTown selection before allowing form submission. Update the form state to include defaultTown as a required field with proper validation error messages. Ensure the submit button remains disabled until all required fields including defaultTown are filled."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Register a new /pickup-point-dashboard route in the TanStack HashRouter, protected by RequireAuth, rendering the new placeholder page.",
+      "summary": "Display DefaultTownSetupDialog immediately after login for users with profiles but no default town",
       "acceptanceCriteria": [
-        "Navigating to /pickup-point-dashboard while logged out shows the existing login gate (RequireAuth behavior).",
-        "Navigating to /pickup-point-dashboard while logged in renders the new placeholder pickup-point dashboard page.",
-        "The new route is included in the router's routeTree so it is reachable at runtime.",
-        "No other routes, dashboards, or role-approval guards are changed in this step."
+        "After successful login, check if user has a profile with no default town",
+        "Show DefaultTownSetupDialog modal when user lacks a default town",
+        "Modal cannot be dismissed until town is selected",
+        "User cannot access any app features until town is set"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/router/HashRouter.tsx",
+          "path": "frontend/src/components/shop/ShopLayout.tsx",
           "operation": "modify",
-          "description": "Add an import for PickupPointDashboardPage, define a new route at path '/pickup-point-dashboard' that renders the page inside RequireAuth (use the existing RequireAuth guard provided by the authorization setup; no additional approval/role gating in this step), and include the route in routeTree so it is reachable. Keep all other routes unchanged. (Verify the component's usage instructions before implementing.)"
+          "description": "Add logic to check if authenticated user has a profile with defaultTown === undefined or null. When this condition is met, render the DefaultTownSetupDialog as a blocking modal before showing other content. Ensure the dialog appears after ProfileSetupDialog completes (if needed) but before allowing access to the main app content. Update the existing conditional rendering logic to include this check."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Update ShopLayout to render blocking DefaultTownSetupDialog for users with profiles but no default town",
+      "acceptanceCriteria": [
+        "DefaultTownSetupDialog appears as a blocking modal when user has profile but no default town",
+        "Dialog cannot be dismissed or bypassed",
+        "After town selection, dialog closes and user can access the app normally"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/towns/DefaultTownSetupDialog.tsx",
+          "operation": "modify",
+          "description": "Remove the onOpenChange prop from the Dialog component to prevent manual dismissal. Ensure the dialog can only be closed programmatically after successful town selection and profile update. Add proper error handling for the town selection and profile save operations. Make the close button (X) either hidden or non-functional to enforce mandatory completion."
+        },
+        {
+          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "operation": "modify",
+          "description": "Refactor the conditional rendering logic to properly sequence ProfileSetupDialog and DefaultTownSetupDialog. Add state management to track when each dialog should be shown based on authentication state, profile existence, and defaultTown presence. Ensure DefaultTownSetupDialog blocks all underlying content when displayed and cannot be dismissed until a town is selected. Use the userProfile query data to determine if defaultTown is missing (undefined or null)."
         }
       ]
     }

@@ -99,6 +99,20 @@ export interface PersonalShopperApplication {
 export type PersonalShopperStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : string };
+export interface PickupOrder {
+  'customerName' : string,
+  'deliveryAddress' : [] | [string],
+  'customerPhone' : string,
+  'orderRecord' : OrderRecord,
+  'createdByPickupPoint' : Principal,
+}
+export interface PickupOrderInput {
+  'customerName' : string,
+  'deliveryAddress' : [] | [string],
+  'paymentMethod' : PaymentMethod,
+  'customerPhone' : string,
+  'items' : Array<CartItem>,
+}
 export interface PickupPointApplication {
   'status' : { 'pending' : null } |
     { 'approved' : null } |
@@ -107,6 +121,7 @@ export interface PickupPointApplication {
   'name' : string,
   'submittedAt' : Time,
   'reviewedBy' : [] | [Principal],
+  'townId' : [] | [TownId],
   'address' : string,
   'businessImage' : ExternalBlob,
   'contactNumber' : string,
@@ -169,11 +184,23 @@ export interface ShopperOrderView {
   'expandedItems' : Array<ExpandedOrderItem>,
 }
 export type Time = bigint;
+export interface Town {
+  'id' : TownId,
+  'status' : TownStatus,
+  'province' : string,
+  'name' : string,
+  'createdAt' : Time,
+  'updatedAt' : Time,
+}
+export type TownId = bigint;
+export type TownStatus = { 'active' : null } |
+  { 'removed' : null };
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
 }
 export interface UserProfile {
+  'defaultTown' : [] | [bigint],
   'name' : string,
   'email' : string,
   'phone' : string,
@@ -241,8 +268,9 @@ export interface _SERVICE {
     [string, string, string, ExternalBlob],
     PersonalShopperApplication
   >,
+  'createPickupOrder' : ActorMethod<[PickupOrderInput], PickupOrder>,
   'createPickupPointApplication' : ActorMethod<
-    [string, string, string, ExternalBlob],
+    [string, string, string, ExternalBlob, TownId],
     PickupPointApplication
   >,
   'createProduct' : ActorMethod<
@@ -250,6 +278,7 @@ export interface _SERVICE {
     Product
   >,
   'createRetailer' : ActorMethod<[RetailerInput], Retailer>,
+  'createTown' : ActorMethod<[string, string], Town>,
   'deleteListing' : ActorMethod<[ListingId], undefined>,
   'deleteRetailer' : ActorMethod<[RetailerId], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -267,6 +296,7 @@ export interface _SERVICE {
     [] | [PersonalShopperApplication]
   >,
   'getPersonalShopperStatus' : ActorMethod<[], [] | [PersonalShopperStatus]>,
+  'getPickupOrder' : ActorMethod<[bigint], [] | [PickupOrder]>,
   'getPickupPointApplication' : ActorMethod<[], [] | [PickupPointApplication]>,
   'getPickupPointStatus' : ActorMethod<
     [],
@@ -281,15 +311,19 @@ export interface _SERVICE {
   'getRetailerPrincipalMapping' : ActorMethod<[Principal], [] | [RetailerId]>,
   'getShopperOrderDetails' : ActorMethod<[OrderId], [] | [ShopperOrderView]>,
   'getShopperOrderExpanded' : ActorMethod<[OrderId], [] | [ShopperOrderView]>,
+  'getTown' : ActorMethod<[TownId], [] | [Town]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
+  'listActiveTowns' : ActorMethod<[], Array<Town>>,
   'listAllListings' : ActorMethod<[], Array<NewListing>>,
   'listAllOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'listCategories' : ActorMethod<[], Array<string>>,
   'listEligibleDriverOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listMyAssignedShopperOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'listMyPickupCreatedOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'listMyPickupOrders' : ActorMethod<[], Array<PickupOrder>>,
   'listPendingDriverApplications' : ActorMethod<[], Array<DriverApplication>>,
   'listPendingPersonalShopperApplications' : ActorMethod<
     [],
@@ -300,14 +334,18 @@ export interface _SERVICE {
     Array<PickupPointApplication>
   >,
   'listProducts' : ActorMethod<[], Array<Product>>,
+  'listRemovedTowns' : ActorMethod<[], Array<Town>>,
   'listRetailers' : ActorMethod<[], Array<Retailer>>,
   'listShopperEligiblePickupOrders' : ActorMethod<[], Array<OrderRecord>>,
+  'listTowns' : ActorMethod<[], Array<Town>>,
   'rejectDriver' : ActorMethod<[Principal, string], undefined>,
   'rejectPersonalShopper' : ActorMethod<[Principal, string], undefined>,
   'rejectPickupPoint' : ActorMethod<[Principal, string], undefined>,
   'removePromo' : ActorMethod<[ListingId], NewListing>,
   'removeRetailerPrincipal' : ActorMethod<[Principal], undefined>,
+  'removeTown' : ActorMethod<[TownId], Town>,
   'requestApproval' : ActorMethod<[], undefined>,
+  'restoreTown' : ActorMethod<[TownId], Town>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPromo' : ActorMethod<[ListingId, bigint, Time, [] | [Time]], NewListing>,
@@ -318,6 +356,7 @@ export interface _SERVICE {
   'updateOrderStatus' : ActorMethod<[OrderId, OrderStatus], OrderRecord>,
   'updateProduct' : ActorMethod<[ProductId, string, string, string], Product>,
   'updateRetailer' : ActorMethod<[RetailerId, RetailerInput], Retailer>,
+  'updateTown' : ActorMethod<[TownId, string, string], Town>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

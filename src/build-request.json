@@ -1,60 +1,77 @@
 {
   "kind": "build_request",
-  "title": "Step 1: Add empty Pickup Point Dashboard route with placeholder page",
+  "title": "Enforce mandatory default town requirement for all users",
+  "projectName": "Thuma Thina",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Create a new Pickup Point Dashboard page component that renders placeholder content only (no backend calls, no listing queries, no order/cart actions). The page must include a clear H1 title and short description indicating this is the upcoming pickup-point dashboard.",
+      "text": "Modify ProfileSetupDialog to make the default town field mandatory and prevent dialog dismissal until a town is selected",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "msg-10"
         ],
         "quotes": [
-          "ok build",
-          "ok lets start with step 1"
+          "new users have to complete town field in profile setup to register on the app"
         ]
       },
       "acceptanceCriteria": [
-        "A new page component exists under frontend/src/pages/shop for the pickup-point dashboard.",
-        "When rendered, the page shows a visible title (H1) and a short English placeholder description.",
-        "The page does not import or call any data-fetching hooks (React Query) or actor methods.",
-        "The page renders without runtime errors and uses existing layout conventions (e.g., container-custom + spacing) consistent with other shop pages."
+        "ProfileSetupDialog cannot be dismissed or closed until a default town is selected",
+        "Form validation prevents submission without a default town",
+        "User cannot proceed to use the app without completing town selection"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add a new authenticated route for the Pickup Point Dashboard in the TanStack router configuration (frontend/src/router/HashRouter.tsx). The route must be protected by RequireAuth and render the new placeholder Pickup Point Dashboard page at a stable path (e.g., /pickup-point-dashboard).",
+      "text": "Add authentication flow check that displays DefaultTownSetupDialog immediately after login for users who have a profile but no default town set",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "msg-10"
         ],
         "quotes": [
-          "ok build",
-          "Step 1: create the empty pickup‑point dashboard route with placeholder text."
+          "they should be directed to profile set up shown modal to select a town",
+          "after log in"
         ]
       },
       "acceptanceCriteria": [
-        "Navigating to /pickup-point-dashboard while logged out shows the existing login gate (RequireAuth behavior).",
-        "Navigating to /pickup-point-dashboard while logged in renders the new placeholder pickup-point dashboard page.",
-        "The new route is included in the router's routeTree so it is reachable at runtime.",
-        "No other routes, dashboards, or role-approval guards are changed in this step."
+        "After successful login, check if user has a profile with no default town",
+        "Show DefaultTownSetupDialog modal when user lacks a default town",
+        "Modal cannot be dismissed until town is selected",
+        "User cannot access any app features until town is set"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Update ShopLayout to render DefaultTownSetupDialog for authenticated users with profiles but no default town, preventing access to underlying content until town is selected",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10"
+        ],
+        "quotes": [
+          "they should be directed to profile set up shown modal to select a town"
+        ]
+      },
+      "acceptanceCriteria": [
+        "DefaultTownSetupDialog appears as a blocking modal when user has profile but no default town",
+        "Dialog cannot be dismissed or bypassed",
+        "After town selection, dialog closes and user can access the app normally"
       ]
     }
   ],
   "constraints": [
-    "Frontend immutable paths must not be edited: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui/*.",
-    "Keep Step 1 minimal: do not add backend methods, React Query hooks, listing sorting, or order creation in this build step."
+    "Do not modify backend schema or Motoko code",
+    "Preserve existing ProfileSetupDialog and DefaultTownSetupDialog components",
+    "Do not change authentication flow in useInternetIdentity hook",
+    "Maintain compatibility with existing user profile structure that includes defaultTown field"
   ],
   "nonGoals": [
-    "Implementing pickup-point role approval gating/guards for the new route.",
-    "Adding pickup-point navigation links/buttons in the header or elsewhere.",
-    "Fetching or displaying listings (including town prioritization).",
-    "Any pickup-point order creation/checkout workflow."
+    "Changing the backend UserProfile type or migration logic",
+    "Modifying town management backend methods",
+    "Adding new town-related database fields",
+    "Implementing town selection UI redesign beyond requirement enforcement"
   ],
   "imageRequirements": {
     "required": [],

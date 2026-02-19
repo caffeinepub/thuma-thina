@@ -1,10 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Add a new authenticated Pickup Point Dashboard route that renders an empty placeholder page.
+**Goal:** Enforce mandatory default town selection for all users to ensure every user has a town set before using the app.
 
 **Planned changes:**
-- Create a new Pickup Point Dashboard page component under `frontend/src/pages/shop` that displays an H1 title and short English placeholder description only.
-- Add a new protected route in `frontend/src/router/HashRouter.tsx` (wrapped by `RequireAuth`) to render the placeholder page at `/pickup-point-dashboard`.
+- Make default town field mandatory in ProfileSetupDialog and prevent dialog dismissal until town is selected
+- Add authentication flow check to display DefaultTownSetupDialog immediately after login for users without a default town
+- Update ShopLayout to render blocking DefaultTownSetupDialog for authenticated users missing a default town
 
-**User-visible outcome:** Logged-in users can navigate to `/pickup-point-dashboard` and see a placeholder Pickup Point Dashboard page; logged-out users are gated by the existing authentication flow.
+**User-visible outcome:** New users must select a default town during registration to proceed. Existing users without a default town will be prompted with a non-dismissible modal after login, preventing app access until a town is selected.

@@ -14,6 +14,9 @@ import { DriverApplicationPage } from '@/pages/shop/DriverApplicationPage';
 import { ShopperDashboardPage } from '@/pages/shop/ShopperDashboardPage';
 import { DriverDashboardPage } from '@/pages/shop/DriverDashboardPage';
 import { PickupPointDashboardPage } from '@/pages/shop/PickupPointDashboardPage';
+import { PickupPointShopCataloguePage } from '@/pages/shop/PickupPointShopCataloguePage';
+import { PickupPointShopCartPage } from '@/pages/shop/PickupPointShopCartPage';
+import { PickupPointShopCheckoutPage } from '@/pages/shop/PickupPointShopCheckoutPage';
 import { RetailerDashboardPage } from '@/pages/shop/RetailerDashboardPage';
 import { RetailerOrderTrackingPage } from '@/pages/shop/RetailerOrderTrackingPage';
 import { AdminDashboardPage } from '@/pages/shop/AdminDashboardPage';
@@ -31,6 +34,7 @@ import { RequireAuth } from '@/components/auth/RequireAuth';
 import { RequireAdmin } from '@/components/auth/RequireAdmin';
 import { RequireApprovedShopper } from '@/components/auth/RequireApprovedShopper';
 import { RequireApprovedDriver } from '@/components/auth/RequireApprovedDriver';
+import { RequireApprovedPickupPoint } from '@/components/auth/RequireApprovedPickupPoint';
 import { ShopLayout } from '@/components/shop/ShopLayout';
 
 const rootRoute = createRootRoute({
@@ -177,7 +181,45 @@ const pickupPointDashboardRoute = createRoute({
   path: '/pickup-point-dashboard',
   component: () => (
     <RequireAuth>
-      <PickupPointDashboardPage />
+      <RequireApprovedPickupPoint>
+        <PickupPointDashboardPage />
+      </RequireApprovedPickupPoint>
+    </RequireAuth>
+  ),
+});
+
+const pickupPointShopRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pickup-point-shop',
+  component: () => (
+    <RequireAuth>
+      <RequireApprovedPickupPoint>
+        <PickupPointShopCataloguePage />
+      </RequireApprovedPickupPoint>
+    </RequireAuth>
+  ),
+});
+
+const pickupPointCartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pickup-point-cart',
+  component: () => (
+    <RequireAuth>
+      <RequireApprovedPickupPoint>
+        <PickupPointShopCartPage />
+      </RequireApprovedPickupPoint>
+    </RequireAuth>
+  ),
+});
+
+const pickupPointCheckoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pickup-point-checkout',
+  component: () => (
+    <RequireAuth>
+      <RequireApprovedPickupPoint>
+        <PickupPointShopCheckoutPage />
+      </RequireApprovedPickupPoint>
     </RequireAuth>
   ),
 });
@@ -350,6 +392,9 @@ const routeTree = rootRoute.addChildren([
   shopperDashboardRoute,
   driverDashboardRoute,
   pickupPointDashboardRoute,
+  pickupPointShopRoute,
+  pickupPointCartRoute,
+  pickupPointCheckoutRoute,
   retailerDashboardRoute,
   retailerOrdersRoute,
   adminDashboardRoute,

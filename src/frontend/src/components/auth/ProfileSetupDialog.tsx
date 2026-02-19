@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useSaveUserProfile } from '@/hooks/useUserProfiles';
+import { useActiveTowns } from '@/hooks/useTowns';
+import { SearchableSelect } from '@/components/admin/SearchableSelect';
 import { toast } from 'sonner';
-import type { UserProfile } from '@/backend';
+import type { UserProfile, TownId } from '@/backend';
 
 interface ProfileSetupDialogProps {
   open: boolean;
@@ -16,10 +18,17 @@ interface ProfileSetupDialogProps {
 
 export function ProfileSetupDialog({ open, onComplete }: ProfileSetupDialogProps) {
   const saveProfile = useSaveUserProfile();
+  const { data: towns = [], isLoading: townsLoading } = useActiveTowns();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [selectedTownId, setSelectedTownId] = useState<string>('');
   const [error, setError] = useState('');
+
+  const townOptions = towns.map((town) => ({
+    value: town.id.toString(),
+    label: `${town.name}, ${town.province}`,
+  }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +49,16 @@ export function ProfileSetupDialog({ open, onComplete }: ProfileSetupDialogProps
       return;
     }
 
+    if (!selectedTownId) {
+      setError('Town is required');
+      return;
+    }
+
     const profile: UserProfile = {
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim(),
+      defaultTown: BigInt(selectedTownId),
     };
 
     try {
@@ -59,13 +74,19 @@ export function ProfileSetupDialog({ open, onComplete }: ProfileSetupDialogProps
     }
   };
 
+  const isFormValid = name.trim() && email.trim() && phone.trim() && selectedTownId;
+
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent 
+        className="sm:max-w-md" 
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>
           <DialogDescription>
-            Please provide your information to continue using Thuma Thina
+            Please provide your information to continue using Thuma Thina. All fields are required.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,7 +137,25 @@ export function ProfileSetupDialog({ open, onComplete }: ProfileSetupDialogProps
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={saveProfile.isPending}>
+          <div className="space-y-2">
+            <Label htmlFor="town">Town *</Label>
+            <SearchableSelect
+              options={townOptions}
+              value={selectedTownId}
+              onValueChange={setSelectedTownId}
+              placeholder="Select your town"
+              disabled={saveProfile.isPending || townsLoading}
+            />
+            {townsLoading && (
+              <p className="text-sm text-muted-foreground">Loading towns...</p>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={saveProfile.isPending || townsLoading || !isFormValid}
+          >
             {saveProfile.isPending ? 'Saving...' : 'Complete Profile'}
           </Button>
         </form>

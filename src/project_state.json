@@ -1,28 +1,36 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App update to support a pickup-point ordering workflow: pickup points (registered with a town) can view prioritized listings (own-town first, all towns included) and create/checkout orders on behalf of customers, feeding into a shopper/driver status pipeline ending with pickup-point marking order collected.",
+  "summary": "An application that requires users to set a default town before accessing the app. Users without a town are prompted with a modal after login, and new users must complete the town field during registration.",
   "architectural_notes": [
-    "Due to platform build limitations, implement the pickup-point dashboard in very small incremental steps (start with an empty route + placeholder, then add data fetching, list rendering, sorting, etc.)."
+    "Town field is required for all users and stored in profiles",
+    "Authentication flow includes post-login check for default town",
+    "Modal prompt system for users missing required profile data"
   ],
-  "known_issues": [
-    "Automated builds fail when the request bundles too many changes at once (dashboard + route + components + backend calls/queries)."
-  ],
+  "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-create-a-new-pickup-point-dashboard-page-component-that-renders-placeholder-content-only-no-backend-calls-no-listing-queries-no-order-cart-actions-the-page-must-include-a-clear-h1-title-and-short-description-indicating-this-is-the-upcoming-pickup-point-dashboard",
-      "title": "Create a new Pickup Point Dashboard page component that renders placeholder content only (no backend calls, no listing queries, no order/cart actions). The page must include a clear H1 title and short description indicating this is the upcoming pickup-point dashboard.",
+      "id": "feature-modify-profilesetupdialog-to-make-the-default-town-field-mandatory-and-prevent-dialog-dismissal-until-a-town-is-selected",
+      "title": "Modify ProfileSetupDialog to make the default town field mandatory and prevent dialog dismissal until a town is selected",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-a-new-authenticated-route-for-the-pickup-point-dashboard-in-the-tanstack-router-configuration-frontend-src-router-hashrouter-tsx-the-route-must-be-protected-by-requireauth-and-render-the-new-placeholder-pickup-point-dashboard-page-at-a-stable-path-e-g-pickup-point-dashboard",
-      "title": "Add a new authenticated route for the Pickup Point Dashboard in the TanStack router configuration (frontend/src/router/HashRouter.tsx). The route must be protected by RequireAuth and render the new placeholder Pickup Point Dashboard page at a stable path (e.g., /pickup-point-dashboard).",
+      "id": "feature-add-authentication-flow-check-that-displays-defaulttownsetupdialog-immediately-after-login-for-users-who-have-a-profile-but-no-default-town-set",
+      "title": "Add authentication flow check that displays DefaultTownSetupDialog immediately after login for users who have a profile but no default town set",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-shoplayout-to-render-defaulttownsetupdialog-for-authenticated-users-with-profiles-but-no-default-town-preventing-access-to-underlying-content-until-town-is-selected",
+      "title": "Update ShopLayout to render DefaultTownSetupDialog for authenticated users with profiles but no default town, preventing access to underlying content until town is selected",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }
@@ -30,37 +38,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Pickup-point dashboard to browse all active listings, prioritized by the pickup-point’s registered town (own-town first, then other towns).",
+      "summary": "Implement town requirement system: modal prompt after login for existing users without town, mandatory town field in registration",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Pickup-point registration requires selecting a town from admin-created towns; saved town is used for dashboard sorting.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Pickup-point order creation/checkout flow from listings (pickup points are the only buyers; customers can browse only).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Order lifecycle/status flow: after pickup-point checkout -> Ready -> Shopper accepted -> Shopper completed -> Driver accepted -> Driver delivered -> Ready for pickup -> Pickup-point marks Collected (end).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Implement build in incremental steps starting with Step 1: create empty pickup-point dashboard route with placeholder text.",
-      "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Step 1: Add empty Pickup Point Dashboard route with placeholder page",
+  "projectName": "Thuma Thina",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

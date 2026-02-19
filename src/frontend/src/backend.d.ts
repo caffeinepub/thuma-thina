@@ -14,7 +14,12 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
-export type OrderId = bigint;
+export interface UserProfile {
+    defaultTown?: bigint;
+    name: string;
+    email: string;
+    phone: string;
+}
 export interface ShopListing {
     activePrice: bigint;
     isPromoActive: boolean;
@@ -25,24 +30,8 @@ export interface ShopListing {
     savings?: bigint;
     retailerId: RetailerId;
 }
-export interface UserProfile {
-    name: string;
-    email: string;
-    phone: string;
-}
 export type Time = bigint;
-export interface Retailer {
-    id: RetailerId;
-    province: string;
-    name: string;
-    createdAt: Time;
-    email: string;
-    updatedAt: Time;
-    address: string;
-    openingHours: OpeningHours;
-    phone: string;
-    townSuburb: string;
-}
+export type OrderId = bigint;
 export interface DriverApplication {
     status: {
         __kind__: "pending";
@@ -73,6 +62,13 @@ export interface WeekdayTimeRange {
     day: bigint;
     closeTime: bigint;
     openTime: bigint;
+}
+export interface PickupOrder {
+    customerName: string;
+    deliveryAddress?: string;
+    customerPhone: string;
+    orderRecord: OrderRecord;
+    createdByPickupPoint: Principal;
 }
 export interface OpeningHours {
     holidayOverrides: Array<HolidayOverride>;
@@ -115,6 +111,13 @@ export type OrderStatus = {
     ready: null;
 };
 export type ListingId = bigint;
+export interface PickupOrderInput {
+    customerName: string;
+    deliveryAddress?: string;
+    paymentMethod: PaymentMethod;
+    customerPhone: string;
+    items: Array<CartItem>;
+}
 export interface PromoDetails {
     endDate?: Time;
     price: bigint;
@@ -139,6 +142,14 @@ export interface NewListing {
     promo?: PromoDetails;
     retailerId: RetailerId;
 }
+export interface Town {
+    id: TownId;
+    status: TownStatus;
+    province: string;
+    name: string;
+    createdAt: Time;
+    updatedAt: Time;
+}
 export interface OrderRecord {
     id: OrderId;
     status: OrderStatus;
@@ -150,6 +161,7 @@ export interface OrderRecord {
     totalAmount: bigint;
     items: Array<CartItem>;
 }
+export type TownId = bigint;
 export type DeliveryMethod = {
     __kind__: "home";
     home: {
@@ -197,6 +209,7 @@ export interface PickupPointApplication {
     name: string;
     submittedAt: Time;
     reviewedBy?: Principal;
+    townId?: TownId;
     address: string;
     businessImage: ExternalBlob;
     contactNumber: string;
@@ -229,6 +242,18 @@ export interface Product {
     preferredImage?: ExternalBlob;
     category: string;
 }
+export interface Retailer {
+    id: RetailerId;
+    province: string;
+    name: string;
+    createdAt: Time;
+    email: string;
+    updatedAt: Time;
+    address: string;
+    openingHours: OpeningHours;
+    phone: string;
+    townSuburb: string;
+}
 export enum ApprovalStatus {
     pending = "pending",
     approved = "approved",
@@ -243,6 +268,10 @@ export enum PaymentMethod {
     icp = "icp",
     zar = "zar",
     nomayini = "nomayini"
+}
+export enum TownStatus {
+    active = "active",
+    removed = "removed"
 }
 export enum UserRole {
     admin = "admin",
@@ -262,9 +291,11 @@ export interface backendInterface {
     createListing(retailerId: RetailerId, productId: ProductId, price: bigint, stock: bigint): Promise<NewListing>;
     createOrder(items: Array<CartItem>, deliveryMethod: DeliveryMethod, paymentMethod: PaymentMethod): Promise<OrderRecord>;
     createPersonalShopperApplication(name: string, email: string, phone: string, selfieImage: ExternalBlob): Promise<PersonalShopperApplication>;
-    createPickupPointApplication(name: string, address: string, contactNumber: string, businessImage: ExternalBlob): Promise<PickupPointApplication>;
+    createPickupOrder(input: PickupOrderInput): Promise<PickupOrder>;
+    createPickupPointApplication(name: string, address: string, contactNumber: string, businessImage: ExternalBlob, townId: TownId): Promise<PickupPointApplication>;
     createProduct(name: string, description: string, image: ExternalBlob, category: string): Promise<Product>;
     createRetailer(input: RetailerInput): Promise<Retailer>;
+    createTown(name: string, province: string): Promise<Town>;
     deleteListing(id: ListingId): Promise<void>;
     deleteRetailer(id: RetailerId): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -279,6 +310,7 @@ export interface backendInterface {
     getOrder(orderId: OrderId): Promise<OrderRecord | null>;
     getPersonalShopperApplication(): Promise<PersonalShopperApplication | null>;
     getPersonalShopperStatus(): Promise<PersonalShopperStatus | null>;
+    getPickupOrder(pickupOrderId: bigint): Promise<PickupOrder | null>;
     getPickupPointApplication(): Promise<PickupPointApplication | null>;
     getPickupPointStatus(): Promise<{
         __kind__: "pending";
@@ -295,27 +327,35 @@ export interface backendInterface {
     getRetailerPrincipalMapping(principal: Principal): Promise<RetailerId | null>;
     getShopperOrderDetails(orderId: OrderId): Promise<ShopperOrderView | null>;
     getShopperOrderExpanded(orderId: OrderId): Promise<ShopperOrderView | null>;
+    getTown(id: TownId): Promise<Town | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
+    listActiveTowns(): Promise<Array<Town>>;
     listAllListings(): Promise<Array<NewListing>>;
     listAllOrders(): Promise<Array<OrderRecord>>;
     listApprovals(): Promise<Array<UserApprovalInfo>>;
     listCategories(): Promise<Array<string>>;
     listEligibleDriverOrders(): Promise<Array<OrderRecord>>;
     listMyAssignedShopperOrders(): Promise<Array<OrderRecord>>;
+    listMyPickupCreatedOrders(): Promise<Array<OrderRecord>>;
+    listMyPickupOrders(): Promise<Array<PickupOrder>>;
     listPendingDriverApplications(): Promise<Array<DriverApplication>>;
     listPendingPersonalShopperApplications(): Promise<Array<PersonalShopperApplication>>;
     listPendingPickupPointApplications(): Promise<Array<PickupPointApplication>>;
     listProducts(): Promise<Array<Product>>;
+    listRemovedTowns(): Promise<Array<Town>>;
     listRetailers(): Promise<Array<Retailer>>;
     listShopperEligiblePickupOrders(): Promise<Array<OrderRecord>>;
+    listTowns(): Promise<Array<Town>>;
     rejectDriver(principal: Principal, reason: string): Promise<void>;
     rejectPersonalShopper(user: Principal, reason: string): Promise<void>;
     rejectPickupPoint(user: Principal, reason: string): Promise<void>;
     removePromo(id: ListingId): Promise<NewListing>;
     removeRetailerPrincipal(principal: Principal): Promise<void>;
+    removeTown(id: TownId): Promise<Town>;
     requestApproval(): Promise<void>;
+    restoreTown(id: TownId): Promise<Town>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPromo(id: ListingId, price: bigint, startDate: Time, endDate: Time | null): Promise<NewListing>;
@@ -323,4 +363,5 @@ export interface backendInterface {
     updateOrderStatus(orderId: OrderId, status: OrderStatus): Promise<OrderRecord>;
     updateProduct(id: ProductId, name: string, description: string, category: string): Promise<Product>;
     updateRetailer(id: RetailerId, input: RetailerInput): Promise<Retailer>;
+    updateTown(id: TownId, name: string, province: string): Promise<Town>;
 }

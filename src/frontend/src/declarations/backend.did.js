@@ -116,6 +116,21 @@ export const PersonalShopperApplication = IDL.Record({
   'email' : IDL.Text,
   'phone' : IDL.Text,
 });
+export const PickupOrderInput = IDL.Record({
+  'customerName' : IDL.Text,
+  'deliveryAddress' : IDL.Opt(IDL.Text),
+  'paymentMethod' : PaymentMethod,
+  'customerPhone' : IDL.Text,
+  'items' : IDL.Vec(CartItem),
+});
+export const PickupOrder = IDL.Record({
+  'customerName' : IDL.Text,
+  'deliveryAddress' : IDL.Opt(IDL.Text),
+  'customerPhone' : IDL.Text,
+  'orderRecord' : OrderRecord,
+  'createdByPickupPoint' : IDL.Principal,
+});
+export const TownId = IDL.Nat;
 export const PickupPointApplication = IDL.Record({
   'status' : IDL.Variant({
     'pending' : IDL.Null,
@@ -126,6 +141,7 @@ export const PickupPointApplication = IDL.Record({
   'name' : IDL.Text,
   'submittedAt' : Time,
   'reviewedBy' : IDL.Opt(IDL.Principal),
+  'townId' : IDL.Opt(TownId),
   'address' : IDL.Text,
   'businessImage' : ExternalBlob,
   'contactNumber' : IDL.Text,
@@ -175,7 +191,20 @@ export const Retailer = IDL.Record({
   'phone' : IDL.Text,
   'townSuburb' : IDL.Text,
 });
+export const TownStatus = IDL.Variant({
+  'active' : IDL.Null,
+  'removed' : IDL.Null,
+});
+export const Town = IDL.Record({
+  'id' : TownId,
+  'status' : TownStatus,
+  'province' : IDL.Text,
+  'name' : IDL.Text,
+  'createdAt' : Time,
+  'updatedAt' : Time,
+});
 export const UserProfile = IDL.Record({
+  'defaultTown' : IDL.Opt(IDL.Nat),
   'name' : IDL.Text,
   'email' : IDL.Text,
   'phone' : IDL.Text,
@@ -273,8 +302,9 @@ export const idlService = IDL.Service({
       [PersonalShopperApplication],
       [],
     ),
+  'createPickupOrder' : IDL.Func([PickupOrderInput], [PickupOrder], []),
   'createPickupPointApplication' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, ExternalBlob],
+      [IDL.Text, IDL.Text, IDL.Text, ExternalBlob, TownId],
       [PickupPointApplication],
       [],
     ),
@@ -284,6 +314,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'createRetailer' : IDL.Func([RetailerInput], [Retailer], []),
+  'createTown' : IDL.Func([IDL.Text, IDL.Text], [Town], []),
   'deleteListing' : IDL.Func([ListingId], [], []),
   'deleteRetailer' : IDL.Func([RetailerId], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -310,6 +341,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(PersonalShopperStatus)],
       ['query'],
     ),
+  'getPickupOrder' : IDL.Func([IDL.Nat], [IDL.Opt(PickupOrder)], ['query']),
   'getPickupPointApplication' : IDL.Func(
       [],
       [IDL.Opt(PickupPointApplication)],
@@ -349,6 +381,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(ShopperOrderView)],
       ['query'],
     ),
+  'getTown' : IDL.Func([TownId], [IDL.Opt(Town)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -356,6 +389,7 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+  'listActiveTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
   'listAllListings' : IDL.Func([], [IDL.Vec(NewListing)], ['query']),
   'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
@@ -366,6 +400,8 @@ export const idlService = IDL.Service({
       [IDL.Vec(OrderRecord)],
       ['query'],
     ),
+  'listMyPickupCreatedOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
+  'listMyPickupOrders' : IDL.Func([], [IDL.Vec(PickupOrder)], ['query']),
   'listPendingDriverApplications' : IDL.Func(
       [],
       [IDL.Vec(DriverApplication)],
@@ -382,18 +418,22 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'listRemovedTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
   'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
   'listShopperEligiblePickupOrders' : IDL.Func(
       [],
       [IDL.Vec(OrderRecord)],
       ['query'],
     ),
+  'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
   'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'removePromo' : IDL.Func([ListingId], [NewListing], []),
   'removeRetailerPrincipal' : IDL.Func([IDL.Principal], [], []),
+  'removeTown' : IDL.Func([TownId], [Town], []),
   'requestApproval' : IDL.Func([], [], []),
+  'restoreTown' : IDL.Func([TownId], [Town], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPromo' : IDL.Func(
@@ -413,6 +453,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [Retailer], []),
+  'updateTown' : IDL.Func([TownId, IDL.Text, IDL.Text], [Town], []),
 });
 
 export const idlInitArgs = [];
@@ -526,6 +567,21 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Text,
     'phone' : IDL.Text,
   });
+  const PickupOrderInput = IDL.Record({
+    'customerName' : IDL.Text,
+    'deliveryAddress' : IDL.Opt(IDL.Text),
+    'paymentMethod' : PaymentMethod,
+    'customerPhone' : IDL.Text,
+    'items' : IDL.Vec(CartItem),
+  });
+  const PickupOrder = IDL.Record({
+    'customerName' : IDL.Text,
+    'deliveryAddress' : IDL.Opt(IDL.Text),
+    'customerPhone' : IDL.Text,
+    'orderRecord' : OrderRecord,
+    'createdByPickupPoint' : IDL.Principal,
+  });
+  const TownId = IDL.Nat;
   const PickupPointApplication = IDL.Record({
     'status' : IDL.Variant({
       'pending' : IDL.Null,
@@ -536,6 +592,7 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'submittedAt' : Time,
     'reviewedBy' : IDL.Opt(IDL.Principal),
+    'townId' : IDL.Opt(TownId),
     'address' : IDL.Text,
     'businessImage' : ExternalBlob,
     'contactNumber' : IDL.Text,
@@ -585,7 +642,17 @@ export const idlFactory = ({ IDL }) => {
     'phone' : IDL.Text,
     'townSuburb' : IDL.Text,
   });
+  const TownStatus = IDL.Variant({ 'active' : IDL.Null, 'removed' : IDL.Null });
+  const Town = IDL.Record({
+    'id' : TownId,
+    'status' : TownStatus,
+    'province' : IDL.Text,
+    'name' : IDL.Text,
+    'createdAt' : Time,
+    'updatedAt' : Time,
+  });
   const UserProfile = IDL.Record({
+    'defaultTown' : IDL.Opt(IDL.Nat),
     'name' : IDL.Text,
     'email' : IDL.Text,
     'phone' : IDL.Text,
@@ -687,8 +754,9 @@ export const idlFactory = ({ IDL }) => {
         [PersonalShopperApplication],
         [],
       ),
+    'createPickupOrder' : IDL.Func([PickupOrderInput], [PickupOrder], []),
     'createPickupPointApplication' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, ExternalBlob],
+        [IDL.Text, IDL.Text, IDL.Text, ExternalBlob, TownId],
         [PickupPointApplication],
         [],
       ),
@@ -698,6 +766,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createRetailer' : IDL.Func([RetailerInput], [Retailer], []),
+    'createTown' : IDL.Func([IDL.Text, IDL.Text], [Town], []),
     'deleteListing' : IDL.Func([ListingId], [], []),
     'deleteRetailer' : IDL.Func([RetailerId], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -724,6 +793,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(PersonalShopperStatus)],
         ['query'],
       ),
+    'getPickupOrder' : IDL.Func([IDL.Nat], [IDL.Opt(PickupOrder)], ['query']),
     'getPickupPointApplication' : IDL.Func(
         [],
         [IDL.Opt(PickupPointApplication)],
@@ -763,6 +833,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ShopperOrderView)],
         ['query'],
       ),
+    'getTown' : IDL.Func([TownId], [IDL.Opt(Town)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -770,6 +841,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+    'listActiveTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
     'listAllListings' : IDL.Func([], [IDL.Vec(NewListing)], ['query']),
     'listAllOrders' : IDL.Func([], [IDL.Vec(OrderRecord)], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
@@ -784,6 +856,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(OrderRecord)],
         ['query'],
       ),
+    'listMyPickupCreatedOrders' : IDL.Func(
+        [],
+        [IDL.Vec(OrderRecord)],
+        ['query'],
+      ),
+    'listMyPickupOrders' : IDL.Func([], [IDL.Vec(PickupOrder)], ['query']),
     'listPendingDriverApplications' : IDL.Func(
         [],
         [IDL.Vec(DriverApplication)],
@@ -800,18 +878,22 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'listProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'listRemovedTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
     'listRetailers' : IDL.Func([], [IDL.Vec(Retailer)], ['query']),
     'listShopperEligiblePickupOrders' : IDL.Func(
         [],
         [IDL.Vec(OrderRecord)],
         ['query'],
       ),
+    'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
     'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'removePromo' : IDL.Func([ListingId], [NewListing], []),
     'removeRetailerPrincipal' : IDL.Func([IDL.Principal], [], []),
+    'removeTown' : IDL.Func([TownId], [Town], []),
     'requestApproval' : IDL.Func([], [], []),
+    'restoreTown' : IDL.Func([TownId], [Town], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPromo' : IDL.Func(
@@ -831,6 +913,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateRetailer' : IDL.Func([RetailerId, RetailerInput], [Retailer], []),
+    'updateTown' : IDL.Func([TownId, IDL.Text, IDL.Text], [Town], []),
   });
 };
 

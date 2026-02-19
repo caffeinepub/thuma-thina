@@ -1,4 +1,5 @@
 import { useListOrdersByCustomer } from '@/hooks/useOrders';
+import { useListMyPickupOrders } from '@/hooks/usePickupPointOrders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Package, Eye } from 'lucide-react';
+import { Package, Eye, Store } from 'lucide-react';
 import { navigate } from '@/router/HashRouter';
 import { formatICTime } from '@/utils/time';
 import { formatZAR } from '@/utils/money';
@@ -20,6 +21,7 @@ import type { OrderStatus } from '@/backend';
 
 export function MyOrdersPage() {
   const { data: orders, isLoading, error } = useListOrdersByCustomer();
+  const { data: pickupOrders } = useListMyPickupOrders();
 
   const getStatusBadge = (status: OrderStatus) => {
     if (status.__kind__ === 'pending') {
@@ -38,6 +40,10 @@ export function MyOrdersPage() {
       return <Badge variant="destructive">Cancelled</Badge>;
     }
     return <Badge variant="outline">Unknown</Badge>;
+  };
+
+  const isPickupOrder = (orderId: bigint) => {
+    return pickupOrders?.some((po) => po.orderRecord.id === orderId);
   };
 
   if (error) {
@@ -92,7 +98,17 @@ export function MyOrdersPage() {
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={Number(order.id)}>
-                    <TableCell className="font-medium">#{Number(order.id)}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        #{Number(order.id)}
+                        {isPickupOrder(order.id) && (
+                          <Badge variant="outline" className="text-xs">
+                            <Store className="h-3 w-3 mr-1" />
+                            Pickup Point
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{formatICTime(order.createdAt)}</TableCell>
                     <TableCell>{order.items.length} items</TableCell>
                     <TableCell>{formatZAR(order.totalAmount)}</TableCell>

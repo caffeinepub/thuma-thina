@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { ExternalBlob } from '@/backend';
+import { ExternalBlob, TownId } from '@/backend';
 import type { PickupPointApplication } from '@/backend';
 
 export const pickupPointApplicationKeys = {
@@ -53,14 +53,16 @@ export function useSubmitPickupPointApplication() {
       address,
       contactNumber,
       businessImage,
+      townId,
     }: {
       name: string;
       address: string;
       contactNumber: string;
       businessImage: ExternalBlob;
+      townId: TownId;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createPickupPointApplication(name, address, contactNumber, businessImage);
+      return actor.createPickupPointApplication(name, address, contactNumber, businessImage, townId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pickupPointApplicationKeys.myApplication });

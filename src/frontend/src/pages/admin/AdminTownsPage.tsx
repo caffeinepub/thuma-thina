@@ -29,7 +29,8 @@ import { SearchableSelect } from '@/components/admin/SearchableSelect';
 import { SA_PROVINCES } from '@/utils/saProvinces';
 import { toast } from 'sonner';
 import { navigate } from '@/router/HashRouter';
-import type { Town, TownId } from '@/hooks/useTowns';
+import type { Town, TownId } from '@/backend';
+import { TownStatus } from '@/backend';
 
 export function AdminTownsPage() {
   const { data: towns, isLoading } = useListTowns();
@@ -45,8 +46,8 @@ export function AdminTownsPage() {
   const [name, setName] = useState('');
   const [province, setProvince] = useState('');
 
-  const activeTowns = towns?.filter((t) => t.status === 'active') || [];
-  const removedTowns = towns?.filter((t) => t.status === 'removed') || [];
+  const activeTowns = towns?.filter((t) => t.status === TownStatus.active) || [];
+  const removedTowns = towns?.filter((t) => t.status === TownStatus.removed) || [];
   const displayTowns = activeTab === 'active' ? activeTowns : removedTowns;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -267,13 +268,13 @@ export function AdminTownsPage() {
                           <TableCell className="font-medium">{town.name}</TableCell>
                           <TableCell>{town.province}</TableCell>
                           <TableCell>
-                            <Badge variant={town.status === 'active' ? 'default' : 'secondary'}>
+                            <Badge variant={town.status === TownStatus.active ? 'default' : 'secondary'}>
                               {town.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              {town.status === 'active' && (
+                              {town.status === TownStatus.active && (
                                 <>
                                   <Button
                                     variant="ghost"

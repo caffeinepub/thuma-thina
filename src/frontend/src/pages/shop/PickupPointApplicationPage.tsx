@@ -8,17 +8,21 @@ import { ArrowLeft, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { navigate } from '@/router/HashRouter';
 import { toast } from 'sonner';
 import { useSubmitPickupPointApplication, useGetMyPickupPointApplication } from '@/hooks/usePickupPointApplication';
+import { useActiveTowns } from '@/hooks/useTowns';
+import { SearchableSelect } from '@/components/admin/SearchableSelect';
 import { ExternalBlob } from '@/backend';
 import { fileToBytes, validateImageFile } from '@/utils/fileBytes';
 
 export function PickupPointApplicationPage() {
   const submitApplication = useSubmitPickupPointApplication();
   const { data: existingApplication, isLoading: loadingExisting, isFetched } = useGetMyPickupPointApplication();
+  const { data: activeTowns, isLoading: townsLoading } = useActiveTowns();
 
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     contactNumber: '',
+    townId: '',
   });
 
   const [businessImageFile, setBusinessImageFile] = useState<File | null>(null);
@@ -68,6 +72,11 @@ export function PickupPointApplicationPage() {
       return;
     }
 
+    if (!formData.townId) {
+      toast.error('Please select a town');
+      return;
+    }
+
     if (!businessImageFile) {
       toast.error('Please upload a business image');
       return;
@@ -82,12 +91,13 @@ export function PickupPointApplicationPage() {
         setUploadProgress(percentage);
       });
 
-      // Submit application
+      // Submit application with townId
       await submitApplication.mutateAsync({
         name: formData.name.trim(),
         address: formData.address.trim(),
         contactNumber: formData.contactNumber.trim(),
         businessImage: businessBlob,
+        townId: BigInt(formData.townId),
       });
 
       toast.success('Application submitted successfully!');
@@ -98,6 +108,8 @@ export function PickupPointApplicationPage() {
         toast.error('You have already submitted an application');
       } else if (error.message?.includes('Unauthorized')) {
         toast.error('Please log in to submit an application');
+      } else if (error.message?.includes('Invalid town')) {
+        toast.error('The selected town is invalid or no longer active');
       } else {
         toast.error(error.message || 'Failed to submit application');
       }
@@ -107,6 +119,11 @@ export function PickupPointApplicationPage() {
   const isSubmitting = submitApplication.isPending;
   const showProgress = isSubmitting && uploadProgress > 0 && uploadProgress < 100;
   const hasExistingApplication = isFetched && existingApplication !== null;
+
+  const townOptions = (activeTowns || []).map((town) => ({
+    value: town.id.toString(),
+    label: `${town.name}, ${town.province}`,
+  }));
 
   if (loadingExisting) {
     return (
@@ -221,6 +238,22 @@ export function PickupPointApplicationPage() {
                     disabled={isSubmitting}
                     required
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="town">Town *</Label>
+                  <div className="mt-2">
+                    <SearchableSelect
+                      options={townOptions}
+                      value={formData.townId}
+                      onValueChange={(value) => handleInputChange('townId', value)}
+                      placeholder={townsLoading ? 'Loading towns...' : 'Select a town'}
+                      disabled={isSubmitting || townsLoading}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Select the town where your pickup point is located
+                  </p>
                 </div>
 
                 <div>
