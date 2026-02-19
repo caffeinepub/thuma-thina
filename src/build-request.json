@@ -1,77 +1,59 @@
 {
   "kind": "build_request",
-  "title": "Enforce mandatory default town requirement for all users",
+  "title": "Extend Towns Module UI to All Users",
   "projectName": "Thuma Thina",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Modify ProfileSetupDialog to make the default town field mandatory and prevent dialog dismissal until a town is selected",
+      "text": "Update MyTownsPage component to display the same towns interface for all authenticated users, removing any admin-only conditional rendering or access checks that currently restrict the UI to admin users only",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-10"
+          "msg-recent"
         ],
         "quotes": [
-          "new users have to complete town field in profile setup to register on the app"
+          "yes , no backend",
+          "same ui",
+          "Remove admin-only checks so ALL users see this interface"
         ]
       },
       "acceptanceCriteria": [
-        "ProfileSetupDialog cannot be dismissed or closed until a default town is selected",
-        "Form validation prevents submission without a default town",
-        "User cannot proceed to use the app without completing town selection"
+        "All authenticated users can view the MyTownsPage interface",
+        "No admin role checks prevent non-admin users from seeing the towns UI",
+        "The UI matches exactly what admin users currently see"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add authentication flow check that displays DefaultTownSetupDialog immediately after login for users who have a profile but no default town set",
+      "text": "Display the towns list and default town selection dropdown interface for all users in MyTownsPage, showing the same searchable town selector that admin currently uses, even though the save functionality will not persist data until backend integration is completed in a future phase",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-10"
+          "msg-recent"
         ],
         "quotes": [
-          "they should be directed to profile set up shown modal to select a town",
-          "after log in"
+          "yes show ui even if it does not save yet",
+          "Display the towns list and selection UI (even though saving won't work until we connect the backend later)"
         ]
       },
       "acceptanceCriteria": [
-        "After successful login, check if user has a profile with no default town",
-        "Show DefaultTownSetupDialog modal when user lacks a default town",
-        "Modal cannot be dismissed until town is selected",
-        "User cannot access any app features until town is set"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Update ShopLayout to render DefaultTownSetupDialog for authenticated users with profiles but no default town, preventing access to underlying content until town is selected",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-10"
-        ],
-        "quotes": [
-          "they should be directed to profile set up shown modal to select a town"
-        ]
-      },
-      "acceptanceCriteria": [
-        "DefaultTownSetupDialog appears as a blocking modal when user has profile but no default town",
-        "Dialog cannot be dismissed or bypassed",
-        "After town selection, dialog closes and user can access the app normally"
+        "All users see a searchable dropdown to select their default town",
+        "The dropdown populates with the existing admin-created towns list",
+        "UI provides visual feedback when a town is selected (even if not persisted)"
       ]
     }
   ],
   "constraints": [
-    "Do not modify backend schema or Motoko code",
-    "Preserve existing ProfileSetupDialog and DefaultTownSetupDialog components",
-    "Do not change authentication flow in useInternetIdentity hook",
-    "Maintain compatibility with existing user profile structure that includes defaultTown field"
+    "Do not modify any backend code or backend methods",
+    "Do not change authentication or authorization logic in the backend",
+    "Preserve all existing admin functionality exactly as it currently works"
   ],
   "nonGoals": [
-    "Changing the backend UserProfile type or migration logic",
-    "Modifying town management backend methods",
-    "Adding new town-related database fields",
-    "Implementing town selection UI redesign beyond requirement enforcement"
+    "Backend integration for saving user default town selections",
+    "Removing favorites functionality (addressed in future phase)",
+    "Creating new backend storage methods",
+    "Modifying user profile structure"
   ],
   "imageRequirements": {
     "required": [],

@@ -301,6 +301,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCatalogue(): Promise<Array<ShopProduct>>;
+    getDefaultTown(): Promise<Town | null>;
     getDriverApplication(): Promise<DriverApplication | null>;
     getListing(id: ListingId): Promise<NewListing | null>;
     getMyOrders(): Promise<Array<OrderRecord>>;
@@ -348,6 +349,7 @@ export interface backendInterface {
     listRetailers(): Promise<Array<Retailer>>;
     listShopperEligiblePickupOrders(): Promise<Array<OrderRecord>>;
     listTowns(): Promise<Array<Town>>;
+    registerUser(profile: UserProfile): Promise<void>;
     rejectDriver(principal: Principal, reason: string): Promise<void>;
     rejectPersonalShopper(user: Principal, reason: string): Promise<void>;
     rejectPickupPoint(user: Principal, reason: string): Promise<void>;
@@ -357,6 +359,7 @@ export interface backendInterface {
     requestApproval(): Promise<void>;
     restoreTown(id: TownId): Promise<Town>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    selectDefaultTown(townId: TownId): Promise<void>;
     setApproval(user: Principal, status: ApprovalStatus): Promise<void>;
     setPromo(id: ListingId, price: bigint, startDate: Time, endDate: Time | null): Promise<NewListing>;
     updateListing(id: ListingId, price: bigint, stock: bigint, status: ListingStatus): Promise<NewListing>;

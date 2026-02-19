@@ -1,59 +1,47 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Enforce mandatory default town requirement for all users",
+  "title": "Extend Towns Module UI to All Users",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Make default town field mandatory in ProfileSetupDialog and prevent dialog dismissal until town is selected",
+      "summary": "Remove admin-only access restrictions from MyTownsPage to allow all authenticated users to view the towns interface",
       "acceptanceCriteria": [
-        "ProfileSetupDialog cannot be dismissed or closed until a default town is selected",
-        "Form validation prevents submission without a default town",
-        "User cannot proceed to use the app without completing town selection"
+        "All authenticated users can view the MyTownsPage interface",
+        "No admin role checks prevent non-admin users from seeing the towns UI",
+        "The UI matches exactly what admin users currently see"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/auth/ProfileSetupDialog.tsx",
+          "path": "frontend/src/pages/shop/MyTownsPage.tsx",
           "operation": "modify",
-          "description": "Remove the onOpenChange prop from the Dialog component to prevent dismissal. Add form validation to require defaultTown selection before allowing form submission. Update the form state to include defaultTown as a required field with proper validation error messages. Ensure the submit button remains disabled until all required fields including defaultTown are filled."
+          "description": "Remove any admin-only conditional rendering or access checks that restrict the towns UI to admin users. Ensure all authenticated users can access and view the default town selection interface without role-based restrictions."
+        },
+        {
+          "path": "frontend/src/router/HashRouter.tsx",
+          "operation": "modify",
+          "description": "Update the MyTownsPage route configuration to remove RequireAdmin guard if present, ensuring the route is protected only by RequireAuth so all authenticated users can access it."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Display DefaultTownSetupDialog immediately after login for users with profiles but no default town",
+      "summary": "Display towns list and default town selection dropdown for all users in MyTownsPage, showing the same searchable interface admin currently uses",
       "acceptanceCriteria": [
-        "After successful login, check if user has a profile with no default town",
-        "Show DefaultTownSetupDialog modal when user lacks a default town",
-        "Modal cannot be dismissed until town is selected",
-        "User cannot access any app features until town is set"
+        "All users see a searchable dropdown to select their default town",
+        "The dropdown populates with the existing admin-created towns list",
+        "UI provides visual feedback when a town is selected (even if not persisted)"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "path": "frontend/src/pages/shop/MyTownsPage.tsx",
           "operation": "modify",
-          "description": "Add logic to check if authenticated user has a profile with defaultTown === undefined or null. When this condition is met, render the DefaultTownSetupDialog as a blocking modal before showing other content. Ensure the dialog appears after ProfileSetupDialog completes (if needed) but before allowing access to the main app content. Update the existing conditional rendering logic to include this check."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Update ShopLayout to render blocking DefaultTownSetupDialog for users with profiles but no default town",
-      "acceptanceCriteria": [
-        "DefaultTownSetupDialog appears as a blocking modal when user has profile but no default town",
-        "Dialog cannot be dismissed or bypassed",
-        "After town selection, dialog closes and user can access the app normally"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/towns/DefaultTownSetupDialog.tsx",
-          "operation": "modify",
-          "description": "Remove the onOpenChange prop from the Dialog component to prevent manual dismissal. Ensure the dialog can only be closed programmatically after successful town selection and profile update. Add proper error handling for the town selection and profile save operations. Make the close button (X) either hidden or non-functional to enforce mandatory completion."
+          "description": "Ensure the searchable town selector dropdown is visible and functional for all authenticated users. The component should fetch and display the list of active towns using useTowns hook, allow users to search and select a town, and provide visual feedback on selection (such as highlighting the selected town or showing a success message). The save functionality may not persist data until backend integration is completed in a future phase, but the UI should still be fully interactive."
         },
         {
-          "path": "frontend/src/components/shop/ShopLayout.tsx",
+          "path": "frontend/src/hooks/useTownMembership.ts",
           "operation": "modify",
-          "description": "Refactor the conditional rendering logic to properly sequence ProfileSetupDialog and DefaultTownSetupDialog. Add state management to track when each dialog should be shown based on authentication state, profile existence, and defaultTown presence. Ensure DefaultTownSetupDialog blocks all underlying content when displayed and cannot be dismissed until a town is selected. Use the userProfile query data to determine if defaultTown is missing (undefined or null)."
+          "description": "Review and update the town membership hooks to ensure they support non-admin users. Remove any admin-only guards or checks that would prevent regular users from interacting with the town selection functionality. Ensure the selectDefaultTown mutation works for all authenticated users."
         }
       ]
     }

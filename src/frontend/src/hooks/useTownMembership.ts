@@ -1,58 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type { TownId } from './useTowns';
-
-// Temporary type definition until backend exports this
-export interface TownMembership {
-  default: TownId;
-  additional: TownId[];
-}
+import { useGetCallerUserProfile } from './useUserProfiles';
+import { toast } from 'sonner';
 
 export const townMembershipKeys = {
   all: ['townMembership'] as const,
   membership: () => [...townMembershipKeys.all, 'membership'] as const,
 };
 
-// Get full town membership (default + additional)
-export function useGetTownMembership() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<TownMembership>({
-    queryKey: townMembershipKeys.membership(),
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Town membership backend methods not yet implemented');
-    },
-    enabled: false, // Disabled until backend is ready
-  });
-}
-
-// Derived query for default town
+// Get default town from user profile - works for all authenticated users
 export function useGetDefaultTown() {
-  const query = useGetTownMembership();
+  const { data: profile, isLoading, isFetched, error } = useGetCallerUserProfile();
 
   return {
-    data: query.data?.default ?? null,
-    isLoading: query.isLoading,
-    isFetched: query.isFetched,
-    error: query.error,
+    data: profile?.defaultTown ?? null,
+    isLoading,
+    isFetched,
+    error,
   };
 }
 
-// Derived query for additional towns
-export function useGetAdditionalTowns() {
-  const query = useGetTownMembership();
-
-  return {
-    data: query.data?.additional ?? [],
-    isLoading: query.isLoading,
-    isFetched: query.isFetched,
-    error: query.error,
-  };
-}
-
-// Set default town
+// Set default town using backend selectDefaultTown method - works for all authenticated users
 export function useSetDefaultTown() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -60,25 +29,36 @@ export function useSetDefaultTown() {
   return useMutation({
     mutationFn: async (townId: TownId) => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Town membership backend methods not yet implemented');
+      await actor.selectDefaultTown(townId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: townMembershipKeys.all });
+      // Invalidate user profile to refresh default town
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      toast.success('Default town updated successfully');
+    },
+    onError: (error: any) => {
+      console.error('Failed to update default town:', error);
+      toast.error(error.message || 'Failed to update default town');
     },
   });
 }
 
-// Add favorite town (no approval needed)
+// Placeholder for future favorite towns functionality
+export function useGetAdditionalTowns() {
+  return {
+    data: [] as TownId[],
+    isLoading: false,
+    isFetched: true,
+    error: null,
+  };
+}
+
 export function useAddFavoriteTown() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (townId: TownId) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Town membership backend methods not yet implemented');
+    mutationFn: async (_townId: TownId) => {
+      throw new Error('Favorite towns feature not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: townMembershipKeys.all });
@@ -86,16 +66,12 @@ export function useAddFavoriteTown() {
   });
 }
 
-// Remove favorite town
 export function useRemoveFavoriteTown() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (townId: TownId) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Town membership backend methods not yet implemented');
+    mutationFn: async (_townId: TownId) => {
+      throw new Error('Favorite towns feature not yet implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: townMembershipKeys.all });

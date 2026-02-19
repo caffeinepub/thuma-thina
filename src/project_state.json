@@ -1,36 +1,32 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "An application that requires users to set a default town before accessing the app. Users without a town are prompted with a modal after login, and new users must complete the town field during registration.",
+  "summary": "Web app project with admin-managed towns module. Currently extending towns module UI (default town selection) from admin-only to all users. Working in phases: frontend UI extension first, then backend integration.",
   "architectural_notes": [
-    "Town field is required for all users and stored in profiles",
-    "Authentication flow includes post-login check for default town",
-    "Modal prompt system for users missing required profile data"
+    "Towns module currently works fully for admin users (frontend + backend)",
+    "Admin-created towns list already exists in backend and used throughout app (e.g., registration)",
+    "Default town selection per user (not system-wide)",
+    "Favorites functionality removed from towns module"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Towns module UI only visible to admin users; regular users see old interface",
+    "Backend not connected for regular users' town interactions"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-modify-profilesetupdialog-to-make-the-default-town-field-mandatory-and-prevent-dialog-dismissal-until-a-town-is-selected",
-      "title": "Modify ProfileSetupDialog to make the default town field mandatory and prevent dialog dismissal until a town is selected",
+      "id": "feature-update-mytownspage-component-to-display-the-same-towns-interface-for-all-authenticated-users-removing-any-admin-only-conditional-rendering-or-access-checks-that-currently-restrict-the-ui-to-admin-users-only",
+      "title": "Update MyTownsPage component to display the same towns interface for all authenticated users, removing any admin-only conditional rendering or access checks that currently restrict the UI to admin users only",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-authentication-flow-check-that-displays-defaulttownsetupdialog-immediately-after-login-for-users-who-have-a-profile-but-no-default-town-set",
-      "title": "Add authentication flow check that displays DefaultTownSetupDialog immediately after login for users who have a profile but no default town set",
+      "id": "feature-display-the-towns-list-and-default-town-selection-dropdown-interface-for-all-users-in-mytownspage-showing-the-same-searchable-town-selector-that-admin-currently-uses-even-though-the-save-functionality-will-not-persist-data-until-backend-integration-is-completed-in-a-future-phase",
+      "title": "Display the towns list and default town selection dropdown interface for all users in MyTownsPage, showing the same searchable town selector that admin currently uses, even though the save functionality will not persist data until backend integration is completed in a future phase",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-shoplayout-to-render-defaulttownsetupdialog-for-authenticated-users-with-profiles-but-no-default-town-preventing-access-to-underlying-content-until-town-is-selected",
-      "title": "Update ShopLayout to render DefaultTownSetupDialog for authenticated users with profiles but no default town, preventing access to underlying content until town is selected",
-      "reqIds": [
-        "REQ-3"
       ],
       "version": 1
     }
@@ -38,9 +34,17 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Implement town requirement system: modal prompt after login for existing users without town, mandatory town field in registration",
+      "summary": "Extend towns module UI to all users (frontend only, no backend)",
       "reqIds": [],
       "status": "in_progress"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Connect backend for all users' default town selection (pending frontend completion)",
+      "reqIds": [
+        "AR-1"
+      ],
+      "status": "pending"
     }
   ],
   "projectName": "Thuma Thina",

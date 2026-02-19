@@ -320,6 +320,7 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCatalogue' : IDL.Func([], [IDL.Vec(ShopProduct)], ['query']),
+  'getDefaultTown' : IDL.Func([], [IDL.Opt(Town)], ['query']),
   'getDriverApplication' : IDL.Func(
       [],
       [IDL.Opt(DriverApplication)],
@@ -426,6 +427,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
+  'registerUser' : IDL.Func([UserProfile], [], []),
   'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
@@ -435,6 +437,7 @@ export const idlService = IDL.Service({
   'requestApproval' : IDL.Func([], [], []),
   'restoreTown' : IDL.Func([TownId], [Town], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'selectDefaultTown' : IDL.Func([TownId], [], []),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'setPromo' : IDL.Func(
       [ListingId, IDL.Nat, Time, IDL.Opt(Time)],
@@ -772,6 +775,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCatalogue' : IDL.Func([], [IDL.Vec(ShopProduct)], ['query']),
+    'getDefaultTown' : IDL.Func([], [IDL.Opt(Town)], ['query']),
     'getDriverApplication' : IDL.Func(
         [],
         [IDL.Opt(DriverApplication)],
@@ -886,6 +890,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'listTowns' : IDL.Func([], [IDL.Vec(Town)], ['query']),
+    'registerUser' : IDL.Func([UserProfile], [], []),
     'rejectDriver' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPersonalShopper' : IDL.Func([IDL.Principal, IDL.Text], [], []),
     'rejectPickupPoint' : IDL.Func([IDL.Principal, IDL.Text], [], []),
@@ -895,6 +900,7 @@ export const idlFactory = ({ IDL }) => {
     'requestApproval' : IDL.Func([], [], []),
     'restoreTown' : IDL.Func([TownId], [Town], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'selectDefaultTown' : IDL.Func([TownId], [], []),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'setPromo' : IDL.Func(
         [ListingId, IDL.Nat, Time, IDL.Opt(Time)],

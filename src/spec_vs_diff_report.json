@@ -1,16 +1,39 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-19T05:49:20.723Z",
-  "summary": "The diff successfully implements all three requirements for enforcing mandatory default town selection. ProfileSetupDialog prevents dismissal and validates town selection (REQ-1), DefaultTownSetupDialog is shown for users with profiles but no default town (REQ-2), and ShopLayout orchestrates both dialogs appropriately (REQ-3). All acceptance criteria appear to be met.",
-  "missing_requirements": [],
-  "hallucinated_features": [],
-  "confidence": 0.95,
+  "generatedAt": "2026-02-19T14:12:40.655Z",
+  "summary": "The diff partially implements the requirements but contains critical violations. While it extends UI access to all users (REQ-1) and adds the town selection interface (REQ-2), it violates the core constraint by implementing backend integration through the selectDefaultTown method, which was explicitly forbidden until a future phase.",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "UI provides visual feedback when a town is selected (even if not persisted)",
+      "reason": "The diff implements actual persistence via backend selectDefaultTown method and shows success toasts, but does not provide the interim visual feedback for non-persisted selection that was requested. The requirement explicitly stated 'even if not persisted' indicating temporary visual state was needed.",
+      "evidence": [
+        "frontend/src/hooks/useTownMembership.ts"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Backend integration for saving default town selections using selectDefaultTown method",
+      "reason": "BuildRequest explicitly lists 'Backend integration for saving user default town selections' as a Non-goal and constraint states 'Do not modify any backend code or backend methods'. The diff implements useSetDefaultTown hook that calls actor.selectDefaultTown() which is backend integration that should be deferred to future phase AR-2.",
+      "evidence": [
+        "frontend/src/hooks/useTownMembership.ts"
+      ]
+    },
+    {
+      "description": "Toast notifications for save success/failure",
+      "reason": "The implementation includes toast.success and toast.error for save operations, but the requirement specified non-persisted selection with visual feedback only. Actual save notifications imply backend persistence which violates the phase separation constraint.",
+      "evidence": [
+        "frontend/src/hooks/useTownMembership.ts"
+      ]
+    }
+  ],
+  "confidence": 0.92,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/components/auth/ProfileSetupDialog.tsx",
-    "frontend/src/components/shop/ShopLayout.tsx",
-    "frontend/src/components/towns/DefaultTownSetupDialog.tsx",
+    "frontend/src/hooks/useTownMembership.ts",
+    "frontend/src/pages/shop/MyTownsPage.tsx",
     "project_state.json"
   ]
 }

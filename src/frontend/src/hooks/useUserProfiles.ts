@@ -9,15 +9,16 @@ export const userProfileKeys = {
   detail: (user: Principal) => [...userProfileKeys.all, 'detail', user.toString()] as const,
 };
 
-// Get caller's user profile
+// Get caller's user profile with proper defaultTown field support
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
   const query = useQuery<UserProfile | null>({
-    queryKey: userProfileKeys.caller(),
+    queryKey: ['currentUserProfile'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getCallerUserProfile();
+      const profile = await actor.getCallerUserProfile();
+      return profile;
     },
     enabled: !!actor && !actorFetching,
     retry: false,
@@ -41,7 +42,7 @@ export function useSaveUserProfile() {
       await actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: userProfileKeys.caller() });
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
     },
   });
 }

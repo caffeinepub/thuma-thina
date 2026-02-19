@@ -7,10 +7,10 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
-import Time "mo:core/Time";
+import Iter "mo:core/Iter";
 import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
-import Iter "mo:core/Iter";
+import Time "mo:core/Time";
 
 
 
@@ -395,6 +395,58 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
+  private func getDefaultTownId() : ?TownId {
+    if (defaultTownId.isSome()) {
+      return defaultTownId;
+    };
+    for ((id, town) in towns.toArray().vals()) {
+      if (town.name == "Osizweni" and town.status == #active) {
+        defaultTownId := ?id;
+        return ?id;
+      };
+    };
+    null;
+  };
+
+  public shared ({ caller }) func selectDefaultTown(townId : TownId) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can select default town");
+    };
+
+    switch (towns.get(townId)) {
+      case (null) { Runtime.trap("Selected town does not exist") };
+      case (?town) {
+        if (town.status != #active) {
+          Runtime.trap("Selected town is not active");
+        };
+      };
+    };
+
+    switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User profile not found") };
+      case (?profile) {
+        let updatedProfile = { profile with defaultTown = ?townId };
+        userProfiles.add(caller, updatedProfile);
+      };
+    };
+  };
+
+  public query ({ caller }) func getDefaultTown() : async ?Town {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can get default town");
+    };
+
+    switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User profile not found") };
+      case (?profile) {
+        switch (profile.defaultTown) {
+          case (null) { return null };
+          case (?townId) { return towns.get(townId) };
+        };
+      };
+    };
+  };
+
   public query ({ caller }) func listTowns() : async [Town] {
     towns.values().toArray();
   };
@@ -403,6 +455,7 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create towns");
     };
+
     if (name == "") { Runtime.trap("Town name is required") };
     if (province == "") { Runtime.trap("Province is required") };
 
@@ -417,6 +470,9 @@ actor {
     };
     towns.add(town.id, town);
     nextTownId += 1;
+    if (name == "Osizweni") {
+      defaultTownId := ?town.id;
+    };
     town;
   };
 
@@ -783,10 +839,6 @@ actor {
     };
   };
 
-  private func isListingOrderable(listing : NewListing) : Bool {
-    listing.status == #active and listing.stock > 0;
-  };
-
   private func isRetailer(caller : Principal) : Bool {
     retailerPrincipals.get(caller).isSome();
   };
@@ -814,6 +866,19 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+  };
+
+  public shared ({ caller }) func registerUser(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can register");
+    };
+
+    let defaultTown = getDefaultTownId();
+    let userProfileWithDefaultTown = {
+      profile with
+      defaultTown = defaultTown;
+    };
+    userProfiles.add(caller, userProfileWithDefaultTown);
   };
 
   public shared ({ caller }) func createProduct(name : Text, description : Text, image : Storage.ExternalBlob, category : Text) : async Product {
@@ -1365,7 +1430,6 @@ actor {
         };
       }
     );
-
     result;
   };
 
@@ -1379,6 +1443,10 @@ actor {
   };
 
   public query ({ caller }) func getOrder(orderId : OrderId) : async ?OrderRecord {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view orders");
+    };
+
     switch (orders.get(orderId)) {
       case (null) { null };
       case (?order) {
@@ -1723,6 +1791,10 @@ actor {
         order.status == #purchased and getOrderTown(order.customer) == driverTown;
       }
     );
+  };
+
+  private func isListingOrderable(listing : NewListing) : Bool {
+    listing.status == #active and listing.stock > 0;
   };
 
   private func createOrderInternal(

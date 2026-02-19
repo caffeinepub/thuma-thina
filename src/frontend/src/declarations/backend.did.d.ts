@@ -284,6 +284,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCatalogue' : ActorMethod<[], Array<ShopProduct>>,
+  'getDefaultTown' : ActorMethod<[], [] | [Town]>,
   'getDriverApplication' : ActorMethod<[], [] | [DriverApplication]>,
   'getListing' : ActorMethod<[ListingId], [] | [NewListing]>,
   'getMyOrders' : ActorMethod<[], Array<OrderRecord>>,
@@ -338,6 +339,7 @@ export interface _SERVICE {
   'listRetailers' : ActorMethod<[], Array<Retailer>>,
   'listShopperEligiblePickupOrders' : ActorMethod<[], Array<OrderRecord>>,
   'listTowns' : ActorMethod<[], Array<Town>>,
+  'registerUser' : ActorMethod<[UserProfile], undefined>,
   'rejectDriver' : ActorMethod<[Principal, string], undefined>,
   'rejectPersonalShopper' : ActorMethod<[Principal, string], undefined>,
   'rejectPickupPoint' : ActorMethod<[Principal, string], undefined>,
@@ -347,6 +349,7 @@ export interface _SERVICE {
   'requestApproval' : ActorMethod<[], undefined>,
   'restoreTown' : ActorMethod<[TownId], Town>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'selectDefaultTown' : ActorMethod<[TownId], undefined>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'setPromo' : ActorMethod<[ListingId, bigint, Time, [] | [Time]], NewListing>,
   'updateListing' : ActorMethod<

@@ -21,13 +21,18 @@ export function ShopLayout({ children }: ShopLayoutProps) {
   const showProfileSetup = isAuthenticated && !profileLoading && profileFetched && userProfile === null;
 
   // Show default town setup when authenticated, has profile, but no default town
+  // Check if defaultTown is missing (null, undefined) or if it's not a valid bigint
+  const hasValidDefaultTown = userProfile?.defaultTown !== null && 
+                               userProfile?.defaultTown !== undefined && 
+                               typeof userProfile?.defaultTown === 'bigint';
+  
   const showDefaultTownSetup = 
     isAuthenticated && 
     !profileLoading && 
     profileFetched && 
     userProfile !== null && 
     userProfile !== undefined &&
-    (userProfile.defaultTown === undefined || userProfile.defaultTown === null);
+    !hasValidDefaultTown;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
