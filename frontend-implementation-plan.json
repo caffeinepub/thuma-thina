@@ -1,0 +1,196 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Restore Version 53 stable base — all core features working (Frontend)",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Restore all frontend hooks to call real backend actor methods instead of returning stubs or throwing errors",
+      "acceptanceCriteria": [
+        "useProducts returns real product data from the backend",
+        "useRetailers returns real retailer data from the backend",
+        "useListings returns real listing data from the backend",
+        "useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication all correctly submit and retrieve applications from the backend",
+        "No hook file contains a stub that unconditionally throws an error or returns an empty array for operations that have backend support"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useProducts.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getProducts(), actor.getProduct(id), actor.createProduct(data), actor.updateProduct(id, data), and actor.getCategories() methods. Remove all hardcoded empty arrays and error throws. Implement proper query invalidation on mutations."
+        },
+        {
+          "path": "frontend/src/hooks/useRetailers.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getRetailers(), actor.getRetailer(id), actor.createRetailer(data), and actor.updateRetailer(id, data) methods. Remove all hardcoded empty arrays and error throws. Implement proper query invalidation on mutations."
+        },
+        {
+          "path": "frontend/src/hooks/useListings.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getListings(), actor.getListing(id), actor.createListing(data), actor.updateListing(id, data), and any promo-related methods. Remove all hardcoded empty arrays and error throws. Implement proper query invalidation on mutations."
+        },
+        {
+          "path": "frontend/src/hooks/useRoleApplications.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.listShopperApplications(), actor.listDriverApplications(), actor.listPickupPointApplications(), actor.approveShopperApplication(principal), actor.rejectShopperApplication(principal), and equivalent approve/reject methods for drivers and pickup points. Remove all error throws and implement proper query invalidation."
+        },
+        {
+          "path": "frontend/src/hooks/useShopperApplication.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getMyShopperApplicationStatus() and actor.submitShopperApplication(data). Remove all null returns and error throws. Implement proper query invalidation on submission."
+        },
+        {
+          "path": "frontend/src/hooks/useDriverApplication.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getMyDriverApplicationStatus() and actor.submitDriverApplication(data). Remove all null returns and error throws. Implement proper query invalidation on submission."
+        },
+        {
+          "path": "frontend/src/hooks/usePickupPointApplication.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getMyPickupPointApplicationStatus() and actor.submitPickupPointApplication(data). Remove all null returns and error throws. Implement proper query invalidation on submission."
+        },
+        {
+          "path": "frontend/src/hooks/useCategories.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.getCategories() and actor.createCategory(name). Remove the hardcoded category list and error throws. Implement proper query invalidation on category creation."
+        },
+        {
+          "path": "frontend/src/hooks/useTowns.ts",
+          "operation": "modify",
+          "description": "Replace stub implementations with real React Query hooks that call actor.listTowns(), actor.createTown(data), actor.updateTown(id, data), and actor.removeTown(id). Remove all hardcoded empty arrays and error throws. Implement proper query invalidation on mutations."
+        },
+        {
+          "path": "frontend/src/hooks/useSystemSettings.ts",
+          "operation": "modify",
+          "description": "Replace stub useWipeSystem mutation with a real implementation that calls actor.wipeSystem(). Remove the error throw and implement proper error handling and query cache clearing on success."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Restore all admin pages to display and manage real backend data, removing backend-unavailable alerts",
+      "acceptanceCriteria": [
+        "AdminProductsPage lists, creates, and edits products from the backend",
+        "AdminRetailersPage lists, creates, and edits retailers from the backend",
+        "AdminManageListingsPage lists, creates, and edits listings from the backend",
+        "AdminShoppersPage shows pending/approved/rejected shopper applications with approve/reject actions",
+        "AdminDriversPage shows pending/approved/rejected driver applications with approve/reject actions",
+        "AdminPickupPointsPage shows pending/approved/rejected pickup point applications with approve/reject actions",
+        "No 'backend unavailable' alert banners appear on any admin page"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/admin/AdminProductsPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace the empty state with a table/grid displaying products from useProducts hook. Add search functionality using the search input. Wire the 'Add Product' button to open ProductEditDialog. Add edit actions to each product row that open ProductEditDialog with the product data. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace the empty state with a table/grid displaying retailers from useRetailers hook. Add search functionality using the search input. Wire the 'Add Retailer' button to open RetailerEditDialog. Add edit actions to each retailer row that open RetailerEditDialog with the retailer data. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace the empty state with a table/grid displaying listings from useListings hook. Add search functionality using the search input. Wire the 'Add Listing' button to open ListingEditDialog. Add edit actions to each listing row that open ListingEditDialog with the listing data. Display retailer and product names for each listing. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminShoppersPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace empty TabsContent sections with tables displaying shopper applications from useRoleApplications hook, filtered by status (pending/approved/rejected). For pending applications, add approve/reject action buttons that call the appropriate mutation from useRoleApplications. Display applicant principal, application date, and status. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminDriversPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace empty TabsContent sections with tables displaying driver applications from useRoleApplications hook, filtered by status (pending/approved/rejected). For pending applications, add approve/reject action buttons that call the appropriate mutation from useRoleApplications. Display applicant principal, application date, and status. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminPickupPointsPage.tsx",
+          "operation": "modify",
+          "description": "Remove the backend-unavailable Alert. Replace empty TabsContent sections with tables displaying pickup point applications from useRoleApplications hook, filtered by status (pending/approved/rejected). For pending applications, add approve/reject action buttons that call the appropriate mutation from useRoleApplications. Display applicant principal, application date, location info, and status. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/admin/AdminOrdersPage.tsx",
+          "operation": "modify",
+          "description": "Keep the backend-unavailable Alert as-is. This page will be implemented separately when the Orders workflow is added in the next build. No changes required for REQ-3."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Restore admin dialog components to provide real create/edit forms connected to backend mutations",
+      "acceptanceCriteria": [
+        "ProductEditDialog renders a form with fields for product name, category, price, description, and image upload",
+        "RetailerEditDialog renders a form with fields for retailer name, location, operating hours, and contact details",
+        "ListingEditDialog renders a form with fields for linking a product to a retailer with pricing and availability",
+        "All dialogs submit data to the backend and show success/error feedback"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/ProductEditDialog.tsx",
+          "operation": "modify",
+          "description": "Remove the informational Alert stub. Implement a full create/edit dialog with a form containing: product name input, category select (using useCategories), price input (using money utils), description textarea, and image upload field (using ExternalBlob from blob-storage component and fileBytes utils). Use the useProducts hook's create/update mutations to submit the form. Display success toast on successful submission and close the dialog. Handle validation errors and display them inline. Use the provided product prop to determine create vs edit mode."
+        },
+        {
+          "path": "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "operation": "modify",
+          "description": "Remove the informational Alert stub. Implement a full create/edit dialog with a form containing: retailer name input, town/location select (using useTowns), contact details inputs (phone, email), and operating hours editor (using RetailerHoursEditor component). Use the useRetailers hook's create/update mutations to submit the form. Display success toast on successful submission and close the dialog. Handle validation errors and display them inline. Use the provided retailer prop to determine create vs edit mode."
+        },
+        {
+          "path": "frontend/src/components/admin/ListingEditDialog.tsx",
+          "operation": "modify",
+          "description": "Remove the informational Alert stub. Implement a full create/edit dialog with a form containing: product select (using SearchableSelect with useProducts data), retailer select (using SearchableSelect with useRetailers data), listing price input (using money utils), stock/availability toggle, and promotional fields if applicable. Use the useListings hook's create/update mutations to submit the form. Display success toast on successful submission and close the dialog. Handle validation errors and display them inline. Use the provided listing prop to determine create vs edit mode."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Restore public catalogue and retailer pages to fetch and display real data from the backend",
+      "acceptanceCriteria": [
+        "CataloguePage fetches and displays products with working search and category filter",
+        "ProductDetailPage fetches and displays product details by ID",
+        "RetailerListPage shows retailers for a given province/town",
+        "RetailerCatalogPage shows a retailer's product listings",
+        "No page displays a 'catalogue unavailable' or 'backend unavailable' alert for features that have backend support"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/shop/CataloguePage.tsx",
+          "operation": "modify",
+          "description": "Remove the unavailability Alert. Replace the empty state with a product grid displaying products from useProducts hook. Implement search and category filtering using useCatalogControls hook. Wire each product card to link to ProductDetailPage with the product ID. Display product images using externalBlobUrl utility. Add 'Add to Cart' buttons that use CartProvider. Display loading and error states appropriately."
+        },
+        {
+          "path": "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "operation": "modify",
+          "description": "Remove the unavailability Alert. Fetch the product using useProducts hook with the productId prop. Display the product's full details including name, description, price (formatted using money utils), category, images (using productImages and externalBlobUrl utils), and availability. Add an 'Add to Cart' button that uses CartProvider. Add a breadcrumb or back link to the catalogue. Display loading and error states appropriately. Show a not-found message if the product doesn't exist."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerListPage.tsx",
+          "operation": "modify",
+          "description": "Remove the unavailability Alert. Fetch retailers using useRetailers hook, filtering by the provided province and town props. Display retailers in a grid or list with their name, location, operating hours, and a link to RetailerCatalogPage with the retailer ID. Display loading and error states appropriately. Show an empty state if no retailers are found in the selected area."
+        },
+        {
+          "path": "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+          "operation": "modify",
+          "description": "Remove the unavailability Alert. Fetch the retailer using useRetailers hook with the retailerId prop, and fetch listings for that retailer using useListings hook. Display the retailer's name and details at the top. Display the retailer's product listings in a grid, showing product name, price, and availability. Wire each listing to link to ProductDetailPage with the product ID. Add 'Add to Cart' buttons. Display loading and error states appropriately. Show a not-found message if the retailer doesn't exist."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Restore the AdminOnly guard component to render its children for authenticated admin users",
+      "acceptanceCriteria": [
+        "AdminOnly component renders its children for authenticated admin users",
+        "AdminOnly component shows an access-denied message for non-admin users",
+        "The admin dashboard and all admin sub-pages are accessible to admin users"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/auth/AdminOnly.tsx",
+          "operation": "modify",
+          "description": "Remove the stub Alert that always displays. Implement proper admin check using the useIsCallerAdmin hook from useQueries. If the user is an admin, render the children prop. If not authenticated, show a login-required message. If authenticated but not an admin, show an access-denied message. Display a loading state while checking admin status. Verify component usage instructions from the authorization component before implementing."
+        }
+      ]
+    }
+  ]
+}

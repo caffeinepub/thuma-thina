@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "E-commerce/delivery platform with user registration and approval workflows, backend modules for products, retailers, and listings management, approval system for shoppers, drivers, and pick-up points. Currently rolling back to Version 53 (stable base) after Version 56 broke everything. Orders workflow still needs to be added on top of the stable V53 base.",
+  "architectural_notes": [
+    "Version 53 is the last known stable version — all rollbacks should target V53 as the base",
+    "Core modules: user registration/approval, products, retailers, listings, shoppers/drivers/pick-up points approval"
+  ],
+  "known_issues": [
+    "Version 56 deployment caused blank screen on live app — all features broken; rolling back to V53"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-restore-all-frontend-hooks-useproducts-useretailers-uselistings-useroleapplications-useshopperapplication-usedriverapplication-usepickuppointapplication-usecategories-usetowns-usesystemsettings-to-their-version-53-implementations-that-call-real-backend-actor-methods-instead-of-returning-stubs-empty-arrays-or-throwing-errors",
+      "title": "Restore all frontend hooks (useProducts, useRetailers, useListings, useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication, useCategories, useTowns, useSystemSettings) to their Version 53 implementations that call real backend actor methods instead of returning stubs, empty arrays, or throwing errors.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-all-admin-pages-adminproductspage-adminretailerspage-adminmanagelistingspage-adminshopperspage-admindriverspage-adminpickuppointspage-adminorderspage-to-their-version-53-implementations-that-display-and-manage-real-backend-data-removing-all-backend-unavailable-alert-banners-and-stub-empty-states",
+      "title": "Restore all admin pages (AdminProductsPage, AdminRetailersPage, AdminManageListingsPage, AdminShoppersPage, AdminDriversPage, AdminPickupPointsPage, AdminOrdersPage) to their Version 53 implementations that display and manage real backend data, removing all 'backend-unavailable' alert banners and stub empty states.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-all-admin-dialog-components-producteditdialog-retailereditdialog-listingeditdialog-to-their-version-53-implementations-that-provide-real-create-edit-forms-connected-to-backend-mutations-replacing-the-current-stub-alerts",
+      "title": "Restore all admin dialog components (ProductEditDialog, RetailerEditDialog, ListingEditDialog) to their Version 53 implementations that provide real create/edit forms connected to backend mutations, replacing the current stub alerts.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-cataloguepage-productdetailpage-retailerlistpage-and-retailercatalogpage-to-their-version-53-implementations-that-fetch-and-display-real-catalogue-product-and-retailer-data-from-the-backend-removing-the-unavailability-alerts",
+      "title": "Restore the CataloguePage, ProductDetailPage, RetailerListPage, and RetailerCatalogPage to their Version 53 implementations that fetch and display real catalogue, product, and retailer data from the backend, removing the unavailability alerts.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-adminonly-guard-component-to-its-version-53-implementation-that-actually-renders-its-children-when-the-caller-is-an-admin-removing-the-current-stub-that-always-shows-a-not-yet-implemented-alert",
+      "title": "Restore the AdminOnly guard component to its Version 53 implementation that actually renders its children when the caller is an admin, removing the current stub that always shows a 'not yet implemented' alert.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Orders workflow - to be built on top of the stable V53 base",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Restore the backend (backend/main.mo) to the Version 53 state, which includes fully functional data types and actor methods for Products, Retailers, Listings, Orders, user registration/approval workflows, and role-based approval for Shoppers, Drivers, and Pick-up Points. All stub/removed backend modules must be re-implemented so they return real data rather than errors or empty arrays.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Thuma Thina",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

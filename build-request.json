@@ -1,0 +1,142 @@
+{
+  "kind": "build_request",
+  "title": "Restore Version 53 stable base — all core features working",
+  "projectName": "Thuma Thina",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Restore the backend (backend/main.mo) to the Version 53 state, which includes fully functional data types and actor methods for Products, Retailers, Listings, Orders, user registration/approval workflows, and role-based approval for Shoppers, Drivers, and Pick-up Points. All stub/removed backend modules must be re-implemented so they return real data rather than errors or empty arrays.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "version 53. evrything was fine i just needed to get orders workflow working, users could register and get approved all backend modules were connected. i had products retailers and listings i could manage all these and approve shoppers drivers and pick up points"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend actor exposes working createProduct, updateProduct, getProducts methods that persist and return real data",
+        "Backend actor exposes working createRetailer, updateRetailer, getRetailers methods that persist and return real data",
+        "Backend actor exposes working createListing, updateListing, getListings methods that persist and return real data",
+        "Backend actor exposes working user registration and approval methods (requestApproval, approveUser, rejectUser)",
+        "Backend actor exposes working shopper, driver, and pick-up point application and approval methods",
+        "All previously stubbed hooks no longer throw errors — they connect to real backend methods"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Restore all frontend hooks (useProducts, useRetailers, useListings, useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication, useCategories, useTowns, useSystemSettings) to their Version 53 implementations that call real backend actor methods instead of returning stubs, empty arrays, or throwing errors.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "on this version 56 everything is not working"
+        ]
+      },
+      "acceptanceCriteria": [
+        "useProducts returns real product data from the backend",
+        "useRetailers returns real retailer data from the backend",
+        "useListings returns real listing data from the backend",
+        "useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication all correctly submit and retrieve applications from the backend",
+        "No hook file contains a stub that unconditionally throws an error or returns an empty array for operations that have backend support"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Restore all admin pages (AdminProductsPage, AdminRetailersPage, AdminManageListingsPage, AdminShoppersPage, AdminDriversPage, AdminPickupPointsPage, AdminOrdersPage) to their Version 53 implementations that display and manage real backend data, removing all 'backend-unavailable' alert banners and stub empty states.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "i had products retailers and listings i could manage all these and approve shoppers drivers and pick up points"
+        ]
+      },
+      "acceptanceCriteria": [
+        "AdminProductsPage lists, creates, and edits products from the backend",
+        "AdminRetailersPage lists, creates, and edits retailers from the backend",
+        "AdminManageListingsPage lists, creates, and edits listings from the backend",
+        "AdminShoppersPage shows pending/approved/rejected shopper applications with approve/reject actions",
+        "AdminDriversPage shows pending/approved/rejected driver applications with approve/reject actions",
+        "AdminPickupPointsPage shows pending/approved/rejected pickup point applications with approve/reject actions",
+        "No 'backend unavailable' alert banners appear on any admin page"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Restore all admin dialog components (ProductEditDialog, RetailerEditDialog, ListingEditDialog) to their Version 53 implementations that provide real create/edit forms connected to backend mutations, replacing the current stub alerts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "i had products retailers and listings i could manage all these"
+        ]
+      },
+      "acceptanceCriteria": [
+        "ProductEditDialog renders a form with fields for product name, category, price, description, and image upload",
+        "RetailerEditDialog renders a form with fields for retailer name, location, operating hours, and contact details",
+        "ListingEditDialog renders a form with fields for linking a product to a retailer with pricing and availability",
+        "All dialogs submit data to the backend and show success/error feedback"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Restore the CataloguePage, ProductDetailPage, RetailerListPage, and RetailerCatalogPage to their Version 53 implementations that fetch and display real catalogue, product, and retailer data from the backend, removing the unavailability alerts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "all backend modules were connected"
+        ]
+      },
+      "acceptanceCriteria": [
+        "CataloguePage fetches and displays products with working search and category filter",
+        "ProductDetailPage fetches and displays product details by ID",
+        "RetailerListPage shows retailers for a given province/town",
+        "RetailerCatalogPage shows a retailer's product listings",
+        "No page displays a 'catalogue unavailable' or 'backend unavailable' alert for features that have backend support"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Restore the AdminOnly guard component to its Version 53 implementation that actually renders its children when the caller is an admin, removing the current stub that always shows a 'not yet implemented' alert.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-prior"
+        ],
+        "quotes": [
+          "all backend modules were connected"
+        ]
+      },
+      "acceptanceCriteria": [
+        "AdminOnly component renders its children for authenticated admin users",
+        "AdminOnly component shows an access-denied message for non-admin users",
+        "The admin dashboard and all admin sub-pages are accessible to admin users"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not add the Orders workflow in this build — it will be added separately on top of the restored V53 base",
+    "Do not modify frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or any files under frontend/src/components/ui",
+    "All Motoko logic must remain in a single actor in backend/main.mo"
+  ],
+  "nonGoals": [
+    "Orders workflow implementation (deferred to next build)",
+    "Any new features beyond restoring V53 functionality",
+    "Changes to the design system, color tokens, or visual theme"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

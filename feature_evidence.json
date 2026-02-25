@@ -1,0 +1,129 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-restore-all-frontend-hooks-useproducts-useretailers-uselistings-useroleapplications-useshopperapplication-usedriverapplication-usepickuppointapplication-usecategories-usetowns-usesystemsettings-to-their-version-53-implementations-that-call-real-backend-actor-methods-instead-of-returning-stubs-empty-arrays-or-throwing-errors",
+      "featureTitle": "Restore all frontend hooks (useProducts, useRetailers, useListings, useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication, useCategories, useTowns, useSystemSettings) to their Version 53 implementations that call real backend actor methods instead of returning stubs, empty arrays, or throwing errors.",
+      "files": [
+        "frontend/src/hooks/useCategories.ts",
+        "frontend/src/hooks/useDriverApplication.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/usePickupPointApplication.ts",
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useRetailers.ts",
+        "frontend/src/hooks/useRoleApplications.ts",
+        "frontend/src/hooks/useShopperApplication.ts",
+        "frontend/src/hooks/useSystemSettings.ts",
+        "frontend/src/hooks/useTowns.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restore-all-admin-pages-adminproductspage-adminretailerspage-adminmanagelistingspage-adminshopperspage-admindriverspage-adminpickuppointspage-adminorderspage-to-their-version-53-implementations-that-display-and-manage-real-backend-data-removing-all-backend-unavailable-alert-banners-and-stub-empty-states",
+      "featureTitle": "Restore all admin pages (AdminProductsPage, AdminRetailersPage, AdminManageListingsPage, AdminShoppersPage, AdminDriversPage, AdminPickupPointsPage, AdminOrdersPage) to their Version 53 implementations that display and manage real backend data, removing all 'backend-unavailable' alert banners and stub empty states.",
+      "files": [
+        "frontend/src/pages/admin/AdminDriversPage.tsx",
+        "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+        "frontend/src/pages/admin/AdminPickupPointsPage.tsx",
+        "frontend/src/pages/admin/AdminProductsPage.tsx",
+        "frontend/src/pages/admin/AdminRetailersPage.tsx",
+        "frontend/src/pages/admin/AdminShoppersPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restore-all-admin-dialog-components-producteditdialog-retailereditdialog-listingeditdialog-to-their-version-53-implementations-that-provide-real-create-edit-forms-connected-to-backend-mutations-replacing-the-current-stub-alerts",
+      "featureTitle": "Restore all admin dialog components (ProductEditDialog, RetailerEditDialog, ListingEditDialog) to their Version 53 implementations that provide real create/edit forms connected to backend mutations, replacing the current stub alerts.",
+      "files": [
+        "frontend/src/components/admin/ListingEditDialog.tsx",
+        "frontend/src/components/admin/ProductEditDialog.tsx",
+        "frontend/src/components/admin/RetailerEditDialog.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restore-the-cataloguepage-productdetailpage-retailerlistpage-and-retailercatalogpage-to-their-version-53-implementations-that-fetch-and-display-real-catalogue-product-and-retailer-data-from-the-backend-removing-the-unavailability-alerts",
+      "featureTitle": "Restore the CataloguePage, ProductDetailPage, RetailerListPage, and RetailerCatalogPage to their Version 53 implementations that fetch and display real catalogue, product, and retailer data from the backend, removing the unavailability alerts.",
+      "files": [
+        "frontend/src/pages/shop/CataloguePage.tsx",
+        "frontend/src/pages/shop/ProductDetailPage.tsx",
+        "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+        "frontend/src/pages/shop/RetailerListPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restore-the-adminonly-guard-component-to-its-version-53-implementation-that-actually-renders-its-children-when-the-caller-is-an-admin-removing-the-current-stub-that-always-shows-a-not-yet-implemented-alert",
+      "featureTitle": "Restore the AdminOnly guard component to its Version 53 implementation that actually renders its children when the caller is an admin, removing the current stub that always shows a 'not yet implemented' alert.",
+      "files": [
+        "frontend/src/components/auth/AdminOnly.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0",
+        "user-approval@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

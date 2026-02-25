@@ -1,0 +1,156 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T15:42:10.437Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 6,
+    "implemented": 5,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Restore the backend (backend/main.mo) to the Version 53 state, which includes fully functional data types and actor methods for Products, Retailers, Listings, Orders, user registration/approval workflows, and role-based approval for Shoppers, Drivers, and Pick-up Points. All stub/removed backend modules must be re-implemented so they return real data rather than errors or empty arrays.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Restore all frontend hooks (useProducts, useRetailers, useListings, useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication, useCategories, useTowns, useSystemSettings) to their Version 53 implementations that call real backend actor methods instead of returning stubs, empty arrays, or throwing errors.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useProducts.ts",
+          "frontend/src/hooks/useRetailers.ts",
+          "frontend/src/hooks/useListings.ts",
+          "frontend/src/hooks/useRoleApplications.ts",
+          "frontend/src/hooks/useShopperApplication.ts",
+          "frontend/src/hooks/useDriverApplication.ts",
+          "frontend/src/hooks/usePickupPointApplication.ts",
+          "frontend/src/hooks/useCategories.ts",
+          "frontend/src/hooks/useTowns.ts",
+          "frontend/src/hooks/useSystemSettings.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useProducts.ts",
+          "frontend/src/hooks/useRetailers.ts",
+          "frontend/src/hooks/useListings.ts",
+          "frontend/src/hooks/useRoleApplications.ts",
+          "frontend/src/hooks/useShopperApplication.ts",
+          "frontend/src/hooks/useDriverApplication.ts",
+          "frontend/src/hooks/usePickupPointApplication.ts",
+          "frontend/src/hooks/useCategories.ts",
+          "frontend/src/hooks/useTowns.ts",
+          "frontend/src/hooks/useSystemSettings.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Restore all admin pages (AdminProductsPage, AdminRetailersPage, AdminManageListingsPage, AdminShoppersPage, AdminDriversPage, AdminPickupPointsPage, AdminOrdersPage) to their Version 53 implementations that display and manage real backend data, removing all 'backend-unavailable' alert banners and stub empty states.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/admin/AdminProductsPage.tsx",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+          "frontend/src/pages/admin/AdminShoppersPage.tsx",
+          "frontend/src/pages/admin/AdminDriversPage.tsx",
+          "frontend/src/pages/admin/AdminPickupPointsPage.tsx",
+          "frontend/src/pages/admin/AdminOrdersPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/admin/AdminProductsPage.tsx",
+          "frontend/src/pages/admin/AdminRetailersPage.tsx",
+          "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+          "frontend/src/pages/admin/AdminShoppersPage.tsx",
+          "frontend/src/pages/admin/AdminDriversPage.tsx",
+          "frontend/src/pages/admin/AdminPickupPointsPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Restore all admin dialog components (ProductEditDialog, RetailerEditDialog, ListingEditDialog) to their Version 53 implementations that provide real create/edit forms connected to backend mutations, replacing the current stub alerts.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/ProductEditDialog.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "frontend/src/components/admin/ListingEditDialog.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/ProductEditDialog.tsx",
+          "frontend/src/components/admin/RetailerEditDialog.tsx",
+          "frontend/src/components/admin/ListingEditDialog.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Restore the CataloguePage, ProductDetailPage, RetailerListPage, and RetailerCatalogPage to their Version 53 implementations that fetch and display real catalogue, product, and retailer data from the backend, removing the unavailability alerts.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/shop/CataloguePage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "frontend/src/pages/shop/RetailerListPage.tsx",
+          "frontend/src/pages/shop/RetailerCatalogPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/shop/CataloguePage.tsx",
+          "frontend/src/pages/shop/ProductDetailPage.tsx",
+          "frontend/src/pages/shop/RetailerListPage.tsx",
+          "frontend/src/pages/shop/RetailerCatalogPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Restore the AdminOnly guard component to its Version 53 implementation that actually renders its children when the caller is an admin, removing the current stub that always shows a 'not yet implemented' alert.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/auth/AdminOnly.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/auth/AdminOnly.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/admin/ListingEditDialog.tsx",
+    "frontend/src/components/admin/ProductEditDialog.tsx",
+    "frontend/src/components/admin/RetailerEditDialog.tsx",
+    "frontend/src/components/auth/AdminOnly.tsx",
+    "frontend/src/components/auth/RequireApprovedDriver.tsx",
+    "frontend/src/components/auth/RequireApprovedPickupPoint.tsx",
+    "frontend/src/components/auth/RequireApprovedShopper.tsx",
+    "frontend/src/hooks/useCategories.ts",
+    "frontend/src/hooks/useDriverApplication.ts",
+    "frontend/src/hooks/useListings.ts",
+    "frontend/src/hooks/usePickupPointApplication.ts",
+    "frontend/src/hooks/useProducts.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/hooks/useRetailers.ts",
+    "frontend/src/hooks/useRoleApplications.ts",
+    "frontend/src/hooks/useShopperApplication.ts",
+    "frontend/src/hooks/useSystemSettings.ts",
+    "frontend/src/hooks/useTowns.ts",
+    "frontend/src/pages/admin/AdminDriversPage.tsx",
+    "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+    "frontend/src/pages/admin/AdminPickupPointsPage.tsx",
+    "frontend/src/pages/admin/AdminProductsPage.tsx",
+    "frontend/src/pages/admin/AdminRetailersPage.tsx",
+    "frontend/src/pages/admin/AdminShoppersPage.tsx",
+    "frontend/src/pages/shop/CataloguePage.tsx",
+    "frontend/src/pages/shop/ProductDetailPage.tsx",
+    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+    "frontend/src/pages/shop/RetailerListPage.tsx",
+    "frontend/src/router/HashRouter.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

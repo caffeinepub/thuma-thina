@@ -1,0 +1,96 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T15:42:10.433Z",
+  "summary": "The diff implements most of the requested V53 restoration across backend, frontend hooks, admin dialogs, admin pages, and the AdminOnly guard. However, several hooks and pages use local in-memory stores instead of calling real backend actor methods, which violates the core requirement of connecting to real backend data. REQ-2 is substantially not met because useProducts, useRetailers, useListings, useTowns, useCategories, useRoleApplications, useShopperApplication, useDriverApplication, and usePickupPointApplication all use local module-level arrays/maps rather than actor calls. REQ-3 admin pages for orders (AdminOrdersPage) is not visible in the diff. REQ-5 catalogue/product detail/retailer pages are not visible in the diff. The AdminOnly guard (REQ-6) appears correctly implemented.",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "Restore all frontend hooks to call real backend actor methods instead of returning stubs, empty arrays, or throwing errors.",
+      "reason": "useProducts, useRetailers, useListings, useRoleApplications, useShopperApplication, useDriverApplication, usePickupPointApplication, useCategories, and useTowns all use local in-memory stores (module-level arrays/maps) instead of calling actor methods. None of these hooks invoke actor.createProduct, actor.getProducts, actor.createRetailer, actor.getRetailers, actor.createListing, actor.getListings, or any backend application methods.",
+      "evidence": [
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useRetailers.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/useRoleApplications.ts",
+        "frontend/src/hooks/useShopperApplication.ts",
+        "frontend/src/hooks/useDriverApplication.ts",
+        "frontend/src/hooks/usePickupPointApplication.ts",
+        "frontend/src/hooks/useCategories.ts",
+        "frontend/src/hooks/useTowns.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Restore AdminOrdersPage to its Version 53 implementation displaying real backend order data.",
+      "reason": "AdminOrdersPage is not present in the diff summary at all — it was not modified or added.",
+      "evidence": []
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Restore CataloguePage, ProductDetailPage, RetailerListPage, and RetailerCatalogPage to fetch and display real data from the backend.",
+      "reason": "None of these page files appear in the diff summary, so it cannot be confirmed they were restored.",
+      "evidence": []
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Local in-memory stores for Products, Retailers, Listings, Towns, Categories, and role applications persist only in module memory and reset on page reload, acting as client-side stubs rather than the requested real backend integration.",
+      "reason": "The build request explicitly requires hooks to call real backend actor methods. The diff introduces client-side in-memory arrays/maps (localProducts, localRetailers, localListings, localTowns, myShopperApplications, myDriverApplications, myPickupPointApplications) as a substitute — this is a new pattern not requested and contradicts the requirement.",
+      "evidence": [
+        "frontend/src/hooks/useProducts.ts",
+        "frontend/src/hooks/useRetailers.ts",
+        "frontend/src/hooks/useListings.ts",
+        "frontend/src/hooks/useTowns.ts",
+        "frontend/src/hooks/useRoleApplications.ts",
+        "frontend/src/hooks/useShopperApplication.ts",
+        "frontend/src/hooks/useDriverApplication.ts",
+        "frontend/src/hooks/usePickupPointApplication.ts"
+      ]
+    },
+    {
+      "description": "RequireApprovedDriver, RequireApprovedPickupPoint, and RequireApprovedShopper guard components were added.",
+      "reason": "These components were not mentioned in the build request requirements. They may be part of V53 base but were not listed as a required deliverable in any REQ.",
+      "evidence": [
+        "frontend/src/components/auth/RequireApprovedDriver.tsx",
+        "frontend/src/components/auth/RequireApprovedPickupPoint.tsx",
+        "frontend/src/components/auth/RequireApprovedShopper.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.72,
+  "changed_files": [
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/admin/ListingEditDialog.tsx",
+    "frontend/src/components/admin/ProductEditDialog.tsx",
+    "frontend/src/components/admin/RetailerEditDialog.tsx",
+    "frontend/src/components/auth/AdminOnly.tsx",
+    "frontend/src/components/auth/RequireApprovedDriver.tsx",
+    "frontend/src/components/auth/RequireApprovedPickupPoint.tsx",
+    "frontend/src/components/auth/RequireApprovedShopper.tsx",
+    "frontend/src/hooks/useCategories.ts",
+    "frontend/src/hooks/useDriverApplication.ts",
+    "frontend/src/hooks/useListings.ts",
+    "frontend/src/hooks/usePickupPointApplication.ts",
+    "frontend/src/hooks/useProducts.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/hooks/useRetailers.ts",
+    "frontend/src/hooks/useRoleApplications.ts",
+    "frontend/src/hooks/useShopperApplication.ts",
+    "frontend/src/hooks/useSystemSettings.ts",
+    "frontend/src/hooks/useTowns.ts",
+    "frontend/src/pages/admin/AdminDriversPage.tsx",
+    "frontend/src/pages/admin/AdminManageListingsPage.tsx",
+    "frontend/src/pages/admin/AdminPickupPointsPage.tsx",
+    "frontend/src/pages/admin/AdminProductsPage.tsx",
+    "frontend/src/pages/admin/AdminRetailersPage.tsx",
+    "frontend/src/pages/admin/AdminShoppersPage.tsx",
+    "frontend/src/pages/shop/CataloguePage.tsx",
+    "frontend/src/pages/shop/ProductDetailPage.tsx",
+    "frontend/src/pages/shop/RetailerCatalogPage.tsx",
+    "frontend/src/pages/shop/RetailerListPage.tsx",
+    "frontend/src/router/HashRouter.tsx",
+    "project_state.json"
+  ]
+}
